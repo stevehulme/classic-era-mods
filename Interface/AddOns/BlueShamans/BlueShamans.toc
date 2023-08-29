@@ -1,0 +1,5 @@
+## Interface: 11302
+## Title: BlueShamans
+## Notes: Makes shamans blue.
+## Author: Vidget
+BlueShamans.lua

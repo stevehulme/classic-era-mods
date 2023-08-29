@@ -1,0 +1,5 @@
+<Bindings>
+  <Binding name="TC_TOGGLE_FRAME" description="TodoChecklister bindings" header="TC_HEADER" category="ADDONS">
+    GLOBAL_TodoChecklisterFrameToggle()
+  </Binding>
+</Bindings>

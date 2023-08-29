@@ -1,0 +1,10 @@
+## Interface: 11302
+## Title: WhoTracker
+## Notes: Tracks /who result changes - type /wt for usage
+## Author: moorea@ymail.com
+## Version: v3.2.2-classic
+## DefaultState: enabled
+## SavedVariables:  whoTrackerSaved
+## OptionalDeps: LibWho-2.0
+WhoTracker.lua
+MoLib/MoLib.lua

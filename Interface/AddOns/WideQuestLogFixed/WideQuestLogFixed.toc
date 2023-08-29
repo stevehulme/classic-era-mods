@@ -1,0 +1,5 @@
+## Interface: 11402
+## Title: Wide Quest Log (fixed)
+## Author: SirMrE
+## Notes: Clone of clonevince, fixed for WoW Classic / HC
+WideQuestLogFixed.lua

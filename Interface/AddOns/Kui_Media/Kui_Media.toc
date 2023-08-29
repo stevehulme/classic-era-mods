@@ -1,0 +1,7 @@
+## Interface: 11403
+
+## Author: Kesava
+## Title: Kui |cff9966ffMedia
+## Notes: This doesn't need to be enabled.
+## IconTexture: 132177
+

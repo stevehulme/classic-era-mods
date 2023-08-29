@@ -1,0 +1,15 @@
+## Interface: 11403
+
+## Author: Kesava
+## Title: Kui |cff9966ffNameplates:|r |cffffffffCore|r
+## Notes: The official layout for Kui Nameplates.
+## IconTexture: 132177
+## Dependencies: Kui_Nameplates
+## SavedVariables: KuiNameplatesCoreSaved
+## SavedVariablesPerCharacter: KuiNameplatesCoreCharacterSaved
+
+lib\embeds.xml
+
+hook.lua
+create.lua
+config.lua

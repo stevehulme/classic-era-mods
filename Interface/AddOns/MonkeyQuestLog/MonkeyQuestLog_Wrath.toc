@@ -1,0 +1,8 @@
+﻿## Interface: 30400
+## Title: MonkeyQuestLog v0.12.0
+## Notes: Replacement Quest Log.
+## Notes-deDE: Ersetzt den Questlog.
+## Author: Trentin, Jim-Bim
+## SavedVariables: mkql_Saved
+## Dependencies: MonkeyLibrary, MonkeyQuest
+MonkeyQuestLogFrame.xml
