@@ -1,4 +1,5 @@
 local _, ctp = ...
+-- local ignoreStore = LibStub:GetLibrary("FusionIgnoreStore-1.0")
 
 local spellsToStripSubtextFrom = {
 	[3127] = true, -- Parry, which is flagged Passive by GetSpellSubtext but not by GetTrainerServiceInfo
@@ -10,7 +11,16 @@ local spellsToAllowRanklessMatch = {
 	[921] = true, -- Pick Pocket, has Rank 1 in trainer ui, no rank from spell info
 	[29166] = true, -- Innervate, has Rank 1 in trainer ui, no rank from spell info
 }
-ctp.RealSpellNameMap = {}
+local spellsToSubstituteSubtextFor = {
+	[35694] = 4195, -- Avoidance rank 1, marked passive from spell subtext
+	[35698] = 4196, -- Avoidance rank 2
+}
+local subtextSubstutiteSpells = {}
+for spellId,subtextFromSpellId in pairs(spellsToSubstituteSubtextFor) do
+	subtextSubstutiteSpells[spellId] = Spell:CreateFromSpellID(subtextFromSpellId)
+end
+local spellKeysToSkipTooltipNameOn = {}
+ctp.TooltipNameMap = {}
 ctp.Abilities = {
 	_byNameStore = {},
 	_store = {},
@@ -27,7 +37,7 @@ ctp.Abilities = {
 		return serviceName .. " *"
 	end,
 	-- postStoreFunc gets key as input
-	_storeSpellInfo = function(self, spellId, isIgnored, postStoreFunc)
+	_storeSpellInfo = function(self, spellId, postStoreFunc)
 		local spell = Spell:CreateFromSpellID(spellId)
 		spell:ContinueOnSpellLoad(
 			function()
@@ -39,45 +49,58 @@ ctp.Abilities = {
 				if (spellsToAllowRanklessMatch[spellId]) then
 					subText = "*"
 				end
-				local key = self._getKey(spellName, subText)
-				self._store[key] = {
-					spellId = spellId,
-					isIgnored = isIgnored
-				}
-
-				-- when the spell has multiple ranks, add its id to the by name store
-				if (string.match(subText, RANK)) then
-					if (self._byNameStore[spellName] == nil) then
-						self._byNameStore[spellName] = {}
+				local function store(subText)
+					local key = self._getKey(spellName, subText)
+					if (ctp.SpellsToIgnoreTooltipNameFor and ctp.SpellsToIgnoreTooltipNameFor[spellId]) then
+						spellKeysToSkipTooltipNameOn[key] = true
 					end
-					tinsert(self._byNameStore[spellName], spellId)
+					self._store[key] = {
+						spellId = spellId
+					}
+					-- when the spell has multiple ranks, add its id to the by name store
+					if (string.match(subText, RANK)) then
+						if (self._byNameStore[spellName] == nil) then
+							self._byNameStore[spellName] = {}
+						end
+						tinsert(self._byNameStore[spellName], spellId)
+					end
+					if (postStoreFunc ~= nil) then
+						postStoreFunc(key)
+					end
 				end
-
-				if (postStoreFunc ~= nil) then
-					postStoreFunc(key)
+				if (subtextSubstutiteSpells[spellId]) then
+					subtextSubstutiteSpells[spellId]:ContinueOnSpellLoad(
+						function()
+							store(subtextSubstutiteSpells[spellId]:GetSpellSubtext())
+						end
+					)
+				else
+					store(subText)
 				end
 			end
 		)
 	end,
 	GetByNameAndSubText = function(self, serviceName, serviceSubText)
 		local key = self._getKey(serviceName, serviceSubText)
+		if (spellKeysToSkipTooltipNameOn[key]) then
+			return self._store[key]
+		end
 		if (self._store[key] == nil) then
 			key = self._getAlternateKey(serviceName)
 			if (self._store[key] ~= nil) then
 				return self._store[key]
 			end
 		end
-		if (ctp.RealSpellNameMap[serviceName] and ctp.RealSpellNameMap[serviceName][serviceSubText]) then
-			key = self._getKey(ctp.RealSpellNameMap[serviceName][serviceSubText], serviceSubText)
+		if (ctp.TooltipNameMap[serviceName]) then
+			local realSpellName = ctp.TooltipNameMap[serviceName][serviceSubText]
+			if (realSpellName) then
+				key = self._getKey(realSpellName, serviceSubText)
+			end
 		end
 		return self._store[key]
 	end,
 	GetAllIdsByName = function(self, serviceName)
 		return self._byNameStore[serviceName]
-	end,
-	IsIgnored = function(self, serviceName, serviceSubText)
-		local ability = self:GetByNameAndSubText(serviceName, serviceSubText)
-		return ability ~= nil and ability.isIgnored
 	end,
 	IsSpellIdStored = function(self, spellId)
 		return self._spellIds[spellId] ~= nil
@@ -88,7 +111,6 @@ ctp.Abilities = {
 		for _, spellId in pairs(table) do
 			self:_storeSpellInfo(
 				spellId,
-				false,
 				function(key)
 					self._spellIds[spellId] = key
 					if (ClassTrainerPlusFrame and ClassTrainerPlusFrame:IsVisible()) then
@@ -97,11 +119,6 @@ ctp.Abilities = {
 					end
 				end
 			)
-		end
-	end,
-	Update = function(self, table)
-		for spellId, isIgnored in pairs(table) do
-			self:_storeSpellInfo(spellId, isIgnored)
 		end
 	end
 }

@@ -1,11 +1,5 @@
---[[
 
-License: All Rights Reserved, (c) 2009-2018
-
-$Revision: 3002 $
-$Date: 2023-01-20 08:12:26 +1100 (Fri, 20 Jan 2023) $
-
-]]--
+--License: All Rights Reserved, (c) 2009-2023
 
 
 local _G = _G

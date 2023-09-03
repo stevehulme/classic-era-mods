@@ -1,7 +1,9 @@
-# 3.10.16 (08-MAY-2023)
- - fixed - https://github.com/arkayenro/arkinventory/issues/1787 - issue handling a null tooltipinfo
- - updated - categorised some items
- - changed - (retail) toc updated to 100100
+# 3.10.17 (02-SEP-2023)
+ - changed - (retail) toc updated to 100105
+ - changed - (wrath) toc updated to 30402
+ - changed - (Classic) toc updated to 11404
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1805 - code issue with HookOpenAllBags from GearManagerDialogPopup
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1814 - (classic) default bank windows opening due to `PlayerInteractionFrameManager` being added to classic
  
 # known issues
  - (dragonflight) reagentbank slots are no longer readable unless the bank is open

@@ -1,6 +1,6 @@
 ## Interface: 30402
 ## Title: What's Training?
-## Version: 5.0.1
+## Version: 5.0.2
 ## Author: Sveng
 ## Notes: Shows you what spells are available at your class trainer
 ## SavedVariables: WT_ShowIgnoreNotice, WT_ShowLearnedNotice
@@ -8,6 +8,9 @@
 ## OptionalDeps: ClassTrainerPlus
 ## X-Curse-Project-ID: 324944
 ## X-WoWI-ID: 25031
+
+libs\LibStub.lua
+libs\FusionIgnoreStore\IgnoreStore.lua
 
 Utils.lua
 Cache.lua

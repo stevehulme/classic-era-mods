@@ -1,9 +1,5 @@
 local _, ctp = ...
-
-local updateCallbacks = {}
-function HookCTPUpdate(callback)
-	tinsert(updateCallbacks, callback)
-end
+local ignoreStore = LibStub:GetLibrary("FusionIgnoreStore-1.0")
 
 ctp.TrainerServices = {
 	totalServices = 0,
@@ -32,17 +28,20 @@ ctp.TrainerServices = {
 				self._byServiceId[i] = currentSection
 				tinsert(candidateSections, currentSection)
 			else
-				if (ctp.RealSpellNameMap[serviceName] == nil) then
-					ctp.RealSpellNameMap[serviceName] = {}
+				if (ctp.TooltipNameMap[serviceName] == nil) then
+					ctp.TooltipNameMap[serviceName] = {}
 				end
-				if (serviceSubText and ctp.RealSpellNameMap[serviceName][serviceSubText] == nil and not IsTradeskillTrainer()) then
+				if (serviceSubText and
+						ctp.TooltipNameMap[serviceName][serviceSubText] == nil
+						and not IsTradeskillTrainer()) then
 					GameTooltip:SetTrainerService(i)
 					local tooltipName = GameTooltipTextLeft1:GetText()
 					if (tooltipName and string.find(tooltipName, serviceName, 1, true)) then
-						ctp.RealSpellNameMap[serviceName][serviceSubText] = tooltipName
+						ctp.TooltipNameMap[serviceName][serviceSubText] = tooltipName
 					end
 				end
-				local isIgnored = ctp.Abilities:IsIgnored(serviceName, serviceSubText)
+				local ai = ctp.Abilities:GetByNameAndSubText(serviceName, serviceSubText)
+				local isIgnored = ai and ignoreStore:IsIgnored(ai.spellId) or false
 				local ability = {
 					serviceId = i,
 					name = serviceName,
@@ -58,7 +57,7 @@ ctp.TrainerServices = {
 					ability.menuTitle = serviceName
 				end
 				self._byServiceId[i] = ability
-				if (not isIgnored or self.showIgnored) then
+				if (not isIgnored or self.showIgnored or serviceType == 'used') then
 					tinsert(currentSection.skills, ability)
 				end
 				if (isIgnored and serviceType ~= "used") then
@@ -131,9 +130,6 @@ ctp.TrainerServices = {
 	Update = function(self)
 		self:_updateCandidates()
 		self:ApplyFilter()
-		for _, func in ipairs(updateCallbacks) do
-			func(self)
-		end
 	end,
 	IsSelected = function(self, serviceId)
 		if (not serviceId or serviceId == 0) then

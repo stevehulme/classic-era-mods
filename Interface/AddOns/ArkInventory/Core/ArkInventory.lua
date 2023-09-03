@@ -1,13 +1,7 @@
 -- local addonName, addonTbl = ...
 
---[[
+--License: All Rights Reserved, (c) 2006-2023
 
-License: All Rights Reserved, (c) 2006-2020
-
-$Revision: 2963 $
-$Date: 2021-11-24 19:29:01 +1100 (Wed, 24 Nov 2021) $
-
-]]--
 
 local _G = _G
 local select = _G.select
@@ -11146,13 +11140,9 @@ function ArkInventory.HookOpenAllBags( self, ... )
 				end
 			end
 			
-		elseif whoname == "AzeriteEssenceUI" then
+		elseif whoname == "AzeriteEssenceUI" or whoname == "ItemInteractionFrame" or whoname == "GearManagerDialogPopup" then
 			
-			-- dont care about this opener yet, just here to stop the warning message
-			
-		elseif whoname == "ItemInteractionFrame" then
-			
-			-- dont care about this opener yet, just here to stop the warning message
+			-- dont care about these openers yet, just here to stop the warning message
 			
 		elseif whoname == "MailCommanderFrame" then
 			
@@ -11186,7 +11176,7 @@ function ArkInventory.HookOpenAllBags( self, ... )
 		if not ArkInventory.isLocationControlled( loc_id ) then
 			for x = ArkInventory.Const.BLIZZARD.GLOBAL.CONTAINER.NUM_BAGS + 1, ArkInventory.Const.BLIZZARD.GLOBAL.CONTAINER.NUM_BAGS + ArkInventory.Const.BLIZZARD.GLOBAL.BANK.NUM_BAGS do
 				if ArkInventory.CrossClient.GetContainerNumSlots( x ) > 0 then
---					ArkInventory.Output2( "HookOpenAllBags - closing bag ", x )
+					--ArkInventory.Output2( "HookOpenAllBags - closing bag ", x )
 					CloseBag( x )
 				end
 			end
@@ -11633,8 +11623,8 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		end
 		
 		
-		-- bank functions (dragonflight onwards as it now opens via the ui panels)
-		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.WRATH ) then
+		-- bank functions (now opens via the ui panels in all versions)
+		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.CLASSIC ) then
 			ArkInventory:RawHook( PlayerInteractionFrameManager, "ShowFrame", ArkInventory.HookPlayerInteractionShow, true )
 			ArkInventory:RawHook( PlayerInteractionFrameManager, "HideFrame", ArkInventory.HookPlayerInteractionHide, true )
 		end
