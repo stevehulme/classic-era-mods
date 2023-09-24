@@ -1,8 +1,8 @@
-## Interface: 30400
+## Interface: 11404
 ## Title: SoulSort
 ## Notes: Easy Soul Shard Management
 ## Author: Anilusion
-## Version: 1.2 WOTLK
+## Version: 1.3 Classic
 ## SavedVariablesPerCharacter: SoulSortOptions
 ## OptionalDeps: LibDataBroker-1.1
 

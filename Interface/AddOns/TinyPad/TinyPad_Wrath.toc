@@ -2,7 +2,7 @@
 ## Title: TinyPad
 ## Notes: TinyPad is a notepad addon
 ## Author: Gello
-## Version: 3.1.8
+## Version: 3.1.9
 ## X-WoWI-ID: 4417
 ## X-Wago-ID: RqGZpQ6d
 ## X-Curse-Project-ID: 84962

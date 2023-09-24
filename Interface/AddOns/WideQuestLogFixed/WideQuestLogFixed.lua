@@ -65,6 +65,8 @@ local function SkinFrames()
     -- Relocate the quest count
     QuestLogQuestCount:ClearAllPoints();
     QuestLogQuestCount:SetPoint("TOPLEFT", QuestLogDetailScrollFrame, "TOPRIGHT", -55, 28);
+    QuestLogCountRight:ClearAllPoints()
+    QuestLogCountRight:SetPoint("TOPRIGHT", QuestLogFrame, -88, -42)
 
     -- Relocate the 'no active quests' text
     QuestLogNoQuestsText:ClearAllPoints();

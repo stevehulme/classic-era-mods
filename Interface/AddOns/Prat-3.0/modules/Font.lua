@@ -278,8 +278,7 @@ L = {
 		["Outline"] = "Umrandung",
 		["outlinemode_desc"] = "Stellt Modus für die Umrandung des Schrifttyps ein.",
 		["outlinemode_name"] = "Umrandungsmodus einstellen",
-		--[[Translation missing --]]
-		["pet_battle_tab"] = "Pet Battle Tab",
+		["pet_battle_tab"] = "Registerkarte „Haustierkampf“",
 		["rememberfont_desc"] = "Deine Wahl des Schrifttyps merken und beim Starten wiederherstellen.",
 		["rememberfont_name"] = "Schrifttyp merken",
 		["Set ChatFrame%d Font Size"] = "Schriftgröße im Chatfenster %d einstellen",

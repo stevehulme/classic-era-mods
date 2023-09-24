@@ -1,3 +1,6 @@
+v3.1.9, 09/05/2023
+- toc update for 10.1.7 patch
+
 v3.1.8, 08/24/2023
 - Resize lua error fix for Classic Era clients
 - toc update for 1.14.4 amd 3.4.2 patches
