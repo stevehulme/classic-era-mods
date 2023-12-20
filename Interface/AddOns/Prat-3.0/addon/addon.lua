@@ -69,7 +69,7 @@ Prat.Version = "Prat |cff8080ff3.0|r (|cff8080ff" .. "DEBUG" .. "|r)"
 --@end-debug@]==]
 
 --@non-debug@
-Prat.Version = "Prat |cff8080ff3.0|r (|cff8080ff".."3.9.36".."|r)"
+Prat.Version = "Prat |cff8080ff3.0|r (|cff8080ff".."3.9.43".."|r)"
 --@end-non-debug@
 
 
@@ -721,14 +721,25 @@ function addon:ChatFrame_MessageEventHandler(this, event, ...)
       if m.DONOTPROCESS then
         Prat.callbacks:Fire(POST_ADDMESSAGE_BLOCKED, m, this, message.EVENT, m.OUTPUT, r, g, b, id)
       elseif m.OUTPUT:len() > 0 then
-        this:AddMessage(m.OUTPUT, r, g, b, id, false, m.ACCESSID, m.TYPEID);
+
+        -- Hack to get the censored message display working with Prat
+        local isChatLineCensored = arg11 and C_ChatInfo.IsChatLineCensored(arg11);
+        local msg = isChatLineCensored and arg1 or m.OUTPUT
+
+        if isChatLineCensored then
+          local eventLabel = event
+          local eventArgs = SafePack(...);
+          this:AddMessage(msg, r, g, b, id, m.ACCESSID, m.TYPEID, eventLabel, eventArgs, function(text) return text end);
+        else
+          this:AddMessage(msg, r, g, b, id, m.ACCESSID, m.TYPEID);
+        end
 
         -- We have called addmessage by now, or we have skipped it
         -- regardless, we call postaddmessage. This was changed to allow
         -- for more flexibility in the customfilters module, speficially
         -- it allows for replacements to occur in blocked messages
 
-        Prat.callbacks:Fire(POST_ADDMESSAGE, m, this, message.EVENT, m.OUTPUT, r, g, b, id, false, m.ACCESSID, m.TYPEID)
+        Prat.callbacks:Fire(POST_ADDMESSAGE, m, this, message.EVENT, m.OUTPUT, r, g, b, id, m.ACCESSID, m.TYPEID)
 
         if (not this:IsShown()) then
           if ((this == _G.DEFAULT_CHAT_FRAME and m.INFO.flashTabOnGeneral) or (this ~= _G.DEFAULT_CHAT_FRAME and m.INFO.flashTab)) then

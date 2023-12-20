@@ -34,6 +34,8 @@ local TTT_DefaultConfig = {
 	
 	t_showAverageItemLevel = true,        -- show average item level (AIL)
 	t_showGearScore = false,              -- show GearScore
+	t_gearScoreAlgorithm =                -- GearScore algorithm
+		((LibFroznFunctions.isWoWFlavor.SL or LibFroznFunctions.isWoWFlavor.DF) and 2 or 1),
 	t_colorAILAndGSTextByQuality = true   -- color average item level and GearScore text by average quality
 };
 
@@ -286,10 +288,12 @@ function TTT_UpdateTooltip(unitCacheRecord)
 			
 			-- average item level
 			if (cfg.t_showAverageItemLevel) then
+				local averageItemLevel = (unitCacheRecord.averageItemLevel.value > 0) and unitCacheRecord.averageItemLevel.value or "-";
+				
 				if (cfg.t_colorAILAndGSTextByQuality) then
-					ailAndGSText:Push(unitCacheRecord.averageItemLevel.qualityColor:WrapTextInColorCode(unitCacheRecord.averageItemLevel.value));
+					ailAndGSText:Push(unitCacheRecord.averageItemLevel.qualityColor:WrapTextInColorCode(averageItemLevel));
 				else
-					ailAndGSText:Push(unitCacheRecord.averageItemLevel.value);
+					ailAndGSText:Push(averageItemLevel);
 				end
 			end
 			
@@ -301,10 +305,24 @@ function TTT_UpdateTooltip(unitCacheRecord)
 					useOnlyGSPrefix = true;
 				end
 				
-				if (cfg.t_colorAILAndGSTextByQuality) then
-					ailAndGSText:Push(spacer .. unitCacheRecord.averageItemLevel.qualityColor:WrapTextInColorCode(unitCacheRecord.averageItemLevel.gearScore));
-				else
-					ailAndGSText:Push(spacer .. unitCacheRecord.averageItemLevel.gearScore);
+				local gearScore;
+				
+				if (cfg.t_gearScoreAlgorithm == 1) then -- TacoTip's GearScore algorithm
+					gearScore = (unitCacheRecord.averageItemLevel.TacoTipGearScore > 0) and unitCacheRecord.averageItemLevel.TacoTipGearScore or "-";
+					
+					if (cfg.t_colorAILAndGSTextByQuality) then
+						ailAndGSText:Push(spacer .. unitCacheRecord.averageItemLevel.TacoTipGearScoreQualityColor:WrapTextInColorCode(gearScore));
+					else
+						ailAndGSText:Push(spacer .. gearScore);
+					end
+				else -- TipTac's GearScore algorithm
+					gearScore = (unitCacheRecord.averageItemLevel.TipTacGearScore > 0) and unitCacheRecord.averageItemLevel.TipTacGearScore or "-";
+					
+					if (cfg.t_colorAILAndGSTextByQuality) then
+						ailAndGSText:Push(spacer .. unitCacheRecord.averageItemLevel.TipTacGearScoreQualityColor:WrapTextInColorCode(gearScore));
+					else
+						ailAndGSText:Push(spacer .. gearScore);
+					end
 				end
 			end
 		end

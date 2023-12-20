@@ -16,7 +16,7 @@ t.settings.defaults = {
     FontSize = 2, -- Medium
     PinBookmarks = false,
     NoFade = false,
-    AllowCtrlKeys = false,
+    EditorCtrlKeys = true, -- formerly Allow Ctrl Keys to let ctrl+f/n/etc work without focus
     HideTooltips = false,
     HideMoreTooltips = false,
     OpenOnLogin = false,
@@ -44,7 +44,7 @@ t.settings.optionsInfo = {
     {"check","Invisible","Invisible","Increase the transparency effect so the background of the text area is invisible when the background fades out.\n\nWhile the No Fadeout option is enabled or this window has focus, the background will remain slightly opaque.","Transparency"},
     {"check","NoFade","No Fadeout","When the mouse leaves TinyPad, and no panel is open (like this settings panel), and the addon doesn't have focus, don't fade out the background."},
     {"check","ShowMinimapButton","Minimap Button","Show a minimap button to summon and dismiss TinyPad."},
-    {"check","AllowCtrlKeys","Allow Ctrl Keys","Allow the use of Ctrl+F (Find), Ctrl+N (New), Ctrl+Z (Undo) or Ctrl+Y (Redo) while TinyPad is on screen, regardless whether it has the blinking cursor active.\n\nThis will only override any bindings you have for those keys while TinyPad is on screen."},
+    {"check","EditorCtrlKeys","Allow Ctrl Keys","Allow the use of Ctrl+F (Find), Ctrl+N (New), Ctrl+Z (Undo) or Ctrl+Y (Redo) while TinyPad is on screen and has focus."},
     {"check","HideTooltips","Hide Tooltips","Hide tooltips within TinyPad like the one you're reading now."},
     {"check","HideMoreTooltips","Hide More","Also hide tooltips that preview the contents of bookmarks.\n\n\124cffaaaaaaHold Shift while the mouse moves over a bookmark to override this behavior and see a preview.","HideTooltips"},
     {"check","OpenOnLogin","Open On Login","When you log in or /reload, start with TinyPad opened."},
@@ -95,6 +95,8 @@ function t.settings:Init()
     t.settings:SetBackdrop({bgFile="Interface\\ChatFrame\\ChatFrameBackground",tileSize=16,tile=true,insets={left=4,right=4,top=4,bottom=4},edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=16})
     t.settings:SetBackdropBorderColor(0.5,0.5,0.5)
     t.settings:SetBackdropColor(0.175,0.175,0.175)
+
+    t.settings:SetScript("OnShow",t.main.UpdateEscapeFrame)
 
     -- line beneath the addRemoveButton to form a border around the scrollFrame
     t.settings.border = t.settings:CreateTexture(nil,"ARTWORK")
@@ -233,6 +235,7 @@ t.settings.changeFuncs = {} -- indexed by the name of the option
 
 function t.settings.changeFuncs:Lock()
     t.main:UpdateLock()
+    t.main:UpdateEscapeFrame()
 end
 
 function t.settings.changeFuncs:LargerScale()
@@ -276,4 +279,8 @@ end
 
 function t.settings.changeFuncs:SharePosition()
     t.main:SavePosition()
+end
+
+function t.settings.changeFuncs:EditorCtrlKeys()
+    t.editor:UpdateCtrlKeys()
 end

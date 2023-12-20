@@ -104,6 +104,10 @@ local function CreateUnitTabGroup(unitID, localizedUnit, order)
                                 if value == false then
                                     return ReloadUI()
                                 end
+                                if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+                                    print("ClassicCastbars: Do a /reload if player castbar doesn't work properly on first time enabling.") -- luacheck: ignore
+                                    PlayerCastingBarFrame:SetLook("CLASSIC")
+                                end
                                 ClassicCastbars:SkinPlayerCastbar()
                             end
                         end,
@@ -175,12 +179,20 @@ local function CreateUnitTabGroup(unitID, localizedUnit, order)
                         disabled = ModuleIsDisabled,
                         hidden = unitID == "player",
                     },
+                    showInterruptSchool = {
+                        order = 9,
+                        name = L.SHOW_INTERRUPT_SCHOOL,
+                        width = "full",
+                        type = "toggle",
+                        hidden = unitID == "player" or not isClassicEra,
+                        disabled = ModuleIsDisabled,
+                    },
                     posX = {
                         -- Position slider X for nameplate castbars only
-                        -- TODO: is there a better way to do this after nameplate GetPoint() changes?
-                        order = 9,
-                        name = "Position X",
-                        desc = "Position X",
+                        -- TODO: is there a better way to do this after nameplate GetPoint() being protected?
+                        order = 10,
+                        name = "Position X (Left/Right)",
+                        desc = "Set castbar position by coords. Blizzard nerfed drag-to-move functionality for nameplates in patch 8.2.",
                         width = 2,
                         type = "range",
                         min = -999,
@@ -199,9 +211,9 @@ local function CreateUnitTabGroup(unitID, localizedUnit, order)
                     posY = {
                         -- Position slider Y for nameplate castbars only
                         -- TODO: is there a better way to do this after nameplate GetPoint() changes?
-                        order = 10,
-                        name = "Position Y",
-                        desc = "Position Y",
+                        order = 11,
+                        name = "Position Y (Up/Down)",
+                        desc = "Set castbar position by coords. Blizzard nerfed drag-to-move functionality for nameplates in patch 8.2.",
                         width = 2,
                         type = "range",
                         min = -999,
@@ -220,7 +232,7 @@ local function CreateUnitTabGroup(unitID, localizedUnit, order)
                         end,
                     },
                     notes = {
-                        order = 11,
+                        order = 12,
                         hidden = not isClassicEra or unitID ~= "focus",
                         name = "\n\nSlash Commands:\n\n|cffffff00 - /focus\n\n - /clearfocus\n\n - /click FocusCastbar|r (won't update unit if /focus used in combat)",
                         type = "description",
@@ -625,10 +637,11 @@ local function GetOptionsTable()
             target = CreateUnitTabGroup("target", L.TARGET, 1),
             nameplate = CreateUnitTabGroup("nameplate", L.NAMEPLATE, 2),
             party = CreateUnitTabGroup("party", L.PARTY, 3),
-            player = WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE and CreateUnitTabGroup("player", L.PLAYER, 4) or nil,
+            player = CreateUnitTabGroup("player", L.PLAYER, 4),
             focus = CreateUnitTabGroup("focus", _G.FOCUS or "Focus", 5),
             arena = not isClassicEra and CreateUnitTabGroup("arena", _G.ARENA or "Arena", 6) or nil,
 
+            -- Reset Button
             resetAllSettings = {
                 order = 6,
                 name = L.RESET_ALL,
@@ -656,10 +669,10 @@ local function GetOptionsTable()
                 end,
             },
 
-            -- Character specific savedvariables
+            -- Character specific savedvariables Checkbox
             usePerCharacterSettings = {
-                order = 7,
-                width = 2,
+                order = 9,
+                width = 1.3,
                 type = "toggle",
                 name = L.PER_CHARACTER,
                 desc = L.PER_CHARACTER_TOOLTIP,

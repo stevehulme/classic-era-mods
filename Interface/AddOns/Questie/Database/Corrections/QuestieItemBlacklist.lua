@@ -8,6 +8,7 @@ function QuestieItemBlacklist:Load()
         [774] = true, -- malachite
         [785] = true, -- mageroyal
         [929] = true, -- Healing Potion
+        [1179] = true, -- ice cold milk
         [1206] = true, -- moss agate
         [1210] = true, -- shadowgem
         [1529] = true, -- jade
@@ -211,6 +212,7 @@ function QuestieItemBlacklist:Load()
         [26043] = true, -- Oshu'gun Crystal Powder Sample
         [29425] = true, -- Mark of Kiljaeden
         [29426] = true, -- Firewing Signet
+        [29460] = true, -- Ethereum Prison Key
         [29739] = true, -- Arcane Tome
         [29740] = true, -- Fel Armament
         [30809] = true, -- Mark of Sargeras

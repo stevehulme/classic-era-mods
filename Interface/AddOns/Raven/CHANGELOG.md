@@ -1,3 +1,12 @@
+# 18 November 2023
+- Removed support for range checks in conditions. An unfortunate casualty of Blizzard preventing mods from telling players where to (not) stand during encounters.
+
+# 16 November 2023
+- Fixed bug caused by namespace changes in Classic WoW.
+
+# 10 November 2023
+- Fixed bug caused by Retail changing the addon management API.
+
 # 24 August 2023
 - Fixed bug caused by Classic Era now using part of the Dragonflight API for addons.
 

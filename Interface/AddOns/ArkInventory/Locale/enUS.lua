@@ -961,7 +961,7 @@ if not L then return end
 	L["LDB_MOUNTS_USEFORLAND_DESC"] = "adds your %1$s mounts to your %2$s mount selections"
 	L["LDB_MOUNTS_FLYING_DISMOUNT_DESC"] = "Enabled = allows you to dismount while flying.\n\nDisabled = you need to land before you can dismount\n\nnote: does not effect spell casting while flying, use the interface options to set that"
 	L["LDB_MOUNTS_FLYING_DISMOUNT_WARNING"] = "You are currently flying, please land to select another mount"
-	L["LDB_MOUNTS_FLYING_DRAGONRIDING_DESC"] = "swap air and land mounts when in the dragon isles so that the summon mount keybinding will get dragonriding mounts by default.\n\nYou will need to hold shift to get an alternative land mount"
+	L["LDB_MOUNTS_FLYING_DRAGONRIDING_DESC"] = "which mounts to use by default in dragonriding capable zones\n\nEnabled = Dragonriding mounts\n\nDisabled = Normal flying mounts\n\nholding CTRL will use the other type when using the mount macro or clicking on the mount icon"
 	L["LDB_MOUNTS_SUMMON"] = "Summon Mount"
 	L["LDB_MOUNTS_NODATA"] = "Unknown / Changed"
 	L["LDB_MOUNTS_TRAVEL_FORM"] = "Use %1$s"

@@ -166,6 +166,10 @@ local alertColors = { -- default colors for spell alerts
 local UnitAura = UnitAura
 MOD.LCD = nil
 if MOD.ExpansionIsOrBelow(LE_EXPANSION_WRATH_OF_THE_LICH_KING) then
+	if C_AddOns.LoadAddOn == nil then
+		C_AddOns.LoadAddOn = LoadAddOn
+	end
+
 	MOD.LCD = LibStub("LibClassicDurations", true)
 	if MOD.LCD then
 		MOD.LCD:Register(Raven) -- tell library it's being used and should start working
@@ -202,9 +206,9 @@ function MOD:OnInitialize()
 
 	MOD.localClass, MOD.myClass = UnitClass("player") -- cache the player's class
 	MOD.localRace, MOD.myRace = UnitRace("player") -- cache the player's race
-	LoadAddOn("LibDataBroker-1.1")
-	LoadAddOn("LibDBIcon-1.0")
-	LoadAddOn("LibBossIDs-1.0", true)
+	C_AddOns.LoadAddOn("LibDataBroker-1.1")
+	C_AddOns.LoadAddOn("LibDBIcon-1.0")
+	C_AddOns.LoadAddOn("LibBossIDs-1.0", true)
 	MOD.MSQ = LibStub("Masque", true)
 	now = GetTime() -- start tracking time
 	suppressTime = now -- start suppression period for certain special effects
@@ -1027,7 +1031,7 @@ function MOD:BAG_UPDATE(e)
 	table.wipe(bagCooldowns) -- update bag item cooldown table
 	for bag = 0, NUM_BAG_SLOTS do
 		local numSlots
-		if MOD.isModernAPI then
+		if _G.GetContainerNumSlots == nil then
 			numSlots = C_Container.GetContainerNumSlots(bag)
 		else
 			numSlots = GetContainerNumSlots(bag)
@@ -1035,11 +1039,13 @@ function MOD:BAG_UPDATE(e)
 
 		for slot = 1, numSlots do
 			local itemID
-			if MOD.isModernAPI then
+
+			if _G.GetContainerItemID == nil then
 				itemID = C_Container.GetContainerItemID(bag, slot)
 			else
 				itemID = GetContainerItemID(bag, slot)
 			end
+
 			if itemID then
 				local _, spellID = GetItemSpell(itemID)
 				if spellID then bagCooldowns[itemID] = spellID end
@@ -1113,7 +1119,7 @@ end
 function MOD:OptionsPanel()
 	if not optionsLoaded then
 		optionsLoaded = true
-		local loaded, reason = LoadAddOn(MOD_Options)
+		local loaded, reason = C_AddOns.LoadAddOn(MOD_Options)
 
 		if not loaded then
 			print(L["Failed to load "] .. tostring(MOD_Options) .. ": " .. tostring(reason))
@@ -2072,7 +2078,7 @@ local function CheckItemCooldown(itemID)
 	local start = 0
 	local duration = 0
 	local ignore = 0
-	if MOD.isModernAPI then
+	if _G.GetItemCooldown == nil then
 		start, duration, ignore = C_Container.GetItemCooldown(itemID)
 	else
 		start, duration = GetItemCooldown(itemID)

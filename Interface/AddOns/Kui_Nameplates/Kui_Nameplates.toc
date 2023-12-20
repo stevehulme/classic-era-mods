@@ -3,7 +3,7 @@
 ## Author: Kesava
 ## Title: Kui |cff9966ffNameplates
 ## Notes: Kesava's nameplate framework.|nDoes nothing without a layout.
-## Version: 2.29.10
+## Version: 2.29.11
 ## IconTexture: 132177
 ## X-License: All Rights Reserved.
 ## X-Website: https://github.com/kesava-wow/kuinameplates2

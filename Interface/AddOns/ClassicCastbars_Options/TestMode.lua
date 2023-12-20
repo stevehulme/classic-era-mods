@@ -11,6 +11,9 @@ local dummySpellData = {
     isChanneled = false,
 }
 
+local isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+local CastingBarFrame = isRetail and _G.PlayerCastingBarFrame or _G.CastingBarFrame
+
 -- Credits to stako & zork for this
 -- https://www.wowinterface.com/forums/showthread.php?t=41819
 local function CalcScreenGetPoint(frame)
@@ -129,13 +132,15 @@ end
 function TestMode:SetCastbarMovable(unitID, parent)
     local parentFrame = parent or ClassicCastbars.AnchorManager:GetAnchor(unitID)
     if not parentFrame then
-        if unitID == "target" or unitID == "nameplate-testmode" or unitID == "focus" then
+        if unitID == "target" or unitID == "focus" then
             print(format("|cFFFF0000[ClassicCastbars] %s|r", _G.ERR_GENERIC_NO_TARGET)) -- luacheck: ignore
+        elseif unitID == "nameplate-testmode" then
+            print(format("|cFFFF0000[ClassicCastbars] %s|r", L.NO_NAMEPLATE_VISIBLE)) -- luacheck: ignore
         end
         return false
     end
 
-    local castbar = unitID == "player" and _G.CastingBarFrame or ClassicCastbars:GetCastbarFrame(unitID)
+    local castbar = unitID == "player" and CastingBarFrame or ClassicCastbars:GetCastbarFrame(unitID)
     if unitID ~= "nameplate-testmode" then -- Blizzard broke drag functionality for frames that are anchored to restricted frames in TBC :(
         castbar:SetMovable(true)
         castbar:SetClampedToScreen(true)
@@ -180,15 +185,18 @@ function TestMode:SetCastbarMovable(unitID, parent)
         castbar.Icon:SetTexture(dummySpellData.icon)
         castbar.Flash:SetAlpha(0)
         castbar.casting = nil
-		castbar.channeling = nil
-		castbar.holdTime = 0
+        castbar.channeling = nil
+        castbar.holdTime = 0
         castbar.fadeOut = nil
         castbar.flash = nil
+        castbar.playCastFX = false
 
         if IsModifierKeyDown() or (IsMetaKeyDown and IsMetaKeyDown()) then
-            castbar:SetStatusBarColor(castbar.nonInterruptibleColor:GetRGB())
+            --castbar:SetStatusBarColor(castbar.nonInterruptibleColor:GetRGB())
+            castbar:SetStatusBarColor(unpack(ClassicCastbars.db.player.statusColorUninterruptible))
         else
-            castbar:SetStatusBarColor(castbar.startCastColor:GetRGB())
+            --castbar:SetStatusBarColor(castbar.startCastColor:GetRGB())
+            castbar:SetStatusBarColor(unpack(ClassicCastbars.db.player.statusColor))
         end
 
         castbar:SetAlpha(1)
@@ -201,7 +209,7 @@ function TestMode:SetCastbarMovable(unitID, parent)
 end
 
 function TestMode:SetCastbarImmovable(unitID)
-    local castbar = unitID == "player" and _G.CastingBarFrame or ClassicCastbars:GetCastbarFrame(unitID)
+    local castbar = unitID == "player" and CastingBarFrame or ClassicCastbars:GetCastbarFrame(unitID)
     castbar:Hide()
     if castbar.tooltip then
         castbar.tooltip:Hide()
@@ -209,7 +217,7 @@ function TestMode:SetCastbarImmovable(unitID)
 
     castbar.unitID = nil
     castbar.parent = nil
-    castbar.isTesting = nil
+    castbar.isTesting = false
     castbar.holdTime = 0
     castbar:EnableMouse(false)
 

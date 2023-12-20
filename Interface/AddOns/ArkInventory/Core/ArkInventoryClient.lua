@@ -611,6 +611,40 @@ function ArkInventory.CrossClient.PlayerHasTransmogByItemInfo( ... )
 	end
 end
 
+function ArkInventory.CrossClient.LoadAddOn( ... )
+	if C_AddOns and C_AddOns.LoadAddOn then
+		return C_AddOns.LoadAddOn( ... )
+	else
+		return LoadAddOn( ... )
+	end
+end
+
+function ArkInventory.CrossClient.GetAddOnMetadata( ... )
+	if C_AddOns and C_AddOns.GetAddOnMetadata then
+		return C_AddOns.GetAddOnMetadata( ... )
+	else
+		return GetAddOnMetadata( ... )
+	end
+end
+
+function ArkInventory.CrossClient.IsAddOnLoaded( ... )
+	if C_AddOns and C_AddOns.IsAddOnLoaded then
+		return C_AddOns.IsAddOnLoaded( ... )
+	else
+		return IsAddOnLoaded( ... )
+	end
+end
+
+function ArkInventory.CrossClient.TooltipSetCurrencyByID( tooltip, ... )
+	if tooltip then
+		if tooltip.SetCurrencyByID then
+			return tooltip:SetCurrencyByID( ... )
+		elseif tooltip.SetCurrencyTokenByID then
+			return tooltip:SetCurrencyTokenByID( ... )
+		end
+	end
+end
+
 
 
 

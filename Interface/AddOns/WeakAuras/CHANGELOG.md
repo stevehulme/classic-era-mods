@@ -1,42 +1,33 @@
-# [5.7.1](https://github.com/WeakAuras/WeakAuras2/tree/5.7.1) (2023-09-06)
+# [5.8.7](https://github.com/WeakAuras/WeakAuras2/tree/5.8.7) (2023-12-03)
 
-[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.7.0...5.7.1)
+[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.8.6...5.8.7)
 
 ## Highlights
 
- - Improvements to triggers
-- Sound previews on dropdown selections
+ - Updates for Season of Discovery
+- New option to treat charged combo point as 7 combo points (thanks to @weswigham for initial idea+PR)
 - Bug fixes 
 
 ## Commits
 
-InfusOnWoW (4):
+InfusOnWoW (9):
 
-- Templates: Add Grove Guardins
-- BT2: Fix tooltip parsing for negative numbers
-- BT2: Update auras 2s after initial login
-- Add a paused condition for timed durations (#4573)
-
-Jods (1):
-
-- fix #4575
+- Show an warning on trying to update an aura that can't be updated
+- Add an option to treat a charged combo point as 7 combo points
+- Add CHAT_MSG_LOOT type
+- Tweak frame levels again a bit
+- Improve error message for auras without a region type
+- AuraBar: Fix property names for gradient colors
+- Author Options: Also sort Sound list for the user
+- Drangonflying Load Option
+- Templates: Fix talent load option for Holy Word: Sanctify
 
 Stanzilla (2):
 
-- Bump TOC for Retail
-- Bump TOC for Era
+- Bump minor
+- Bump Classic TOC for SoD
 
-mrbuds (11):
+mrbuds (1):
 
-- Fix spell fields focus for non-aura triggers and load options
-- Fix anchor to screen for auras in a group
-- Bossmod Timer fix (#4584)
-- Sub Text Element: Show formatting options for all %-replacements
-- Condition of Text type auras can edit text
-- Combat Log trigger: add extraSpellId for apropriate subEvents
-- Add sound preview on sound selection dropdowns
-- Delay & Duration fields show time converted to [[HH:]MM:]ss format
-- tune "spell" option width & alignment
-- On Aura trigger, show spell name when typing spell id
-- For Combat Log, DBM Timer, BigWigs Timer triggers, spellId field show icon & name of spell
+- Classis SoD: include new spell ids in spell cache
 

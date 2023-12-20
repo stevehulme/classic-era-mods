@@ -12,6 +12,8 @@ function t.bookmarks:Init()
     t.bookmarks:SetBackdropBorderColor(0.5,0.5,0.5)
     t.bookmarks:SetBackdropColor(0.2,0.2,0.2)
 
+    t.bookmarks:SetScript("OnShow",t.main.UpdateEscapeFrame)
+
     -- wide "Add Bookmark"/"Remove Bookmark" at top of bookmarks
     t.bookmarks.addRemoveButton = CreateFrame("Button",nil,t.bookmarks,"TinyPadPanelButtonWithIconTemplate")
     t.bookmarks.addRemoveButton:RegisterForClicks("AnyUp")

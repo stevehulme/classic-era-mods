@@ -304,29 +304,36 @@ function ttStyle:GeneratePlayerLines(currentDisplayParams, unitRecord, first)
 	-- local guild, guildRank = GetGuildInfo(unitRecord.id);
 	local guildName, guildRankName, guildRankIndex, realm = GetGuildInfo(unitRecord.id);
 	if (guildName) then
-		local playerGuildName = GetGuildInfo("player");
-		local guildColor = (guildName == playerGuildName and CreateColor(unpack(cfg.colorSameGuild)) or cfg.colorGuildByReaction and unitRecord.reactionColor or CreateColor(unpack(cfg.colorGuild)));
-		local text = guildColor:WrapTextInColorCode(format("<%s>", guildName));
-		if (cfg.showGuildRank and guildRankName) then
-			if (cfg.guildRankFormat == "title") then
-				text = text .. TT_COLOR.text.guildRank:WrapTextInColorCode(format(" %s", guildRankName));
-			elseif (cfg.guildRankFormat == "both") then
-				text = text .. TT_COLOR.text.guildRank:WrapTextInColorCode(format(" %s (%s)", guildRankName, guildRankIndex));
-			elseif (cfg.guildRankFormat == "level") then
-				text = text .. TT_COLOR.text.guildRank:WrapTextInColorCode(format(" %s", guildRankIndex));
+		if (cfg.showGuild) then -- show guild
+			local playerGuildName = GetGuildInfo("player");
+			local guildColor = (guildName == playerGuildName and CreateColor(unpack(cfg.colorSameGuild)) or cfg.colorGuildByReaction and unitRecord.reactionColor or CreateColor(unpack(cfg.colorGuild)));
+			local text = guildColor:WrapTextInColorCode(format("<%s>", guildName));
+			if (cfg.showGuildRank and guildRankName) then
+				if (cfg.guildRankFormat == "title") then
+					text = text .. TT_COLOR.text.guildRank:WrapTextInColorCode(format(" %s", guildRankName));
+				elseif (cfg.guildRankFormat == "both") then
+					text = text .. TT_COLOR.text.guildRank:WrapTextInColorCode(format(" %s (%s)", guildRankName, guildRankIndex));
+				elseif (cfg.guildRankFormat == "level") then
+					text = text .. TT_COLOR.text.guildRank:WrapTextInColorCode(format(" %s", guildRankIndex));
+				end
 			end
-		end
-		currentDisplayParams.mergeLevelLineWithGuildName = false;
-		if (LibFroznFunctions.isWoWFlavor.ClassicEra) then -- no separate line for guild name in classic era. merge with reaction (only color blind mode) or level line.
-			if (unitRecord.isColorBlind) then
-				GameTooltipTextLeft2:SetText(text .. "\n" .. unitRecord.reactionTextInColorBlindModeForClassicEra);
+			currentDisplayParams.mergeLevelLineWithGuildName = false;
+			if (LibFroznFunctions.isWoWFlavor.ClassicEra) then -- no separate line for guild name in classic era. merge with reaction (only color blind mode) or level line.
+				if (unitRecord.isColorBlind) then
+					GameTooltipTextLeft2:SetText(text .. "\n" .. unitRecord.reactionTextInColorBlindModeForClassicEra);
+				else
+					GameTooltipTextLeft2:SetText(text);
+					currentDisplayParams.mergeLevelLineWithGuildName = true;
+				end
 			else
 				GameTooltipTextLeft2:SetText(text);
-				currentDisplayParams.mergeLevelLineWithGuildName = true;
+				lineLevel.Index = (lineLevel.Index + 1);
 			end
-		else
-			GameTooltipTextLeft2:SetText(text);
-			lineLevel.Index = (lineLevel.Index + 1);
+		else -- don't show guild
+			if (not LibFroznFunctions.isWoWFlavor.ClassicEra) then -- no separate line for guild name in classic era
+				GameTooltipTextLeft2:SetText(nil);
+				lineLevel.Index = (lineLevel.Index + 1);
+			end
 		end
 	end
 end
@@ -336,7 +343,7 @@ function ttStyle:GeneratePetLines(currentDisplayParams, unitRecord, first)
 	lineName:Push(unitRecord.nameColor:WrapTextInColorCode(unitRecord.name));
 	lineLevel:Push(" ");
 	local petType = UnitBattlePetType(unitRecord.id) or 5;
-	lineLevel:Push(CreateColor(unpack(cfg.colorRace)):WrapTextInColorCode(_G["BATTLE_PET_NAME_"..petType]));
+	lineLevel:Push(CreateColor(unpack(cfg.colorRace)):WrapTextInColorCode(_G["BATTLE_PET_NAME_"..petType] or TT_Unknown));
 
 	if (unitRecord.isWildBattlePet) then
 		local race = UnitCreatureFamily(unitRecord.id) or UnitCreatureType(unitRecord.id);
@@ -389,7 +396,7 @@ end
 function ttStyle:ModifyUnitTooltip(tip, currentDisplayParams, unitRecord, first)
 	-- obtain unit properties
 	unitRecord.reactionColor = CreateColor(unpack(cfg["colorReactText" .. unitRecord.reactionIndex]));
-	unitRecord.nameColor = (cfg.colorNameByReaction and unitRecord.reactionColor) or CreateColor(unpack(cfg.colorName));
+	unitRecord.nameColor = ((not cfg.enableColorName) and CreateColor(GameTooltipTextLeft1:GetTextColor())) or (cfg.colorNameByReaction and unitRecord.reactionColor) or CreateColor(unpack(cfg.colorName));
 
 	-- this is the line index where the level and unit type info is
 	lineLevel.Index = 2 + (unitRecord.isColorBlind and UnitIsVisible(unitRecord.id) and 1 or 0);

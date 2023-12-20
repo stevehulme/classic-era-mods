@@ -23,6 +23,7 @@ local collection = {
 	
 	list = { }, -- [index] = { } - currencies and headers from the blizard frame
 	cache = { }, -- [id] = { } - all currencies
+	namecache = { }, -- [name] = [id] - all currencies
 	
 	filter = {
 		expanded = { },
@@ -161,11 +162,10 @@ end
 
 function ArkInventory.Collection.Currency.GetByName( name )
 	if type( name ) == "string" and name ~= "" then
-		for _, obj in ArkInventory.Collection.Currency.Iterate( ) do
-			if obj.name == name then
-				return obj.id, obj
-			end
-		end
+		local obj = ArkInventory.Collection.Currency.GetByID( collection.namecache[name] )
+		if obj then
+			return obj.id, obj
+		end 
 	end
 end
 
@@ -221,6 +221,7 @@ local function ScanBase( id )
 	end
 	
 	local cache = collection.cache
+	local namecache = collection.namecache
 	
 	if not cache[id] then
 		
@@ -236,10 +237,18 @@ local function ScanBase( id )
 			-- /dump C_CurrencyInfo.GetBasicCurrencyInfo( 1220 ) order resources (no limits)
 			-- /dump GetCurrencyInfo( 1314 ) order resources (no limits)
 				
+				local name = info.name
+				
 				cache[id] = info
 				
 				cache[id].id = id
 				cache[id].link = ArkInventory.CrossClient.GetCurrencyLink( id, 0 )
+				
+				if namecache[name] then
+					ArkInventory.OutputWarning( "duplicate currency name [", name, "] [", id, "=", namecache[name], "]" )
+				else
+					namecache[name] = id
+				end
 				
 				collection.numTotal = collection.numTotal + 1
 				
@@ -249,15 +258,23 @@ local function ScanBase( id )
 			
 		else
 			
+			local name = string.format( "Header %s", math.abs( id ) )
+			
 			cache[id] = {
 				id = id,
 				link = "",
-				name = string.format( "Header %s", math.abs( id ) ),
+				name = name,
 				iconFileID = "",
 				maxWeeklyQuantity = 0,
 				maxQuantity = 0,
 				quality = 0,
 			}
+			
+			if namecache[name] then
+				ArkInventory.OutputWarning( "duplicate currency name [", name, "] [", id, "=", namecache[name], "]" )
+			else
+				namecache[name] = id
+			end
 			
 		end
 		
@@ -480,7 +497,7 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE_BUCKET( events )
 	
 	if ArkInventory.Global.Mode.Combat then
 		-- set to scan when leaving combat
-		ArkInventory.Global.LeaveCombatRun[loc_id] = true
+		ArkInventory.Global.ScanAfterCombat[loc_id] = true
 		return
 	end
 	
@@ -491,6 +508,12 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE_BUCKET( events )
 	
 	if TokenFrame:IsVisible( ) then
 		--ArkInventory.Output( "IGNORED (CURRENCY FRAME IS OPEN)" )
+		return
+	end
+	
+	if IsMounted( ) then
+		-- set to scan after dismounting
+		ArkInventory.Global.ScanAfterDismount[loc_id] = true
 		return
 	end
 	

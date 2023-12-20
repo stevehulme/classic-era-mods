@@ -48,6 +48,7 @@ local _DoYell
 --Channel types
 _QuestieComms.QC_WRITE_ALLGUILD = "GUILD"
 _QuestieComms.QC_WRITE_ALLGROUP = "PARTY"
+_QuestieComms.QC_WRITE_ALLINSTANCE = "INSTANCE_CHAT"
 _QuestieComms.QC_WRITE_ALLRAID = "RAID"
 _QuestieComms.QC_WRITE_WHISPER = "WHISPER"
 _QuestieComms.QC_WRITE_CHANNEL = "CHANNEL"
@@ -173,7 +174,7 @@ function QuestieComms:Initialize()
     Questie:RegisterMessage("QC_ID_REQUEST_FULL_QUESTLIST", _QuestieComms.RequestQuestLog);
 
     -- Part of yellcomms, removing
-    -- if not Questie.db.global.disableYellComms then
+    -- if not Questie.db.profile.disableYellComms then
     --     C_Timer.NewTicker(60, QuestieComms.SortRemotePlayers) -- periodically check for old players and remove them.
     -- end
 
@@ -199,6 +200,8 @@ function _QuestieComms:BroadcastQuestUpdate(questId) -- broadcast quest update t
             questPacket.data.priority = "NORMAL";
             if partyType == "raid" then
                 questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLRAID
+            elseif partyType == "instance" then
+                questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLINSTANCE
             else
                 questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLGROUP
             end
@@ -223,6 +226,8 @@ function _QuestieComms:BroadcastQuestRemove(questId) -- broadcast quest update t
         questPacket.data.priority = "ALERT";
         if partyType == "raid" then
             questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLRAID;
+        elseif partyType == "instance" then
+            questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLINSTANCE
         else
             questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLGROUP;
         end
@@ -247,7 +252,7 @@ end
 
 
 function QuestieComms:PopulateQuestDataPacketV2_noclass_renameme(questId, quest, offset)
-    local questObject = QuestieDB:GetQuest(questId);
+    local questObject = QuestieDB.GetQuest(questId);
 
     local count = 0
 
@@ -278,7 +283,7 @@ function QuestieComms:PopulateQuestDataPacketV2_noclass_renameme(questId, quest,
 end
 
 function QuestieComms:PopulateQuestDataPacketV2(questId, quest, offset)
-    local questObject = QuestieDB:GetQuest(questId);
+    local questObject = QuestieDB.GetQuest(questId);
 
     local count = 0
 
@@ -464,7 +469,7 @@ local _loadupTime_removeme = GetTime() -- this will be removed in 6.0.1 or 6.1, 
 -- yelling quests on login. Not enough time to make and test a proper fix
 
 function QuestieComms:YellProgress(questId)
-    if Questie.db.global.disableYellComms or badYellLocations[C_Map.GetBestMapForUnit("player")] or QuestiePlayer.numberOfGroupMembers > 4 or GetTime() - _loadupTime_removeme < 8 then
+    if Questie.db.profile.disableYellComms or badYellLocations[C_Map.GetBestMapForUnit("player")] or QuestiePlayer.numberOfGroupMembers > 4 or GetTime() - _loadupTime_removeme < 8 then
         return
     end
     if not QuestieComms._yellWaitingQuests[questId] then
@@ -519,7 +524,7 @@ function _QuestieComms:BroadcastQuestLog(eventName, sendMode, targetPlayer) -- b
         for questId, data in pairs(QuestLogCache.questLog_DO_NOT_MODIFY) do -- DO NOT MODIFY THE RETURNED TABLE
             if (not QuestieDB.QuestPointers[questId]) then
                 if not Questie._sessionWarnings[questId] then
-                    Questie:Error(l10n("The quest %s is missing from Questie's database, Please report this on GitHub or Discord!", tostring(questId)))
+                    if not Questie.IsSoD then Questie:Error(l10n("The quest %s is missing from Questie's database. Please report this on GitHub or Discord!", tostring(questId))) end
                     Questie._sessionWarnings[questId] = true
                 end
             else
@@ -597,6 +602,9 @@ function _QuestieComms:BroadcastQuestLog(eventName, sendMode, targetPlayer) -- b
                             if partyType == "raid" then
                                 questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLRAID
                                 questPacket.data.priority = "BULK"
+                            elseif partyType == "instance" then
+                                questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLINSTANCE
+                                questPacket.data.priority = "BULK" -- in case of battlegrounds
                             else
                                 questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLGROUP
                                 questPacket.data.priority = "NORMAL"
@@ -632,7 +640,7 @@ function _QuestieComms:BroadcastQuestLogV2(eventName, sendMode, targetPlayer) --
         for questId, data in pairs(QuestLogCache.questLog_DO_NOT_MODIFY) do -- DO NOT MODIFY THE RETURNED TABLE
             if (not QuestieDB.QuestPointers[questId]) then
                 if not Questie._sessionWarnings[questId] then
-                    Questie:Error(l10n("The quest %s is missing from Questie's database, Please report this on GitHub or Discord!", tostring(questId)))
+                    if not Questie.IsSoD then Questie:Error(l10n("The quest %s is missing from Questie's database. Please report this on GitHub or Discord!", tostring(questId))) end
                     Questie._sessionWarnings[questId] = true
                 end
             else
@@ -715,6 +723,9 @@ function _QuestieComms:BroadcastQuestLogV2(eventName, sendMode, targetPlayer) --
                             if partyType == "raid" then
                                 questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLRAID
                                 questPacket.data.priority = "BULK"
+                            elseif partyType == "instance" then
+                                questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLINSTANCE
+                                questPacket.data.priority = "BULK" -- in case of battlegrounds
                             else
                                 questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLGROUP
                                 questPacket.data.priority = "NORMAL"
@@ -742,12 +753,13 @@ function _QuestieComms:RequestQuestLog(eventName) -- broadcast quest update to g
         --Do we really need to make this?
         local questPacket = _QuestieComms:CreatePacket(_QuestieComms.QC_ID_REQUEST_FULL_QUESTLIST);
 
+        questPacket.data.priority = "NORMAL";
         if partyType == "raid" then
             questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLRAID;
-            questPacket.data.priority = "NORMAL";
+        elseif partyType == "instance" then
+            questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLINSTANCE
         else
             questPacket.data.writeMode = _QuestieComms.QC_WRITE_ALLGROUP;
-            questPacket.data.priority = "NORMAL";
         end
         questPacket:write();
     end
@@ -756,7 +768,7 @@ end
 ---@param questId number
 ---@return QuestPacket
 function QuestieComms:CreateQuestDataPacket(questId)
-    local questObject = QuestieDB:GetQuest(questId);
+    local questObject = QuestieDB.GetQuest(questId);
 
     ---@class QuestPacket
     local quest = {
@@ -929,7 +941,7 @@ _QuestieComms.packets = {
         end,
         read = function(self)
             Questie:Debug(Questie.DEBUG_INFO, "[QuestieComms] Received: QC_ID_YELL_PROGRESS")
-            if not Questie.db.global.disableYellComms and not badYellLocations[C_Map.GetBestMapForUnit("player")] then
+            if not Questie.db.profile.disableYellComms and not badYellLocations[C_Map.GetBestMapForUnit("player")] then
                 QuestieComms.remotePlayerTimes[self.playerName] = GetTime()
                 QuestieComms:InsertQuestDataPacketV2(self[1], self.playerName, 1, true)
                 QuestieComms:SortRemotePlayers()

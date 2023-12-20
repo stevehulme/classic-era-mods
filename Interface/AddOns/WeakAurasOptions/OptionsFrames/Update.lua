@@ -314,10 +314,11 @@ local function BuildUidMap(data, children, type)
     --- @type table<uid, UidMapData>
     map = {
     },
-    type = type -- Either old or new, only used for error checking
+    type = type, -- Either old or new, only used for error checking
+    root = data.uid,
+    totalCount = #children + 1,
+    idToUid = {}
   }
-  uidMap.root = data.uid
-  uidMap.totalCount = #children + 1
 
   -- Build helper map from id to uid
   local idToUid = {}
@@ -1291,7 +1292,7 @@ local function AddAuraList(container, uidMap, list, expandText)
 end
 
 local methods = {
-  Open = function(self, data, children, target, sender, callbackFunc)
+  Open = function(self, data, children, target, linkedAuras, sender, callbackFunc)
     if(self.optionsWindow.window == "importexport") then
       self.optionsWindow.importexport:Close();
     elseif(self.optionsWindow.window == "texture") then
@@ -1308,6 +1309,7 @@ local methods = {
       data = data,
       children = children or {},
       target = target,
+      linkedAuras = linkedAuras,
       sender = sender
     }
     self.userChoices = {
@@ -1317,6 +1319,30 @@ local methods = {
 
     self:ReleaseChildren()
     self:AddBasicInformationWidgets(data, sender)
+
+    do
+      local highestVersion = data.internalVersion or 0
+      if children then
+        for _, child in ipairs(children) do
+          highestVersion = max(highestVersion, child.internalVersion or 0)
+        end
+      end
+
+      if (highestVersion > WeakAuras.InternalVersion()) then
+        local highestVersionWarning = AceGUI:Create("Label")
+        highestVersionWarning:SetFontObject(GameFontHighlight)
+        highestVersionWarning:SetFullWidth(true)
+        highestVersionWarning:SetText(L["This aura was created with a newer version of WeakAuras.\nUpgrade your version of WeakAuras or wait for next release before installing this aura."])
+        highestVersionWarning:SetColor(1, 0, 0)
+        self:AddChild(highestVersionWarning)
+        self.importButton:Hide()
+        self.viewCodeButton:Hide()
+        self:DoLayout()
+        return
+      else
+        self.importButton:Show()
+      end
+    end
 
     local matchInfoResult = AceGUI:Create("Label")
     matchInfoResult:SetFontObject(GameFontHighlight)
@@ -1432,22 +1458,22 @@ local methods = {
       self:AddChild(scamCheckText)
     end
 
-    local highestVersion = data.internalVersion or 0
-    if children then
-      for _, child in ipairs(children) do
-        highestVersion = max(highestVersion, child.internalVersion or 0)
+    if linkedAuras and next(linkedAuras) then
+      self:AddChild(AceGUI:Create("WeakAurasSpacer"))
+
+      local linkedAurasText = AceGUI:Create("Label")
+      linkedAurasText:SetFontObject(GameFontHighlight)
+      linkedAurasText:SetFullWidth(true)
+
+      local auraIdText = table.concat(self.pendingData.linkedAuras, ", ")
+      if #self.pendingData.linkedAuras == 1 then
+        linkedAurasText:SetText(L["This aura is marked as an update to an aura '%s', but cannot be used to update that aura. This usually happens if an aura is moved out of a group."]:format(auraIdText))
+      else
+        linkedAurasText:SetText(L["This aura is marked as an update to auras '%s', but cannot be used to update them. This usually happens if an aura is moved out of a group."]:format(auraIdText))
       end
+      linkedAurasText:SetColor(1, 0, 0)
+      self:AddChild(linkedAurasText)
     end
-
-    if (highestVersion > WeakAuras.InternalVersion()) then
-      local highestVersionWarning = AceGUI:Create("Label")
-      highestVersionWarning:SetFontObject(GameFontHighlight)
-      highestVersionWarning:SetFullWidth(true)
-      highestVersionWarning:SetText(L["This aura was created with a newer version of WeakAuras.\nIt might not work correctly with your version!"])
-      highestVersionWarning:SetColor(1, 0, 0)
-      self:AddChild(highestVersionWarning)
-    end
-
 
     local currentBuild = floor(WeakAuras.BuildInfo / 10000)
     local importBuild = data.tocversion and floor(data.tocversion / 10000)

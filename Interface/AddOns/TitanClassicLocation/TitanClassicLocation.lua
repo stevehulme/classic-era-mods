@@ -208,7 +208,7 @@ function TitanPanelLocationButton_OnEvent(self, event, ...)
 	TitanPanelLocation_HandleUpdater();
 	if TitanGetVar(TITAN_LOCATION_ID, "ShowLocOnMiniMap") and MinimapBorderTop:IsShown() then
 		if not MinimapZoneTextButton:IsShown() then MinimapZoneTextButton:Show() end
-		if not MiniMapWorldMapButton:IsShown() then MiniMapWorldMapButton:Show() end
+--		if not MiniMapWorldMapButton:IsShown() then MiniMapWorldMapButton:Show() end
 	end
 end
 
@@ -493,7 +493,7 @@ function TitanPanelLocationButton_LocOnMiniMap()
 	if TitanGetVar(TITAN_LOCATION_ID, "ShowLocOnMiniMap") then
 		MinimapBorderTop:Show()
 		MinimapZoneTextButton:Show()
-		MiniMapWorldMapButton:Show()
+--		MiniMapWorldMapButton:Show()
 	else
 		MinimapBorderTop:Hide()
 		MinimapZoneTextButton:Hide()

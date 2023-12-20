@@ -5,12 +5,6 @@ t.toolbar = CreateFrame("Frame",nil,t.main)
 
 t.init:Register("toolbar")
 
-local function propagateKeyboardInput(self,state)
-    if not InCombatLockdown() then
-        self:SetPropagateKeyboardInput(state)
-    end
-end
-
 function t.toolbar:Init()
     t.toolbar:SetPoint("TOPLEFT",6,-6)
     t.toolbar:SetPoint("TOPRIGHT",-6,-6)
@@ -39,49 +33,6 @@ function t.toolbar:Init()
     -- PageNumber in middle
     t.toolbar.pageNumber = t.toolbar:CreateFontString(nil,"ARTWORK","GameFontHighlight")
     t.toolbar.pageNumber:SetPoint("CENTER",t.toolbar,"CENTER",25-13,0)
-
-    -- rather than put TinyPad in UISpecialFrames, attaching esc functionality to close button
-    t.toolbar.closeButton:SetScript("OnKeyDown",function(self,key)
-        -- if key is ESC (or whatever remapped to) and in default layout, then toggle(hide) window
-        if key==GetBindingKey("TOGGLEGAMEMENU") or InCombatLockdown() then
-            if t.layout.currentLayout=="bookmarks" and t.bookmarks.titleEditBox:HasFocus() then
-                t.bookmarks:ShowAddRemoveButton() -- special case, don't close bookmarks, just return to add/remove button
-                propagateKeyboardInput(self,false)
-                return
-            elseif t.layout.currentLayout~="default" and (not t.settings.saved.PinBookmarks or t.layout.currentLayout~="bookmarks") then
-                t.layout:Show("default")
-                propagateKeyboardInput(self,false)
-                return
-            elseif not t.settings.saved.Lock then
-                TinyPad:Toggle()
-                propagateKeyboardInput(self,false)
-                return
-            end
-        end
-
-        if (IsControlKeyDown() and t.settings.saved.AllowCtrlKeys) or InCombatLockdown() then
-            if key=="Z" then
-                t.toolbar:UndoButtonOnClick()
-                propagateKeyboardInput(self,false)
-                return
-            elseif key=="Y" then
-                t.toolbar:RedoButtonOnClick()
-                propagateKeyboardInput(self,false)
-                return
-            elseif key=="F" then
-                t.toolbar:SearchButtonOnClick()
-                propagateKeyboardInput(self,false)
-                return
-            elseif key=="N" then
-                t.toolbar:NewPageButtonOnClick()
-                propagateKeyboardInput(self,false)
-                return
-            end
-        end
-
-        propagateKeyboardInput(self,true)
-    end)
-
 end
 
 function t.toolbar:Resize(width,height)

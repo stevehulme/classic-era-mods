@@ -20,6 +20,8 @@ local QuestiePlayer = QuestieLoader:ImportModule("QuestiePlayer")
 local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
 ---@type QuestieMap
 local QuestieMap = QuestieLoader:ImportModule("QuestieMap")
+---@type QuestieCoords
+local QuestieCoords = QuestieLoader:ImportModule("QuestieCoords")
 ---@type ZoneDB
 local ZoneDB = QuestieLoader:ImportModule("ZoneDB")
 ---@type l10n
@@ -29,8 +31,8 @@ local tinsert = table.insert
 
 local objectiveFlashTicker
 local zoneCache = {}
-local questProximityTimer = nil
-local questZoneProximityTimer = nil
+local questProximityTimer
+local questZoneProximityTimer
 local bindTruthTable = {
     ['left'] = function(button)
         return "LeftButton" == button
@@ -61,7 +63,7 @@ local bindTruthTable = {
 
 local _QuestLogScrollBar = QuestLogListScrollFrame.ScrollBar or QuestLogListScrollFrameScrollBar
 
----@param quest table The table provided by QuestieDB:GetQuest(questId)
+---@param quest table The table provided by QuestieDB.GetQuest(questId)
 function TrackerUtils:ShowQuestLog(quest)
     -- Priority order first check if addon exist otherwise default to original
     local questFrame = QuestLogExFrame or ClassicQuestLog or QuestLogFrame
@@ -104,7 +106,7 @@ function TrackerUtils:SetTomTomTarget(title, zone, x, y)
     end
 end
 
----@param objective table The table provided by QuestieDB:GetQuest(questId).Objectives[objective]
+---@param objective table The table provided by QuestieDB.GetQuest(questId).Objectives[objective]
 function TrackerUtils:ShowObjectiveOnMap(objective)
     local spawn, zone = QuestieMap:GetNearestSpawn(objective)
     if spawn then
@@ -115,7 +117,7 @@ function TrackerUtils:ShowObjectiveOnMap(objective)
     end
 end
 
----@param quest table The table provided by QuestieDB:GetQuest(questId)
+---@param quest table The table provided by QuestieDB.GetQuest(questId)
 function TrackerUtils:ShowFinisherOnMap(quest)
     local spawn, zone = QuestieMap:GetNearestQuestSpawn(quest)
     if spawn then
@@ -126,7 +128,7 @@ function TrackerUtils:ShowFinisherOnMap(quest)
     end
 end
 
----@param objective table The table provided by QuestieDB:GetQuest(questId).Objectives[objective]
+---@param objective table The table provided by QuestieDB.GetQuest(questId).Objectives[objective]
 function TrackerUtils:FlashObjective(objective)
     if next(objective.AlreadySpawned) then
         local toFlash = {}
@@ -211,7 +213,7 @@ function TrackerUtils:FlashObjective(objective)
     end
 end
 
----@param quest table The table provided by QuestieDB:GetQuest(questId)
+---@param quest table The table provided by QuestieDB.GetQuest(questId)
 function TrackerUtils:FlashFinisher(quest)
     local toFlash = {}
     -- ugly code
@@ -313,18 +315,12 @@ end
 ---@return string|nil completionText Quest Completion text string or nil
 function TrackerUtils:GetCompletionText(quest)
     local questIndex = GetQuestLogIndexByID(quest.Id)
-    local completionText
-
-    if Questie.IsWotlk then
-        completionText = GetQuestLogCompletionText(questIndex)
-    else
-        completionText = quest.Description[1]:gsub("%.", "")
-    end
+    local completionText = GetQuestLogCompletionText(questIndex)
 
     if completionText then
         return completionText
     else
-        return nil
+        return quest.Description[1]:gsub("%.", "")
     end
 end
 
@@ -335,12 +331,18 @@ local function GetZoneNameByIDFallback(zoneId)
         return zoneCache[zoneId]
     end
 
+    if zoneId <= 0 or type(zoneId) ~= "number" then
+        return "Unknown Zone"
+    end
+
     for _, zone in pairs(l10n.zoneLookup) do
-        if zone and type(zoneId) == "number" and zoneId > 0 and (l10n.zoneLookup[zone][zoneId]) == "string" then
-            zoneCache[zoneId] = l10n.zoneLookup[zone][zoneId]
+        if zone[zoneId] then
+            zoneCache[zoneId] = zone[zoneId]
             return zoneCache[zoneId]
         end
     end
+
+    Questie:Debug(Questie.DEBUG_CRITICAL, "[GetZoneNameByIDFallback]: Unable to find a zone name for zoneId", zoneId)
 
     return "Unknown Zone"
 end
@@ -382,7 +384,7 @@ function TrackerUtils:UnFocus()
         return
     end
     for questId in pairs(QuestiePlayer.currentQuestlog) do
-        local quest = QuestieDB:GetQuest(questId)
+        local quest = QuestieDB.GetQuest(questId)
 
         if quest then
             quest.FadeIcons = nil
@@ -430,7 +432,7 @@ function TrackerUtils:FocusObjective(questId, objectiveIndex)
 
     Questie.db.char.TrackerFocus = tostring(questId) .. " " .. tostring(objectiveIndex)
     for questLogQuestId in pairs(QuestiePlayer.currentQuestlog) do
-        local quest = QuestieDB:GetQuest(questLogQuestId)
+        local quest = QuestieDB.GetQuest(questLogQuestId)
         if quest and next(quest.Objectives) then
             if questLogQuestId == questId then
                 quest.HideIcons = nil
@@ -468,7 +470,7 @@ function TrackerUtils:FocusQuest(questId)
 
     Questie.db.char.TrackerFocus = questId
     for questLogQuestId in pairs(QuestiePlayer.currentQuestlog) do
-        local quest = QuestieDB:GetQuest(questLogQuestId)
+        local quest = QuestieDB.GetQuest(questLogQuestId)
         if quest then
             if questLogQuestId == questId then
                 quest.HideIcons = nil
@@ -480,26 +482,15 @@ function TrackerUtils:FocusQuest(questId)
     end
 end
 
----@param zoneOrSort string The name of the Zone
-function TrackerUtils:ReportErrorMessage(zoneOrSort)
-    Questie:Error("SortID: |cffffbf00" .. zoneOrSort .. "|r was not found in the Database. Please file a bugreport at:")
-    Questie:Error("|cff00bfffhttps://github.com/Questie/Questie/issues|r")
-end
-
----@return table|nil position Retuns Players current X/Y coordinates or nil if a Players postion can't be determined
+---@return table|nil position Returns Players current X/Y coordinates or nil if a Players postion can't be determined
 local function _GetWorldPlayerPosition()
     -- Turns coords into 'world' coords so it can be compared with any coords in another zone
-    local uiMapId = C_Map.GetBestMapForUnit("player")
-    if (not uiMapId) then
-        return nil
-    end
-
-    local mapPosition = C_Map.GetPlayerMapPosition(uiMapId, "player")
+    local mapPosition, mapID = QuestieCoords.GetPlayerMapPosition()
     if (not mapPosition) or (not mapPosition.x) then
         return nil
     end
 
-    local worldPosition = select(2, C_Map.GetWorldPosFromMapPos(uiMapId, mapPosition))
+    local worldPosition = select(2, C_Map.GetWorldPosFromMapPos(mapID, mapPosition))
     local position = {
         x = worldPosition.x,
         y = worldPosition.y
@@ -528,7 +519,7 @@ local function _GetDistanceToClosestObjective(questId)
     end
 
     local coordinates = {}
-    local quest = QuestieDB:GetQuest(questId)
+    local quest = QuestieDB.GetQuest(questId)
 
     if (not quest) then
         return nil
@@ -590,10 +581,10 @@ local function _GetContinent(uiMapId)
     end
 end
 
-local function _GetZoneName(zoneOrSort)
+local function _GetZoneName(zoneOrSort, questId)
     if not zoneOrSort then return end
     local zoneName
-    local sortObj = Questie.db.global.trackerSortObjectives
+    local sortObj = Questie.db.profile.trackerSortObjectives
     if sortObj == "byZone" or sortObj == "byZonePlayerProximity" or sortObj == "byZonePlayerProximityReversed" then
         if (zoneOrSort) > 0 then
             -- Valid ZoneID
@@ -602,9 +593,9 @@ local function _GetZoneName(zoneOrSort)
             -- Valid CategoryID
             zoneName = TrackerUtils:GetCategoryNameByID(zoneOrSort)
         else
-            -- Probobly not in the Database. Assign zoneOrSort ID so Questie doesn't error
-            zoneName = tostring(zoneOrSort)
-            TrackerUtils:ReportErrorMessage(zoneName)
+            -- The quest has no explicit zone or category. Fallback to "Unknown Zone"
+            zoneName = "Unknown Zone"
+            Questie:Debug(Questie.DEBUG_CRITICAL, "[TrackerUtils:_GetZoneName] zoneOrSort", zoneOrSort, "of quest", questId, "is not in the Database!")
         end
     else
         -- Let's create custom Zones based on Sorting type.
@@ -630,7 +621,7 @@ end
 function TrackerUtils:GetSortedQuestIds()
     local sortedQuestIds = {}
     local questDetails = {}
-    local sortObj = Questie.db.global.trackerSortObjectives
+    local sortObj = Questie.db.profile.trackerSortObjectives
     -- Update quest objectives
     for questId, quest in pairs(QuestiePlayer.currentQuestlog) do
         if quest then
@@ -640,7 +631,7 @@ function TrackerUtils:GetSortedQuestIds()
             -- Create questDetails table keys and insert values
             questDetails[quest.Id] = {}
             questDetails[quest.Id].quest = quest
-            questDetails[quest.Id].zoneName = _GetZoneName(quest.zoneOrSort)
+            questDetails[quest.Id].zoneName = _GetZoneName(quest.zoneOrSort, quest.Id)
 
             if quest:IsComplete() == 1 or (not next(quest.Objectives)) then
                 questDetails[quest.Id].questCompletePercent = 1
@@ -719,8 +710,6 @@ function TrackerUtils:GetSortedQuestIds()
         end
 
         local sorter = function(a, b)
-            local qA = questDetails[a].quest
-            local qB = questDetails[b].quest
             local qAZone = questDetails[a].zoneName
             local qBZone = questDetails[b].zoneName
 
@@ -757,8 +746,6 @@ function TrackerUtils:GetSortedQuestIds()
         end
 
         local sorterReversed = function(a, b)
-            local qA = questDetails[a].quest
-            local qB = questDetails[b].quest
             local qAZone = questDetails[a].zoneName
             local qBZone = questDetails[b].zoneName
 
@@ -998,11 +985,11 @@ function TrackerUtils:ShowVoiceOverPlayButtons()
                     TrackerLinePool.SetAllPlayButtonAlpha(1)
                     TrackerFadeTicker.Fade()
 
-                    if not Questie.db.global.trackerFadeMinMaxButtons then
+                    if not Questie.db.profile.trackerFadeMinMaxButtons then
                         TrackerLinePool.SetAllExpandQuestAlpha(0)
                     end
 
-                    if not Questie.db.global.trackerFadeQuestItemButtons then
+                    if not Questie.db.profile.trackerFadeQuestItemButtons then
                         TrackerLinePool.SetAllItemButtonAlpha(0)
                     end
                 end
@@ -1015,11 +1002,11 @@ function TrackerUtils:ShowVoiceOverPlayButtons()
                     TrackerFadeTicker.Fade()
                 end
 
-                if not Questie.db.global.trackerFadeMinMaxButtons then
+                if not Questie.db.profile.trackerFadeMinMaxButtons then
                     TrackerLinePool.SetAllExpandQuestAlpha(1)
                 end
 
-                if not Questie.db.global.trackerFadeQuestItemButtons then
+                if not Questie.db.profile.trackerFadeQuestItemButtons then
                     TrackerLinePool.SetAllItemButtonAlpha(1)
                 end
             end

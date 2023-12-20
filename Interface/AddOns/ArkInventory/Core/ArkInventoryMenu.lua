@@ -3962,7 +3962,7 @@ function ArkInventory.MenuLDBTrackingReputationListHeaders( offset, level, value
 		
 		for _, entry in ArkInventory.Collection.Reputation.ListIterate( ) do
 			
-			if entry.parentIndex == nil then
+			if entry.parentIndex == nil and entry.name then
 				
 				--ArkInventory.Output2( "HEADER: ", entry )
 				

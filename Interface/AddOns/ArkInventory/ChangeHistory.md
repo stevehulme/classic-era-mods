@@ -1,11 +1,9 @@
-# 3.10.17 (02-SEP-2023)
- - changed - (retail) toc updated to 100105
- - changed - (wrath) toc updated to 30402
- - changed - (Classic) toc updated to 11404
- - fixed - https://github.com/arkayenro/arkinventory/issues/1805 - code issue with HookOpenAllBags from GearManagerDialogPopup
- - fixed - https://github.com/arkayenro/arkinventory/issues/1814 - (classic) default bank windows opening due to `PlayerInteractionFrameManager` being added to classic
- 
+# 3.10.21 (17-DEC-2023)
+ - updated - libperiodictable was updated to resolve an issue in wrath and classic
+
+
 # known issues
+ - default frames that would normally open via the PlayerInteractionFrameManager no longer open if you are in combat, you just get an addon error.  there is currently no workaround for this
  - (dragonflight) reagentbank slots are no longer readable unless the bank is open
  - recipes on vendors are showing item counts for the items they create, not the recipe
  - (dragonflight) currency tokens on the backback no longer have a fixed amount and will keep going until you run out of space, they can get messy
@@ -14,7 +12,7 @@
  - cooldowns no longer start automatically.  you can close/open the bag to get them to show (if you enable that option).  all of the cooldown events ACTIONBAR_UPDATE_COOLDOWN, BAG_UPDATE_COOLDOWN, PET_BAR_UPDATE_COOLDOWN, SPELL_UPDATE_COOLDOWN, appear to trigger off other players as well, but do not provide any indication whether the event was triggered by you or them, so cooldowns will trigger window refreshes fairly constantly when you are around large numbers of players.  even limiting it to one update per second generated too much lag, especially in massive groups.
  - chat link for a battlepet in the guild bank will not send
  - the first time you click on a hyperlink in chat it wont show the item counts
- 
+
 # to do
  - double check all categories show/hide for the right clients
  - confirm things havent broken in classic, wrath, or shadowlands
@@ -24,4 +22,3 @@
  - add action; move (bank to bag, bag to bank, bag to vault, vault to bag)
  - add actions to items
  - allow multiple actions on a category / item
- 

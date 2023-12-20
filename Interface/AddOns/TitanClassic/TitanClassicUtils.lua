@@ -1790,9 +1790,9 @@ local function TitanDisplayRightClickMenu_OnLoad(self, func)
 		-- Nasty "hack", load Blizzard_Calendar if not loaded,
 		-- for it to secure init 24 dropdown menu buttons,
 		-- to avoid action blocked by tainting
-		if not IsAddOnLoaded("Blizzard_Calendar") then
-			LoadAddOn("Blizzard_Calendar")
-		end
+--		if not IsAddOnLoaded("Blizzard_Calendar") then
+--			LoadAddOn("Blizzard_Calendar")
+--		end
 		-- not good practice but there seems to be no other way to get
 		-- the actual bar (frame parent) to the dropdown implementation
 		TitanPanel_DropMenu = self

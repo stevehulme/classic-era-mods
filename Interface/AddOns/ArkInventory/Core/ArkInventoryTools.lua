@@ -39,8 +39,9 @@ for x = 352170, 352180 do
 end
 ]]--
 
+
 --[[
-local z = "level is decreased"
+local z = "engrave"
 ArkInventory.Output( "search=", z )
 for k, v in pairs (_G) do
 	if type( k ) == "string" and type( v ) == "string" then
@@ -51,7 +52,7 @@ for k, v in pairs (_G) do
 		end
 	end
 end
---]]
+]]--
 
 function ArkInventory.Tools.dump_enum( value, path, search )
 	if type( value ) == "table" then

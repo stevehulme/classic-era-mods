@@ -8,6 +8,7 @@ local death_alert_styles = {
 	["boss_banner_enemy_icon_small"] = "boss_banner_enemy_icon_small",
 	["boss_banner_enemy_icon_medium"] = "boss_banner_enemy_icon_medium",
 	["boss_banner_enemy_icon_animated"] = "boss_banner_enemy_icon_animated",
+	["text_only"] = "text_only",
 	-- ["lf_animated"] = "lf_animated",
 }
 local LSM30 = LibStub("LibSharedMedia-3.0", true)
@@ -16,6 +17,9 @@ sounds["default_hardcore"] = 8959
 sounds["golfclap"] = "Interface\\AddOns\\Deathlog\\Sounds\\golfclap.ogg"
 sounds["hunger_games"] = "Interface\\AddOns\\Deathlog\\Sounds\\hunger_games.ogg"
 sounds["HeroFallen"] = "Interface\\AddOns\\Deathlog\\Sounds\\HeroFallen.ogg"
+sounds["Dread_Hunger"] = "Interface\\AddOns\\Deathlog\\Sounds\\Dread_Hunger.ogg"
+sounds["Arugal"] = "Interface\\AddOns\\Deathlog\\Sounds\\Arugal.ogg"
+sounds["random"] = "random"
 local fonts = LSM30:HashTable("font")
 fonts["blei00d"] = "Fonts\\blei00d.TTF"
 fonts["BreatheFire"] = "Interface\\AddOns\\Deathlog\\Fonts\\BreatheFire.ttf"
@@ -49,11 +53,27 @@ death_alert_frame.text:SetText(
 		.. " in Elywynn Forest."
 )
 
-death_alert_frame.text:SetFont("Fonts\\blei00d.TTF", 22, "")
+death_alert_frame.text:SetFont(Deathlog_L.death_alert_font, 22, "")
 death_alert_frame.text:SetTextColor(1, 1, 1, 1)
 death_alert_frame.text:SetJustifyH("CENTER")
 death_alert_frame.text:SetParent(death_alert_frame)
 death_alert_frame.text:Show()
+
+local function PlayRandomSound()
+	local count = 0
+	for _, _ in pairs(sounds) do
+		count = count + 1
+	end
+	local randomIndex = math.random(1, count)
+
+	local count = 0
+	for _, v in pairs(sounds) do
+		count = count + 1
+		if count == randomIndex then
+			PlaySoundFile(v)
+		end
+	end
+end
 
 function Deathlog_DeathAlertFakeDeath()
 	local r = math.random(1, 100)
@@ -75,6 +95,21 @@ function Deathlog_DeathAlertFakeDeath()
 		["source_id"] = s,
 		["last_words"] = "Sample last words, help!",
 	}
+
+	-- pvp tests
+	local pvp_r = math.random(0, 3)
+	if pvp_r == 1 then
+		fake_entry["source_id"] = deathlog_encode_pvp_source("target")
+	elseif pvp_r == 2 then
+		fake_entry["source_id"] = deathlog_encode_pvp_source(deathlog_last_attack_player)
+	elseif pvp_r == 3 then
+		deathlog_refresh_last_attack_info(UnitName("target"))
+		deathlog_last_duel_to_death_player = deathlog_last_attack_player
+		fake_entry["source_id"] = deathlog_encode_pvp_source(deathlog_last_attack_player)
+		deathlog_last_duel_to_death_player = nil
+		deathlog_clear_last_attack_info()
+	end
+
 	alert_cache[UnitName("player")] = nil
 	Deathlog_DeathAlertPlay(fake_entry)
 end
@@ -89,6 +124,22 @@ function Deathlog_DeathAlertPlay(entry)
 		return
 	end
 
+	if
+		deathlog_settings[widget_name]["current_zone_filter"] ~= nil
+		and deathlog_settings[widget_name]["current_zone_filter"] == true
+	then
+		local my_current_map = C_Map.GetBestMapForUnit("player")
+		if my_current_map == nil then
+			local _, _, _, _, _, _, _, _instance_id, _, _ = GetInstanceInfo()
+			if entry["instance_id"] ~= instance_id then
+				return
+			end
+		end
+		if entry["map_id"] ~= my_current_map then
+			return
+		end
+	end
+
 	if deathlog_settings[widget_name]["guild_only"] then
 		local guildName, guildRankName, guildRankIndex = GetGuildInfo("player")
 		if entry["guild"] ~= guildName then
@@ -100,10 +151,14 @@ function Deathlog_DeathAlertPlay(entry)
 	end
 	alert_cache[entry["name"]] = 1
 
-	if deathlog_settings[widget_name]["alert_sound"] == "default_hardcore" then
-		PlaySound(8959)
-	else
-		PlaySoundFile(sounds[deathlog_settings[widget_name]["alert_sound"]])
+	if deathlog_settings[widget_name]["enable_sound"] then
+		if deathlog_settings[widget_name]["alert_sound"] == "default_hardcore" then
+			PlaySound(8959)
+		elseif deathlog_settings[widget_name]["alert_sound"] == "random" then
+			PlayRandomSound()
+		else
+			PlaySoundFile(sounds[deathlog_settings[widget_name]["alert_sound"]])
+		end
 	end
 	death_alert_frame.text:SetText("Some text")
 
@@ -155,7 +210,27 @@ function Deathlog_DeathAlertPlay(entry)
 	if entry["source_id"] == -7 then
 		msg = deathlog_settings[widget_name]["slime_message"]
 	end
-	msg = msg:gsub("%<name>", entry["name"])
+
+	local source_name_pvp = deathlog_decode_pvp_source(entry["source_id"])
+	if source_name_pvp ~= "" then
+		source_name = source_name_pvp
+	end
+
+	if source_name == "" and deathlogPredictSource then
+		source_name = deathlogPredictSource(entry["map_pos"], entry["map_id"]) or ""
+	end
+
+	local _deathlog_watchlist_icon = ""
+	if
+		deathlog_watchlist_entries
+		and deathlog_watchlist_entries[entry["name"]]
+		and deathlog_watchlist_entries[entry["name"]]["Icon"]
+	then
+		_deathlog_watchlist_icon = deathlog_watchlist_entries[entry["name"]]["Icon"] .. " "
+	end
+
+	msg = msg:gsub("%<name>", _deathlog_watchlist_icon .. entry["name"])
+
 	msg = msg:gsub("%<class>", class)
 	msg = msg:gsub("%<race>", race)
 	msg = msg:gsub("%<source>", source_name)
@@ -180,11 +255,23 @@ function Deathlog_DeathAlertPlay(entry)
 
 	death_alert_frame.text:SetText(msg)
 
+	if deathlog_settings[widget_name]["style"] == "text_only" then
+		for _, v in pairs(death_alert_frame.textures) do
+			v:Hide()
+		end
+	end
+
 	if
 		deathlog_settings[widget_name]["style"] == "boss_banner_enemy_icon_small"
 		or deathlog_settings[widget_name]["style"] == "boss_banner_enemy_icon_medium"
 	then
-		if entry["source_id"] then
+		if source_name_pvp ~= "" then
+			if string.find(source_name_pvp, "Duel to Death") then
+				death_alert_frame.textures.enemy_portrait:SetTexture("Interface\\ICONS\\inv_jewelry_trinketpvp_02")
+			else
+				death_alert_frame.textures.enemy_portrait:SetTexture("Interface\\ICONS\\Ability_warrior_challange")
+			end
+		elseif entry["source_id"] then
 			if id_to_display_id[entry["source_id"]] then
 				SetPortraitTextureFromCreatureDisplayID(
 					death_alert_frame.textures.enemy_portrait,
@@ -300,6 +387,7 @@ end
 
 local defaults = {
 	["enable"] = true,
+	["enable_sound"] = true,
 	["pos_x"] = 0,
 	["pos_y"] = 250,
 	["size_x"] = 600,
@@ -313,13 +401,13 @@ local defaults = {
 	["font_color_g"] = 1,
 	["font_color_b"] = 1,
 	["font_color_a"] = 1,
-	["message"] = "<name> the <race> <class> has been slain\nby <source> at lvl <level> in <zone>.",
-	["fall_message"] = "<name> the <race> <class> fell to\ndeath at lvl <level> in <zone>.",
-	["drown_message"] = "<name> the <race> <class> drowned\n at lvl <level> in <zone>.",
-	["slime_message"] = "<name> the <race> <class> has died from slime.\n at lvl <level> in <zone>.",
-	["lava_message"] = "<name> the <race> <class> drowned in lava.\n at lvl <level> in <zone>.",
-	["fire_message"] = "<name> the <race> <class> has died from fire.\n at lvl <level> in <zone>.",
-	["fatigue_message"] = "<name> the <race> <class> has died from fatigue.\n at lvl <level> in <zone>.",
+	["message"] = Deathlog_L.death_alert_default_message,
+	["fall_message"] = Deathlog_L.death_alert_default_fall_message,
+	["drown_message"] = Deathlog_L.death_alert_default_drown_message,
+	["slime_message"] = Deathlog_L.death_alert_default_slime_message,
+	["lava_message"] = Deathlog_L.death_alert_default_lava_message,
+	["fire_message"] = Deathlog_L.death_alert_default_fire_message,
+	["fatigue_message"] = Deathlog_L.death_alert_default_fatigue_message,
 	["min_lvl"] = 1,
 	["min_lvl_player"] = false,
 	["max_lvl"] = MAX_PLAYER_LEVEL,
@@ -328,13 +416,12 @@ local defaults = {
 	["accent_color_g"] = 1,
 	["accent_color_b"] = 1,
 	["accent_color_a"] = 1,
+	["current_zone_filter"] = false,
 	["alert_sound"] = "default_hardcore",
 }
 
 local function applyDefaults(_defaults, force)
-	if deathlog_settings[widget_name] == nil then
-		deathlog_settings[widget_name] = {}
-	end
+	deathlog_settings[widget_name] = deathlog_settings[widget_name] or {}
 	for k, v in pairs(_defaults) do
 		if deathlog_settings[widget_name][k] == nil or force then
 			deathlog_settings[widget_name][k] = v
@@ -727,6 +814,8 @@ function Deathlog_DeathAlertWidget_applySettings()
 		initializeBossBanner("enemy_icon", "animated")
 	elseif deathlog_settings[widget_name]["style"] == "lf_animated" then
 		initializeLFBanner("enemy_icon", "animated")
+	elseif deathlog_settings[widget_name]["style"] == "text_only" then
+		initializeBossBanner("enemy_icon", "medium")
 	end
 
 	death_alert_frame.text:SetFont(
@@ -770,6 +859,19 @@ options = {
 				Deathlog_DeathAlertWidget_applySettings()
 			end,
 		},
+		enable_sound = {
+			type = "toggle",
+			name = "Enable Sound",
+			desc = "Enable alert sound.",
+			order = 0,
+			get = function()
+				return deathlog_settings[widget_name]["enable_sound"]
+			end,
+			set = function()
+				deathlog_settings[widget_name]["enable_sound"] = not deathlog_settings[widget_name]["enable_sound"]
+				Deathlog_DeathAlertWidget_applySettings()
+			end,
+		},
 		guild_only_toggle = {
 			type = "toggle",
 			name = "Guild only alerts",
@@ -780,6 +882,20 @@ options = {
 			end,
 			set = function()
 				deathlog_settings[widget_name]["guild_only"] = not deathlog_settings[widget_name]["guild_only"]
+				Deathlog_DeathAlertWidget_applySettings()
+			end,
+		},
+		my_zone_only_toggle = {
+			type = "toggle",
+			name = "Current zone only alerts",
+			desc = "Only show alerts for deaths within the player's current zone.",
+			order = 1,
+			get = function()
+				return deathlog_settings[widget_name]["current_zone_filter"]
+			end,
+			set = function()
+				deathlog_settings[widget_name]["current_zone_filter"] =
+					not deathlog_settings[widget_name]["current_zone_filter"]
 				Deathlog_DeathAlertWidget_applySettings()
 			end,
 		},

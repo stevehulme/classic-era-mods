@@ -53,7 +53,7 @@ local properties = {
   },
 }
 
-WeakAuras.regionPrototype.AddProperties(properties, default);
+Private.regionPrototype.AddProperties(properties, default);
 
 local function GetProperties(data)
   return properties;
@@ -72,17 +72,23 @@ local function create(parent)
   region.duration = 0;
   region.expirationTime = math.huge;
 
-  WeakAuras.regionPrototype.create(region);
+  Private.regionPrototype.create(region);
 
   return region;
 end
 
 local function modify(parent, region, data)
-  WeakAuras.regionPrototype.modify(parent, region, data);
+  Private.regionPrototype.modify(parent, region, data);
   local text = region.text;
 
   local fontPath = SharedMedia:Fetch("font", data.font);
   text:SetFont(fontPath, data.fontSize, data.outline);
+  if not text:GetFont() and fontPath then -- workaround font not loading correctly
+    local objectName = "WeakAuras-Font-" .. data.font
+    local fontObject = _G[objectName] or CreateFont(objectName)
+    fontObject:SetFont(fontPath, data.fontSize, data.outline == "None" and "" or data.outline)
+    text:SetFontObject(fontObject)
+  end
   if not text:GetFont() then -- Font invalid, set the font but keep the setting
     text:SetFont(STANDARD_TEXT_FONT, data.fontSize, data.outline);
   end
@@ -330,19 +336,19 @@ local function modify(parent, region, data)
   region.displayText = data.displayText
   region:ConfigureTextUpdate()
   region:ConfigureSubscribers()
-  WeakAuras.regionPrototype.modifyFinish(parent, region, data);
+  Private.regionPrototype.modifyFinish(parent, region, data);
 end
 
 local function validate(data)
   Private.EnforceSubregionExists(data, "subbackground")
 end
 
-WeakAuras.RegisterRegionType("text", create, modify, default, GetProperties, validate);
+Private.RegisterRegionType("text", create, modify, default, GetProperties, validate);
 
 -- Fallback region type
 
 local function fallbackmodify(parent, region, data)
-  WeakAuras.regionPrototype.modify(parent, region, data);
+  Private.regionPrototype.modify(parent, region, data);
   local text = region.text;
 
   text:SetFont(STANDARD_TEXT_FONT, data.fontSize, data.outline and "OUTLINE" or nil);
@@ -358,7 +364,7 @@ local function fallbackmodify(parent, region, data)
 
   region.Update = function() end
 
-  WeakAuras.regionPrototype.modifyFinish(parent, region, data);
+  Private.regionPrototype.modifyFinish(parent, region, data);
 end
 
-WeakAuras.RegisterRegionType("fallback", create, fallbackmodify, default);
+Private.RegisterRegionType("fallback", create, fallbackmodify, default);

@@ -92,8 +92,8 @@ function t.editor:Init()
     t.editor.editBox:SetScript("OnTextChanged",t.editor.OnTextChanged)
     t.editor.editBox:SetScript("OnCursorChanged",t.editor.OnCursorChanged)
     t.editor.editBox:SetScript("OnHyperlinkClick",t.editor.OnHyperlinkClick)
-    t.editor.editBox:SetScript("OnKeyDown",t.editor.OnKeyDown)
     t.editor.editBox:SetScript("OnHyperlinkClick",t.editor.OnHyperlinkClick)
+    t.editor.editBox:SetScript("OnTabPressed",t.editor.OnTabPressed)
 
     -- when the text in the editbox doesn't span the whole height of the scrollframe, then it won't receive
     -- mouse events to gain focus; this click of the underlying frame will focus the editbox
@@ -118,8 +118,9 @@ function t.editor:Init()
             C_Timer.After(0,t.editor.CancelStackSplit)
         end
     end)
-    
+
     t.editor:SetCurrentPage() -- update to current page (should be last page from pages.Init)
+    t.editor:UpdateCtrlKeys() -- set up ctrl key script handlers if options set
 end
 
 function t.editor:Resize(width,height)
@@ -234,23 +235,6 @@ function t.editor:UpdateScrollBarVisibility()
     end
 end
 
--- this OnKeyDown only happens while the editbox has focus
-function t.editor:OnKeyDown(key)
-    if key=="TAB" then
-        t.editor.editBox:Insert((" "):rep(t.constants.TAB_NUM_SPACES)) -- misc\constants.lua to change the number of spaces in a tab
-    elseif IsControlKeyDown() then
-        if key=="Z" then
-            t.toolbar:UndoButtonOnClick()
-        elseif key=="Y" then
-            t.toolbar:RedoButtonOnClick()
-        elseif key=="F" then
-            t.toolbar:SearchButtonOnClick()
-        elseif key=="N" then
-            t.toolbar:NewPageButtonOnClick()
-        end
-    end
-end
-
 -- when escape pressed, close any open panels if layout is not default; otherwise clear focus
 function t.editor:OnEscapePressed()
     if t.layout.currentLayout=="default" or (t.layout.currentLayout=="bookmarks" and t.settings.saved.PinBookmarks) then
@@ -258,6 +242,10 @@ function t.editor:OnEscapePressed()
     else
         t.layout:Show("default")
     end
+end
+
+function t.editor:OnTabPressed()
+    t.editor.editBox:Insert((" "):rep(t.constants.TAB_NUM_SPACES)) -- misc\constants.lua to change the number of spaces in a tab    
 end
 
 --[[ undo/redo ]]
@@ -320,3 +308,29 @@ end
 function t.editor:OnHyperlinkClick(link,text,button)
     SetItemRef(link,text,button)
 end
+
+--[[ ctrl keys ]]
+
+function t.editor:UpdateCtrlKeys()
+    if t.settings.saved.EditorCtrlKeys then
+        t.editor.editBox:SetScript("OnKeyDown",t.editor.OnEditorKeyDown)
+    else
+        t.editor.editBox:SetScript("OnKeyDown",nil)
+    end
+end
+
+-- this OnKeyDown only happens while the editbox has focus
+function t.editor:OnEditorKeyDown(key)
+    if IsControlKeyDown() then
+        if key=="Z" then
+            t.toolbar:UndoButtonOnClick()
+        elseif key=="Y" then
+            t.toolbar:RedoButtonOnClick()
+        elseif key=="F" then
+            t.toolbar:SearchButtonOnClick()
+        elseif key=="N" then
+            t.toolbar:NewPageButtonOnClick()
+        end
+    end
+end
+

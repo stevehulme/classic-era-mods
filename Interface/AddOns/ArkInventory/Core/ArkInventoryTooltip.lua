@@ -259,7 +259,8 @@ local function helper_TooltipSetHyperlink( tooltip, h )
 		elseif osd.class == "currency" then
 			
 			if tooltip then
-				tooltip:SetCurrencyByID( osd.id, osd.amount )
+				--tooltip:SetCurrencyByID( osd.id, osd.amount )
+				ArkInventory.CrossClient.TooltipSetCurrencyByID( tooltip, osd.id, osd.amount )
 			end
 			
 		elseif osd.class == "copper" then
@@ -2036,6 +2037,16 @@ end
 
 function ArkInventory.HookTooltipSetGeneric( fn, tooltip, ... )
 	
+	if not fn then return end
+	
+	if not tooltip then return end
+	
+	-- not one of the tooltips im checking
+	if not tooltip.ARKTTD then
+		--ArkInventory.Output( "ignoring - unknown - ", tooltip:GetName( ) )
+		return
+	end
+	
 	if not tooltip:IsShown( ) then
 		
 		-- caters for the game closing the tooltip when opening the same link again.
@@ -2050,16 +2061,8 @@ function ArkInventory.HookTooltipSetGeneric( fn, tooltip, ... )
 		
 	end
 	
-	if not fn then return end
-	
 	if checkAbortItemCount( tooltip ) then return end
 	
-	
-	-- not one of the tooltips im checking
-	if not tooltip.ARKTTD then
-		--ArkInventory.Output( "ignoring - unknown - ", tooltip:GetName( ) )
-		return
-	end
 	
 	-- dont play with any of the scan tooltips (they arent hooked so should not get here)
 	if tooltip.ARKTTD.scan then
@@ -2187,16 +2190,13 @@ end
 
 function ArkInventory.HookTooltipOnUpdate( tooltip, elapsed )
 	
-	if not tooltip then return end
+	if checkAbortItemCount( tooltip ) then return end
 	
 	if not tooltip.ARKTTD or not tooltip.ARKTTD.onupdate.timer or not tooltip.ARKTTD.onupdate.fn then return end
 	tooltip.ARKTTD.onupdate.timer = tooltip.ARKTTD.onupdate.timer - elapsed
 	if tooltip.ARKTTD.onupdate.timer > 0 then return end
 	
 	tooltip.ARKTTD.onupdate.timer = ArkInventory.Const.BLIZZARD.GLOBAL.TOOLTIP.UPDATETIMER
-	
-	if checkAbortItemCount( tooltip ) then return end
-	
 	
 	if tooltip == ItemRefTooltip then
 		

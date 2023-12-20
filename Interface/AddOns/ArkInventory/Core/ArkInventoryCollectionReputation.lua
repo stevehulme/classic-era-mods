@@ -842,7 +842,7 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_REPUTATION_UPDATE_BUCKET( events )
 	if ArkInventory.Global.Mode.Combat then
 		-- set to scan when leaving combat
 		--ArkInventory.Output( "IGNORED (YOU ARE IN COMBAT - WILL SCAN WHEN OUT OF COMBAT)" )
-		ArkInventory.Global.LeaveCombatRun[loc_id] = true
+		ArkInventory.Global.ScanAfterCombat[loc_id] = true
 		return
 	end
 	

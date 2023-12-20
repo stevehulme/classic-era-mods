@@ -109,6 +109,7 @@ function t.main:Init()
                 self:SetSize(t.settings.saved.Width,t.settings.saved.Height)
             end
         end
+        t.main:UpdateEscapeFrame()
     end)
 
     t.main:SetScript("OnHide",function(self)
@@ -116,6 +117,7 @@ function t.main:Init()
             t.main.isFadedOut = true
             t.main:SetAlpha(0)
         end
+        t.main.escapeFrame:Hide()
     end)
 
     -- creates fadeout/fadein animations t.main.fadeout and t.main.fadein
@@ -133,6 +135,12 @@ function t.main:Init()
     t.main:UpdateScale()
     t.main:UpdateTransparency()
 
+    -- TinyPadEscape is added to UISpecialFrames to capture escape key to dismiss panels/window
+    t.main.escapeFrame = CreateFrame("Frame","TinyPadEscape",t.main)
+    t.main.escapeFrame:SetScript("OnHide",t.main.OnEscape)
+    tinsert(UISpecialFrames,"TinyPadEscape")
+
+    t.main:UpdateEscapeFrame()
 end
 
 function t.main:UpdateLock()
@@ -191,3 +199,28 @@ function t.main:SavePosition()
     t.settings.saved.Width = self:GetWidth()
     t.settings.saved.Height = self:GetHeight()
 end
+
+-- shows or hides the TinyPadEscape UISpecialFrame to capture escape keys
+function t.main:UpdateEscapeFrame()
+    -- if esc key should be enabled, then make the escape frame visible
+    if (t.layout.currentLayout=="bookmarks" and t.bookmarks.titleEditBox:HasFocus()) or (t.layout.currentLayout~="default" and (not t.settings.saved.PinBookmarks or t.layout.currentLayout~="bookmarks")) or (not t.settings.saved.Lock and t.main:IsVisible()) then
+        t.main.escapeFrame:Show()
+    else
+        t.main.escapeFrame:Hide()
+    end
+end
+
+-- called when the TinyPadEscape UISpecialFrame is hidden (esc key hit)
+function t.main:OnEscape()
+    if t.layout.currentLayout=="bookmarks" and t.bookmarks.titleEditBox:HasFocus() then
+        t.bookmarks:ShowAddRemoveButton() -- special case, don't close bookmarks, just return to add/remove button
+        t.main:UpdateEscapeFrame()
+    elseif t.layout.currentLayout~="default" and (not t.settings.saved.PinBookmarks or t.layout.currentLayout~="bookmarks") then
+        t.layout:Show("default")
+        t.main:UpdateEscapeFrame()
+    elseif not t.settings.saved.Lock then
+        TinyPad:Toggle()
+        t.main:UpdateEscapeFrame()
+    end
+end
+

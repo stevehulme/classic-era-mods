@@ -22,10 +22,7 @@ average_class_container:SetSize(100, 100)
 average_class_container:Show()
 average_class_container.configure_for = "map"
 
-local class_font = "Fonts\\blei00d.TTF"
-if GetLocale() == "ruRU" then
-	class_font = "Fonts\\ARIALN.TTF"
-end
+local class_font = Deathlog_L.class_font
 
 local class_tbl = deathlog_class_tbl
 local race_tbl = deathlog_race_tbl
@@ -66,6 +63,7 @@ for k, class_id in pairs(class_tbl) do
 		average_class_font_strings[class_id][v[1]]:SetJustifyH(v[3])
 		average_class_font_strings[class_id][v[1]]:SetWidth(50)
 		average_class_font_strings[class_id][v[1]]:SetTextColor(1, 1, 1, 1)
+		average_class_font_strings[class_id][v[1]]:SetWordWrap(false)
 	end
 	sep = sep - 15
 end

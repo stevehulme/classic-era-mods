@@ -41,6 +41,7 @@ local DROPDOWN_BARTEXTFORMAT = {
 -- Options -- The "y" value of a category subtable, will further increase the vertical offset position of the item
 local activePage = 1;
 local options = {};
+local option;
 
 -- General
 local ttOptionsGeneral = {
@@ -65,7 +66,8 @@ ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "DropDown", var = "nameType",
 ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "DropDown", var = "showRealm", label = "Show Unit Realm", list = { ["|cffffa0a0Do not show realm"] = "none", ["Show realm"] = "show", ["Show realm in new line"] = "showInNewLine", ["Show (*) instead"] = "asterisk" } };
 ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "DropDown", var = "showTarget", label = "Show Unit Target", list = { ["|cffffa0a0Do not show target"] = "none", ["After name"] = "afterName", ["Below name/realm"] = "belowNameRealm", ["Last line"] = "last" } };
 ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "Text", var = "targetYouText", label = "Targeting You Text", y = 16 };
-ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "Check", var = "showGuildRank", label = "Show Player Guild Rank Title", tip = "In addition to the guild name, with this option on, you will also see their guild rank by title and/or level", y = 16 };
+ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "Check", var = "showGuild", label = "Show Player Guild", tip = "This will show the guild of the player.", y = 16 };
+ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "Check", var = "showGuildRank", label = "Show Player Guild Rank Title", tip = "In addition to the guild name, with this option on, you will also see their guild rank by title and/or level", y = 8 };
 ttOptionsGeneral[#ttOptionsGeneral + 1] = { type = "DropDown", var = "guildRankFormat", label = "Format", list = { ["Title only"] = "title", ["Title + level"] = "both", ["Level only"] = "level" }, y = 8 };
 
 -- Special
@@ -99,7 +101,8 @@ local options = {
 	-- Colors
 	{
 		[0] = "Colors",
-		{ type = "Color", var = "colorName", label = "Name Color", tip = "Color of the name, when not using the option to make it the same as reaction color" },
+		{ type = "Check", var = "enableColorName", label = "Enable Coloring of Name", tip = "Turns on or off coloring names" },
+		{ type = "Color", var = "colorName", label = "Name Color", tip = "Color of the name, when not using the option to make it the same as reaction color", y = 8 },
 		{ type = "Check", var = "colorNameByReaction", label = "Color Name by Reaction", tip = "Name color will have the same color as the reaction\nNOTE: This option is overridden by class colored name for players" },
 		{ type = "Check", var = "colorNameByClass", label = "Color Player Names by Class Color", tip = "With this option on, player names are colored by their class color\nNOTE: This option overrides reaction colored name for players" },
 		
@@ -336,7 +339,12 @@ if (TipTacTalents) then
 		tttOptions[#tttOptions + 1] = { type = "Check", var = "t_showTalentIcon", label = "Show Talent Icon", tip = "This option makes the tip show the talent icon" };
 	end
 	
-	tttOptions[#tttOptions + 1] = { type = "Check", var = "t_showTalentText", label = "Show Talent Text", tip = "This option makes the tip show the talent text", y = 12 };
+	option = { type = "Check", var = "t_showTalentText", label = "Show Talent Text", tip = "This option makes the tip show the talent text", y = 12 };
+	if (LibFroznFunctions.isWoWFlavor.ClassicEra) then
+		option.tip = option.tip .. ".\nNOTE: Inspecting other players' talents isn't available in Classic Era. Only own talents (available at level 10) will be shown.";
+	end
+	tttOptions[#tttOptions + 1] = option;
+	
 	tttOptions[#tttOptions + 1] = { type = "Check", var = "t_colorTalentTextByClass", label = "Color Talent Text by Class Color", tip = "With this option on, talent text is colored by their class color" };
 	
 	if (not LibFroznFunctions.isWoWFlavor.SL) then
@@ -349,8 +357,9 @@ if (TipTacTalents) then
 	
 	tttOptions[#tttOptions + 1] = { type = "Header", label = "Average Item Level", y = 12 };
 	tttOptions[#tttOptions + 1] = { type = "Check", var = "t_showAverageItemLevel", label = "Show Average Item Level (AIL)", tip = "This option makes the tip show the average item level (AIL) of other players" };
-	tttOptions[#tttOptions + 1] = { type = "Check", var = "t_showGearScore", label = "Show TipTac's GearScore", tip = "This option makes the tip show TipTac's GearScore of other players.\nNOTE: TipTac's own implementation to simply calculate the GearScore is used here. This is the sum of all item levels weighted by performance per item level above/below base level of first tier set of current expansion, inventory type and item quality. Inventory slots for shirt, tabard and ranged are excluded." };
-	tttOptions[#tttOptions + 1] = { type = "Check", var = "t_colorAILAndGSTextByQuality", label = "Color Average Item Level and GearScore Text\nby Quality Color", tip = "With this option on, average item level and GearScore text is colored by the average quality of the items" };
+	tttOptions[#tttOptions + 1] = { type = "Check", var = "t_showGearScore", label = "Show GearScore", tip = "This option makes the tip show TipTac's GearScore of other players" };
+	tttOptions[#tttOptions + 1] = { type = "DropDown", var = "t_gearScoreAlgorithm", label = "GearScore Algorithm", list = { ["TacoTip"] = { value = 1, tip = "The de-facto standard algorithm from addon TacoTip" }, ["TipTac"] = { value = 2, tip = "TipTac's own implementation to simply calculate the GearScore is used here. This is the sum of all item levels weighted by performance per item level above/below base level of first tier set of current expansion, inventory type and item quality. Inventory slots for shirt, tabard and ranged are excluded." },}, tip = "Switch between different GearScore implementations", y = 8 };
+	tttOptions[#tttOptions + 1] = { type = "Check", var = "t_colorAILAndGSTextByQuality", label = "Color Average Item Level and GearScore Text\nby Quality Color", tip = "With this option on, average item level and GearScore text is colored by the quality", y = 12 };
 	
 	options[#options + 1] = {
 		[0] = "Talents/AIL",

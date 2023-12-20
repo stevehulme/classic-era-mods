@@ -17,26 +17,7 @@ You should have received a copy of the GNU General Public License
 along with the Deathlog AddOn. If not, see <http://www.gnu.org/licenses/>.
 --]]
 --
-local instance_tbl = {
-	{ 33, "SHADOWFANGKEEP", "Shadowfang Keep" },
-	{ 36, "DEADMINES", "Deadmines" },
-	{ 34, "STORMWINDSTOCKADES", "Stockades" },
-	{ 43, "WAILINGCAVERNS", "Wailing Caverns" },
-	{ 47, "RAZORFENKRAUL", "Razorfen Kraul" },
-	{ 48, "BLACKFATHOMDEEPS", "Blackfathom Deeps" },
-	{ 90, "GNOMEREGAN", "Gnomeregan" },
-	{ 18, "SCARLETMONASTERY", "Scarlet Monastery" },
-	{ 70, "ULDAMAN", "Uldaman" },
-	{ 109, "SUNKENTEMPLE", "Sunken Temple" },
-	{ 129, "RAZORFENDOWNS", "Razorfen Downs" },
-	{ 209, "ZULFARAK", "Zul'Farak" },
-	{ 229, "BLACKROCKSPIRE", "Blackrock Spire" },
-	{ 239, "BLACKROCKDEPTHS", "Blackrock Depths" },
-	{ 289, "SCHOLOMANCE", "Scholomance" },
-	{ 329, "STRATHOLME", "Stratholme" },
-	{ 349, "MARAUDON", "Maraudon" },
-	{ 429, "DIREMAUL", "Diremaul" },
-}
+local instance_tbl = Deathlog_L.instance_tbl
 
 local instance_container = CreateFrame("Frame")
 instance_container:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -61,10 +42,11 @@ local function createInstanceButton(path_postfix, title_text)
 
 	frame.instance_str = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	frame.instance_str:SetPoint("CENTER", frame.instance_texture, "CENTER", 0, -20)
-	frame.instance_str:SetFont("Fonts\\blei00d.TTF", 15, "OUTLINE")
+	frame.instance_str:SetFont(Deathlog_L.menu_font, 15, "OUTLINE")
 	frame.instance_str:SetTextColor(1, 1, 1, 1)
 	frame.instance_str:SetJustifyH("CENTER")
 	frame.instance_str:SetText(title_text)
+	frame.instance_str:SetWidth(180)
 	frame.instance_str:Hide()
 	return frame
 end
@@ -214,14 +196,28 @@ function instance_container.updateMenuElement(scroll_frame, current_instance_id,
 
 	instance_container.instance_buttons[17]:SetPoint(
 		"TOPLEFT",
-		instance_container.instance_buttons[14],
+		instance_container.instance_buttons[13],
 		"TOPLEFT",
 		0,
 		vert_sep
 	)
 	instance_container.instance_buttons[18]:SetPoint(
 		"TOPLEFT",
+		instance_container.instance_buttons[14],
+		"TOPLEFT",
+		0,
+		vert_sep
+	)
+	instance_container.instance_buttons[19]:SetPoint(
+		"TOPLEFT",
 		instance_container.instance_buttons[15],
+		"TOPLEFT",
+		0,
+		vert_sep
+	)
+	instance_container.instance_buttons[20]:SetPoint(
+		"TOPLEFT",
+		instance_container.instance_buttons[16],
 		"TOPLEFT",
 		0,
 		vert_sep

@@ -110,3 +110,5 @@ function t.searchbar:SearchButtonOnClick()
     end
     t.searchbar.searchBox:SetFocus()
 end
+
+

@@ -23,6 +23,7 @@ local cfg;
 local TT_DefaultConfig = {
 	showUnitTip = true,
 	showStatus = true,
+	showGuild = true,
 	showGuildRank = true,
 	guildRankFormat = "both",
 	showTargetedBy = true,
@@ -48,6 +49,7 @@ local TT_DefaultConfig = {
 	hideSpecializationAndClassText = true,
 	
 	-- colors
+	enableColorName = true,
 	colorName = { 1, 1, 1, 1 },
 	colorNameByReaction = true,
 	colorNameByClass = false,
@@ -571,7 +573,7 @@ TT_ExtendedConfig.tipsToModify = {
 		},
 		hookFnForAddOn = function(TT_CacheForFrames)
 			-- HOOK: SharedPetBattleAbilityTooltip_UpdateSize() to re-hook OnUpdate for PetJournalPrimaryAbilityTooltip and PetJournalSecondaryAbilityTooltip
-			hooksecurefunc("SharedPetBattleAbilityTooltip_UpdateSize", function(self)
+			LibFroznFunctions:HookSecureFuncIfExists("SharedPetBattleAbilityTooltip_UpdateSize", function(self)
 				-- re-hook OnUpdate for PetJournalPrimaryAbilityTooltip and PetJournalSecondaryAbilityTooltip to anchor tip to mouse position
 				if (LibFroznFunctions:ExistsInTable(self, { PetJournalPrimaryAbilityTooltip, PetJournalSecondaryAbilityTooltip })) then
 					tt:AnchorTipToMouseOnUpdate(self);
@@ -915,7 +917,7 @@ tt:RegisterEvent("PLAYER_LOGIN");
 -- toggle options
 function tt:ToggleOptions()
 	local addOnName = MOD_NAME .. "Options";
-	local loaded, reason = LoadAddOn(addOnName);
+	local loaded, reason = LibFroznFunctions:LoadAddOn(addOnName);
 	
 	if (loaded) then
 		local TipTacOptions = _G[addOnName];

@@ -1,13 +1,8 @@
-@weswigham:
-- Properly account for timeMod on aura timers.
+@Terciob:
+- Adding cast animations for 10.2.
 
 @cont1nuity:
-- BugFix on Lib Update.
-- Fixing code template for 'Options Changed' hook.
-
-@Terciob:
-- Library updates.
-- Fixing Audi Cues not playing when nameplate was off screen.
-- Fixing mouse scroll lag on Cast Colors an Names tab.
-- Adding 'Options Changed' hook for mods.
+- Adding more 10.2 units to 'forced in combat'.
+- Fixes for broken cast bars in classic.
+- Fixes for broken range checks.
 
