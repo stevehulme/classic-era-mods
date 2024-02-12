@@ -2093,6 +2093,11 @@ function TitanPrint(message, msg_type)
 			..TitanUtils_GetGreenText(" "..ver)
 			..TitanUtils_GetGoldText(L["TITAN_PANEL_VERSION_INFO"]
 			)
+		pre = pre.."\n"
+			..TitanUtils_GetRedText("WARNING: ")
+			..TitanUtils_GetGoldText("This is the last update of "..L["TITAN_PANEL"].."!")
+			..TitanUtils_GetRedText("\nPlease delete this version and upgrade to ")
+			..TitanUtils_GetGoldText("Titan Panel 8")
 	end
 
 	msg = pre..dtype..TitanUtils_GetGreenText(message)

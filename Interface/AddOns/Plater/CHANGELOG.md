@@ -1,8 +1,7 @@
-@Terciob:
-- Adding cast animations for 10.2.
-
 @cont1nuity:
-- Adding more 10.2 units to 'forced in combat'.
-- Fixes for broken cast bars in classic.
-- Fixes for broken range checks.
+- Fixing SoD nameplate aura bugs.
+- Fixing DK rune visuals not updating properly when on cooldown.
+- Adding 'isLooseTarget', 'isSoftEnemy' and 'isSoftFriend' to 'unitFrame'.
+- Adding more cast animations for 10.2.
+- 'Plater.GetHealthCutoffValue(getOnly)' now returns 'lower' and 'upper' execute range
 

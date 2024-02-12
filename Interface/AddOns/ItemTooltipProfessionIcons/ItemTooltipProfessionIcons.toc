@@ -1,9 +1,9 @@
-## Interface: 11404
+## Interface: 11501
 ## Title: ItemTooltipProfessionIcons
 ## Notes: Displays which professions and quests may use the item via the item's tooltip
 ## Author: Bytespire
 ## SavedVariables: ItemTooltipIconsConfig
-## Version: v1.3.1-Classic
+## Version: v1.3.2-Classic
 
 
 ItemProfConstants.lua

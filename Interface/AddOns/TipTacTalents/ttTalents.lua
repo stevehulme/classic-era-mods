@@ -6,11 +6,19 @@
 
 -- create addon
 local MOD_NAME = ...;
+local PARENT_MOD_NAME = "TipTac";
 local ttt = CreateFrame("Frame", MOD_NAME, nil, BackdropTemplateMixin and "BackdropTemplate");
 ttt:Hide();
 
 -- get libs
 local LibFroznFunctions = LibStub:GetLibrary("LibFroznFunctions-1.0");
+
+-- register with TipTac core addon if available
+local TipTac = _G[PARENT_MOD_NAME];
+
+if (TipTac) then
+	LibFroznFunctions:RegisterForGroupEvents(PARENT_MOD_NAME, ttt, "Talents");
+end
 
 ----------------------------------------------------------------------------------------------------
 --                                             Config                                             --
@@ -18,6 +26,8 @@ local LibFroznFunctions = LibStub:GetLibrary("LibFroznFunctions-1.0");
 
 -- config
 local cfg;
+local TT_ExtendedConfig;
+local TT_CacheForFrames;
 
 -- default config
 local TTT_DefaultConfig = {
@@ -35,7 +45,7 @@ local TTT_DefaultConfig = {
 	t_showAverageItemLevel = true,        -- show average item level (AIL)
 	t_showGearScore = false,              -- show GearScore
 	t_gearScoreAlgorithm =                -- GearScore algorithm
-		((LibFroznFunctions.isWoWFlavor.SL or LibFroznFunctions.isWoWFlavor.DF) and 2 or 1),
+		LibFroznFunctions.hasWoWFlavor.defaultGearScoreAlgorithm,
 	t_colorAILAndGSTextByQuality = true   -- color average item level and GearScore text by average quality
 };
 
@@ -45,7 +55,7 @@ local TTT_DefaultConfig = {
 
 -- text constants
 local TTT_TEXT = {
-	talentsPrefix = ((LibFroznFunctions.isWoWFlavor.SL or LibFroznFunctions.isWoWFlavor.DF) and SPECIALIZATION or TALENTS), -- MoP: Could be changed from TALENTS (Talents) to SPECIALIZATION (Specialization)
+	talentsPrefix = ((LibFroznFunctions.hasWoWFlavor.specializationAvailable) and SPECIALIZATION or TALENTS), -- MoP: Could be changed from TALENTS (Talents) to SPECIALIZATION (Specialization)
 	ailAndGSPrefix = STAT_AVERAGE_ITEM_LEVEL, -- Item Level
 	onlyGSPrefix = "GearScore",
 	loading = SEARCH_LOADING_TEXT, -- Loading...
@@ -102,6 +112,15 @@ function ttt:SetupConfig()
 	else
 		cfg = TTT_DefaultConfig;
 	end
+end
+
+----------------------------------------------------------------------------------------------------
+--                                         Element Events                                         --
+----------------------------------------------------------------------------------------------------
+
+function ttt:OnApplyConfig(_TT_CacheForFrames, _cfg, _TT_ExtendedConfig)
+	TT_CacheForFrames = _TT_CacheForFrames;
+	TT_ExtendedConfig = _TT_ExtendedConfig;
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -225,7 +244,7 @@ function TTT_UpdateTooltip(unitCacheRecord)
 				spacer = (specText:GetCount() > 0) and " " or "";
 
 				if (cfg.t_colorTalentTextByClass) then
-					local classColor = LibFroznFunctions:GetClassColor(unitCacheRecord.classID, 5);
+					local classColor = LibFroznFunctions:GetClassColor(unitCacheRecord.classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 					specText:Push(spacer .. classColor:WrapTextInColorCode(unitCacheRecord.talents.name));
 				else
 					specText:Push(spacer .. unitCacheRecord.talents.name);
@@ -307,7 +326,7 @@ function TTT_UpdateTooltip(unitCacheRecord)
 				
 				local gearScore;
 				
-				if (cfg.t_gearScoreAlgorithm == 1) then -- TacoTip's GearScore algorithm
+				if (cfg.t_gearScoreAlgorithm == LFF_GEAR_SCORE_ALGORITHM.TacoTip) then -- TacoTip's GearScore algorithm
 					gearScore = (unitCacheRecord.averageItemLevel.TacoTipGearScore > 0) and unitCacheRecord.averageItemLevel.TacoTipGearScore or "-";
 					
 					if (cfg.t_colorAILAndGSTextByQuality) then

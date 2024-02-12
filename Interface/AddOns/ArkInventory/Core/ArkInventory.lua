@@ -2938,6 +2938,8 @@ function ArkInventory.OnInitialize( )
 		{ "HEIRLOOMS_UPDATED", "EVENT_ARKINV_COLLECTION_HEIRLOOM_UPDATE", ArkInventory.Global.Location[ArkInventory.Const.Location.Heirloom].proj },
 		
 		{ "ITEM_DATA_LOAD_RESULT", "EVENT_ARKINV_ITEM_DATA_LOAD_RESULT" },
+		{ "TRADE_SKILL_ITEM_CRAFTED_RESULT", "EVENT_ARKINV_TRADE_SKILL_ITEM_CRAFTED_RESULT", ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT },
+--		{ "TRADE_SKILL_CURRENCY_REWARD_RESULT", "EVENT_ARKINV_ITEM_DATA_LOAD_RESULT" },
 		
 		{ "CURRENCY_DISPLAY_UPDATE", "EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE", ArkInventory.Global.Location[ArkInventory.Const.Location.Currency].proj },
 		{ "PLAYER_TRADE_CURRENCY", "EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE", ArkInventory.ENUM.EXPANSION.PANDARIA }, --FIX ME, check when this got added
@@ -8775,10 +8777,11 @@ function ArkInventory.Frame_Item_OnEnter( frame )
 			
 			local showSell = nil
 			
-			if( tooltipInfo.battlePetSpeciesID and tooltipInfo.battlePetSpeciesID > 0 ) then
+			if tooltipInfo.type == Enum.TooltipDataType.BattlePet then
+--			if( tooltipInfo.battlePetSpeciesID and tooltipInfo.battlePetSpeciesID > 0 ) then
 				ContainerFrameItemButton_CalculateItemTooltipAnchors( frame, GameTooltip ) -- Battle pet tooltip uses the GameTooltip's anchor
-				BattlePetToolTip_Show( tooltipInfo.battlePetSpeciesID, tooltipInfo.battlePetLevel, tooltipInfo.battlePetBreedQuality, tooltipInfo.battlePetMaxHealth, tooltipInfo.battlePetPower, tooltipInfo.battlePetSpeed, tooltipInfo.battlePetName )
-				return
+				return BattlePetToolTip_ShowLink( i.h )
+--				return BattlePetToolTip_Show( tooltipInfo.battlePetSpeciesID, tooltipInfo.battlePetLevel, tooltipInfo.battlePetBreedQuality, tooltipInfo.battlePetMaxHealth, tooltipInfo.battlePetPower, tooltipInfo.battlePetSpeed, tooltipInfo.battlePetName )
 			else
 				if BattlePetTooltip then
 					BattlePetTooltip:Hide( )
@@ -11361,9 +11364,9 @@ function ArkInventory.HookPlayerInteractionProcess( index, state, event, ... )
 			
 			if not event then
 				
-				if InCombatLockdown( ) then
-					ArkInventory.OutputWarning( "you are in combat, opening this interaction window is going to fail due to in combat restrictions" )
-				end
+--				if InCombatLockdown( ) then
+--					ArkInventory.OutputWarning( "you are in combat, opening this interaction window is going to fail due to in combat restrictions" )
+--				end
 				
 				ArkInventory.OutputDebug( "show frame [", index, "]" )
 				return ArkInventory.hooks[PlayerInteractionFrameManager].ShowFrame( nil, index )
@@ -11521,11 +11524,11 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		--ArkInventory.LoadAddOn( "Blizzard_ScrappingMachineUI" )
 		
 		
-		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) then
-			ArkInventory.LoadAddOn( "Blizzard_Professions" )
-		else
-			ArkInventory.LoadAddOn( "Blizzard_TradeSkillUI" )
-		end
+--		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) then
+--			ArkInventory.LoadAddOn( "Blizzard_Professions" )
+--		else
+--			ArkInventory.LoadAddOn( "Blizzard_TradeSkillUI" )
+--		end
 		
 	end
 	--ArkInventory.LoadAddOn( "Blizzard_AuctionHouseUI" )
@@ -11593,6 +11596,10 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		elseif ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.TBC ) then
 			ArkInventory:SecureHook( "BackpackTokenFrame_Update", ArkInventory.EVENT_ARKINV_BACKPACK_TOKEN_UPDATE )
 		end
+		
+		
+--		part of testing the professions addon being loaded up front
+--		ArkInventory:SecureHook( ScrollBoxListLinearViewMixin, "CalculateDataIndices", ArkInventory.CalculateDataIndices )
 		
 		
 		-- bag functions

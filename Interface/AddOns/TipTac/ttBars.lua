@@ -17,8 +17,8 @@ local bars = ttBars.bars;
 LibFroznFunctions:RegisterForGroupEvents(MOD_NAME, ttBars, "Bars");
 
 -- Constants
-local BAR_MARGIN_X = ((LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC)) and 5 or 7;
-local BAR_MARGIN_Y = ((LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC)) and 6 or 8;
+local BAR_MARGIN_X = 7 + LibFroznFunctions.hasWoWFlavor.barMarginAdjustment;
+local BAR_MARGIN_Y = 8 + LibFroznFunctions.hasWoWFlavor.barMarginAdjustment;
 local BAR_SPACING = 7;
 
 local TT_GTT_MINIMUM_WIDTH_FOR_BARS = 110; -- minimum width for bars, so that numbers are not out of bounds
@@ -35,7 +35,7 @@ end
 
 function HealthBarMixin:GetColor(unitRecord)
 	if (unitRecord.isPlayer) and (cfg.healthBarClassColor) then
-		local classColor = LibFroznFunctions:GetClassColor(unitRecord.classID, 5);
+		local classColor = LibFroznFunctions:GetClassColor(unitRecord.classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 		return classColor:GetRGBA();
 	else
 		return unpack(cfg.healthBarColor);

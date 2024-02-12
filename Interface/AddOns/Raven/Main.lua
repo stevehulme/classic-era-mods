@@ -34,14 +34,9 @@ local release = tonumber(v1);
 local major = tonumber(v2);
 local minor = tonumber(v3)
 
-MOD.isVanilla = (release == 1) and (major >= 4) and (minor >= 1)
-MOD.isWrath = (release == 3) and (major >= 4) and (minor >= 1)
+MOD.isVanilla = LE_EXPANSION_LEVEL_CURRENT == 0;
+MOD.isWrath = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING
 MOD.isClassic = MOD.isWrath or MOD.isVanilla
-MOD.isModernAPI = true
-
-if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then
-	MOD.isModernAPI = MOD.isClassic
-end
 
 function MOD.ExpansionIsOrAbove(exp)
 	if exp == nil then return false end --This is Vanilla
@@ -53,7 +48,6 @@ function MOD.ExpansionIsOrBelow(exp)
 	return LE_EXPANSION_LEVEL_CURRENT <= exp
 end
 
---MOD.isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC) or (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC) or (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC)
 MOD.updateOptions = false -- set this to cause the options panel to update (checked every half second)
 MOD.LocalSpellNames = {} -- must be defined in first module loaded
 local LSPELL = MOD.LocalSpellNames
@@ -164,6 +158,7 @@ local alertColors = { -- default colors for spell alerts
 }
 
 local UnitAura = UnitAura
+
 MOD.LCD = nil
 if MOD.ExpansionIsOrBelow(LE_EXPANSION_WRATH_OF_THE_LICH_KING) then
 	if C_AddOns.LoadAddOn == nil then
@@ -180,6 +175,16 @@ end
 
 local band = bit.band -- shortcut for common bit logic operator
 
+-- Functions for reading Auras
+function MOD:GetAuraData(unitToken, index, filter)
+	if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex and AuraUtil.UnpackAuraData then
+		return AuraUtil.UnpackAuraData(C_UnitAuras.GetAuraDataByIndex(unitToken, index, filter))
+	else
+		return UnitAura(unitToken, index, filter)
+	end
+end
+
+
 -- UnitAura no longer works with spell names in xxBfAxx so this function searches for them by scanning
 -- While not the most efficient way to do this, it is generally used with a filter that should limit the depth of the search
 -- This is only called for combat log events related to spell auras
@@ -187,7 +192,7 @@ function MOD.UnitAuraSpellName(unit, spellName, filter)
 	local name, icon, count, btype, duration, expire, caster, isStealable, nameplateShowSelf, spellID, apply, boss
 	if type(spellName) == "string" then -- sanity check only being called with a spell name
 		for i = 1, 100 do
-			name, icon, count, btype, duration, expire, caster, isStealable, nameplateShowSelf, spellID, apply, boss = UnitAura(unit, i, nil, filter)
+			name, icon, count, btype, duration, expire, caster, isStealable, nameplateShowSelf, spellID, apply, boss = MOD:GetAuraData(unit, i, filter)
 			if name == spellName then break end
 		end
 	end
@@ -253,7 +258,7 @@ local function HideShow(key, frame, check, options)
 		if hide then
 			BuffFrame:Hide();
 
-			if MOD.isModernAPI and MOD.ExpansionIsOrAbove(LE_EXPANSION_DRAGONFLIGHT) then
+			if MOD.ExpansionIsOrAbove(LE_EXPANSION_DRAGONFLIGHT) then
 				DebuffFrame:Hide();
 			end
 
@@ -265,7 +270,7 @@ local function HideShow(key, frame, check, options)
 			hiding[key] = true;
 		elseif show then
 			BuffFrame:Show();
-			if MOD.isModernAPI and MOD.ExpansionIsOrAbove(LE_EXPANSION_DRAGONFLIGHT) then
+			if MOD.ExpansionIsOrAbove(LE_EXPANSION_DRAGONFLIGHT) then
 				DebuffFrame:Show();
 			end
 
@@ -453,7 +458,7 @@ function MOD:AddTrackers(unit)
 		trackerMarker = trackerMarker + 1 -- unique tag for this pass
 		local i = 1
 		repeat
-			name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply = UnitAura(unit, i, "HELPFUL|PLAYER")
+			name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply = MOD:GetAuraData(unit, i, "HELPFUL|PLAYER")
 			if name and caster == "player" then
 				AddTracker(dstGUID, dstName, true, name, icon, count, btype, duration, expire, caster, isStealable, spellID, nil, apply, trackerMarker)
 				MOD.SetDuration(name, spellID, duration)
@@ -463,7 +468,7 @@ function MOD:AddTrackers(unit)
 		until not name
 		i = 1
 		repeat
-			name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply, boss = UnitAura(unit, i, "HARMFUL|PLAYER")
+			name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply, boss = MOD:GetAuraData(unit, i, "HARMFUL|PLAYER")
 			if name and caster == "player" then
 				if spellID ~= 146739 or duration ~= 0 or InCombatLockdown() then -- don't add Corruption if out-of-combat
 					AddTracker(dstGUID, dstName, false, name, icon, count, btype, duration, expire, caster, isStealable, spellID, boss, apply, trackerMarker)
@@ -1563,7 +1568,8 @@ local function GetWeaponBuffs()
 	if mh then -- add the mainhand buff, if any, to the table
 		local islot = INVSLOT_MAINHAND
 		local mhbuff
-		if MOD.isModernAPI and not MOD.isClassic then
+
+		if not MOD.isClassic then
 			mhbuff = GetWeaponBuffName(islot)
 		else
 			mhbuff = GetWeaponBuffNameOld(islot)
@@ -1592,7 +1598,8 @@ local function GetWeaponBuffs()
 	if oh then -- add the offhand buff, if any, to the table
 		local islot = INVSLOT_OFFHAND
 		local ohbuff
-		if MOD.isModernAPI and not MOD.isClassic then
+
+		if not MOD.isClassic then
 			ohbuff = GetWeaponBuffName(islot)
 		else
 			ohbuff = GetWeaponBuffNameOld(islot)
@@ -1622,7 +1629,7 @@ local function GetBuffs(unit)
 	local name, icon, count, btype, duration, expire, caster, isStealable, nameplatePersonal, spellID, apply, boss, castByPlayer, showOnNameplate
 	local i = 1
 	repeat
-		name, icon, count, btype, duration, expire, caster, isStealable, nameplatePersonal, spellID, apply, boss, castByPlayer, showOnNameplate = UnitAura(unit, i, "HELPFUL")
+		name, icon, count, btype, duration, expire, caster, isStealable, nameplatePersonal, spellID, apply, boss, castByPlayer, showOnNameplate = MOD:GetAuraData(unit, i, "HELPFUL")
 		if name then
 			if not caster then if spellID and fixEnchants[spellID] then caster = "player" else caster = "unknown" end -- fix Jade Spirit, Dancing Steel, River's Song
 			elseif caster == "vehicle" then caster = "player" end -- vehicle buffs treated like player buffs
@@ -1636,7 +1643,7 @@ local function GetBuffs(unit)
 	if MOD.ExpansionIsOrBelow(LE_EXPANSION_WRATH_OF_THE_LICH_KING) or not UnitHasVehicleUI("player") then return end
 	i = 1
 	repeat
-		name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply, boss = UnitAura("vehicle", i, "HELPFUL")
+		name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply, boss = MOD:GetAuraData("vehicle", i, "HELPFUL")
 		if name then
 			if not caster then caster = "unknown" elseif caster == "vehicle" then caster = "player" end -- vehicle buffs treated like player buffs
 			if caster == "player" then MOD.SetDuration(name, spellID, duration); MOD.SetSpellType(spellID, btype) end
@@ -1651,7 +1658,7 @@ local function GetDebuffs(unit)
 	local name, icon, count, btype, duration, expire, caster, isStealable, nameplatePersonal, spellID, apply, boss, castByPlayer, showOnNameplate
 	local i = 1
 	repeat
-		name, icon, count, btype, duration, expire, caster, isStealable, nameplatePersonal, spellID, apply, boss, castByPlayer, showOnNameplate = UnitAura(unit, i, "HARMFUL")
+		name, icon, count, btype, duration, expire, caster, isStealable, nameplatePersonal, spellID, apply, boss, castByPlayer, showOnNameplate = MOD:GetAuraData(unit, i, "HARMFUL")
 		if name then
 			if not caster then caster = "unknown" elseif caster == "vehicle" then caster = "player" end -- vehicle debuffs treated like player debuffs
 			if caster == "player" then MOD.SetDuration(name, spellID, duration); MOD.SetSpellType(spellID, btype) end
@@ -1664,7 +1671,7 @@ local function GetDebuffs(unit)
 	if MOD.ExpansionIsOrBelow(LE_EXPANSION_WRATH_OF_THE_LICH_KING) or not UnitHasVehicleUI("player") then return end
 	i = 1
 	repeat
-		name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply, boss = UnitAura("vehicle", i, "HARMFUL")
+		name, icon, count, btype, duration, expire, caster, isStealable, _, spellID, apply, boss = MOD:GetAuraData("vehicle", i, "HARMFUL")
 		if name then
 			if not caster then caster = "unknown" elseif caster == "vehicle" then caster = "player" end -- vehicle debuffs treated like player debuffs
 			if caster == "player" then MOD.SetDuration(name, spellID, duration); MOD.SetSpellType(spellID, btype) end
@@ -1676,35 +1683,33 @@ end
 
 -- Add tracking auras (updated for Cataclysm which allows multiple active tracking types)
 local function GetTracking()
-	local notTracking, notTrackingIcon, found = L["Not Tracking"], "Interface\\Minimap\\Tracking\\None", false
+	local found = false
 	local trackingTypes = nil
-	if MOD.isModernAPI then
-		trackingTypes = C_Minimap.GetNumTrackingTypes()
-	else
+
+	if C_Minimap.GetNumTrackingTypes == nil then
 		if MOD.ExpansionIsOrAbove(LE_EXPANSION_WRATH_OF_THE_LICH_KING) then
 			trackingTypes = GetNumTrackingTypes()
 		else
 			return
 		end
+	else
+		trackingTypes = C_Minimap.GetNumTrackingTypes()
 	end
 
+
 	for i = 1, trackingTypes do
-		local tracking
-		local trackingIcon
-		local active
-		if MOD.isModernAPI then
-			tracking, trackingIcon, active = C_Minimap.GetTrackingInfo(i)
-		else
-			tracking, trackingIcon, active = GetTrackingInfo(i)
-		end
+		local tracking, trackingIcon, active = C_Minimap.GetTrackingInfo(i)
 
 		if active then
 			found = true
 			AddAura("player", tracking, true, nil, 1, "Tracking", 0, "player", nil, nil, nil, trackingIcon, 0, "tracking", tracking)
 		end
 	end
+
 	if not found then
-		AddAura("player", notTracking, true, nil, 1, "Tracking", 0, "player", nil, nil, nil, notTrackingIcon, 0, "tracking", notTracking)
+		local notTracking = L["Not Tracking"]
+
+		AddAura("player", notTracking, true, nil, 1, "Tracking", 0, "player", nil, nil, nil, "Interface\\Minimap\\Tracking\\None", 0, "tracking", notTracking)
 	end
 end
 

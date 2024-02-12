@@ -1,6 +1,7 @@
 # Prat 3.0
 
-## [3.9.43](https://github.com/Legacy-of-Sylvanaar/prat-3-0/tree/3.9.43) (2023-11-15)
-[Full Changelog](https://github.com/Legacy-of-Sylvanaar/prat-3-0/compare/3.9.42...3.9.43) [Previous Releases](https://github.com/Legacy-of-Sylvanaar/prat-3-0/releases)
+## [3.9.47](https://github.com/Legacy-of-Sylvanaar/prat-3-0/tree/3.9.47) (2024-02-07)
+[Full Changelog](https://github.com/Legacy-of-Sylvanaar/prat-3-0/compare/3.9.46...3.9.47) [Previous Releases](https://github.com/Legacy-of-Sylvanaar/prat-3-0/releases)
 
-- Update tocs for 10.2 and 1.15  
+- Update toc for 1.15.1  
+- AltNames: Recognise "Alt of <name>" (#172)  

@@ -1786,6 +1786,12 @@ local function TitanPanel_MainMenu()
 	info.value = "player";
 	L_UIDropDownMenu_AddButton(info);
 --]]
+	
+	TitanPanelRightClickMenu_AddSpacer(L_UIDROPDOWNMENU_MENU_LEVEL);
+	local pre = ""
+			..TitanUtils_GetRedText("WARNING:")
+			..TitanUtils_GetGoldText(" Please upgrade to Titan Panel 8")
+	TitanPanelRightClickMenu_AddTitle(pre)
 end
 
 --[[ local

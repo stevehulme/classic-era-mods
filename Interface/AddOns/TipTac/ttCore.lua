@@ -47,6 +47,7 @@ local TT_DefaultConfig = {
 	hideFactionText = false,
 	hidePvpText = true,
 	hideSpecializationAndClassText = true,
+	highlightTipTacDeveloper = true,
 	
 	-- colors
 	enableColorName = true,
@@ -62,6 +63,21 @@ local TT_DefaultConfig = {
 	colorLevel = { 0.75, 0.75, 0.75, 1 },
 	
 	classColoredBorder = true,
+	
+	enableCustomClassColors = false,
+	colorCustomClassWarrior = {},      -- set during event ADDON_LOADED
+	colorCustomClassPaladin = {},      -- set during event ADDON_LOADED
+	colorCustomClassHunter = {},       -- set during event ADDON_LOADED
+	colorCustomClassRogue = {},        -- set during event ADDON_LOADED
+	colorCustomClassPriest = {},       -- set during event ADDON_LOADED
+	colorCustomClassDeathknight = {},  -- set during event ADDON_LOADED
+	colorCustomClassShaman = {},       -- set during event ADDON_LOADED
+	colorCustomClassMage = {},         -- set during event ADDON_LOADED
+	colorCustomClassWarlock = {},      -- set during event ADDON_LOADED
+	colorCustomClassMonk = {},         -- set during event ADDON_LOADED
+	colorCustomClassDruid = {},        -- set during event ADDON_LOADED
+	colorCustomClassDemonhunter = {},  -- set during event ADDON_LOADED
+	colorCustomClassEvoker = {},       -- set during event ADDON_LOADED
 	
 	-- reactions
 	reactColoredBorder = false,
@@ -217,6 +233,9 @@ local TT_DefaultConfig = {
 -- extended config
 local TT_ExtendedConfig = {};
 
+-- custom class colors config
+TT_ExtendedConfig.customClassColors = {}; -- set during event ADDON_LOADED and tt:ApplyConfig()
+
 -- original GameTooltip fonts
 TT_ExtendedConfig.oldGameTooltipText = {        -- set during tt:ApplyConfig()
 	fontFace = "",
@@ -329,7 +348,7 @@ TT_ExtendedConfig.tipsToModify = {
 								end
 								
 								local classID = splits[5];
-								local classColor = LibFroznFunctions:GetClassColor(classID, 5);
+								local classColor = LibFroznFunctions:GetClassColor(classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 								
 								tt:SetBackdropBorderColorLocked(tip, classColor.r, classColor.g, classColor.b);
 							end
@@ -399,8 +418,10 @@ TT_ExtendedConfig.tipsToModify = {
 			["QuestScrollFrame.StoryTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
 			["QuestScrollFrame.CampaignTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
 			["WorldMapTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
+			["SettingsTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
 			
 			-- 3rd party addon tooltips
+			["AceConfigDialogTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
 			["LibDBIconTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
 			["AtlasLootTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
 			["QuestHelperTooltip"] = { applyAppearance = true, applyAnchor = true, applyScaling = true },
@@ -518,7 +539,7 @@ TT_ExtendedConfig.tipsToModify = {
 						local name, classFile, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole, relationship, dungeonScore, pvpItemLevel = C_LFGList.GetApplicantMemberInfo(applicantID, memberIdx);
 						
 						if (name) then
-							local classColor = LibFroznFunctions:GetClassColorByClassFile(classFile, "PRIEST");
+							local classColor = LibFroznFunctions:GetClassColorByClassFile(classFile, "PRIEST", cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 							
 							tt:SetBackdropBorderColorLocked(GameTooltip, classColor.r, classColor.g, classColor.b);
 						end
@@ -566,6 +587,12 @@ TT_ExtendedConfig.tipsToModify = {
 			end
 		end
 	},
+	["Blizzard_CharacterCustomize"] = {
+		frames = {
+			["CharCustomizeTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
+			["CharCustomizeNoHeaderTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true }
+		}
+	},
 	["Blizzard_Collections"] = {
 		frames = {
 			["PetJournalPrimaryAbilityTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true },
@@ -594,9 +621,9 @@ TT_ExtendedConfig.tipsToModify = {
 					if (memberInfo) then
 						local classID = memberInfo.classID;
 						
-						classColor = LibFroznFunctions:GetClassColor(classID, 5);
+						classColor = LibFroznFunctions:GetClassColor(classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 					else
-						classColor = LibFroznFunctions:GetClassColor(5);
+						classColor = LibFroznFunctions:GetClassColor(5, nil, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 					end
 					
 					tt:SetBackdropBorderColorLocked(GameTooltip, classColor.r, classColor.g, classColor.b);
@@ -731,6 +758,7 @@ local TT_TipsToModifyFromOtherMods = {};
 --   .powerMax                               unit max power
 --
 --   .isColorBlind                           true if color blind mode is enabled, false otherwise.
+--   .isTipTacDeveloper                      true if it's a unit of a TipTac developer, false for other units.
 --
 -- timestampStartUnitAppearance              timestamp of start of unit appearance, nil otherwise.
 -- timestampStartCustomUnitFadeout           timestamp of start of custom unit fadeout, nil otherwise.
@@ -754,9 +782,25 @@ local TT_TIP_CONTENT = {
 	unknownOnCleared = 8
 };
 
+-- TipTac developer
+local TT_TipTacDeveloper = {
+	-- Frozn45
+	{
+		regionID = 3, -- Europe
+		guid = "Player-1099-00D6E047" -- Camassea - Rexxar
+	}, {
+		regionID = 3, -- Europe
+		guid = "Player-1099-006E9FB3" -- Valadenya - Rexxar
+	}, {
+		regionID = 3, -- Europe
+		guid = "Player-1099-025F2F49" -- Gorath - Rexxar
+	}
+};
+
 -- others
 local TT_IsConfigLoaded = false;
 local TT_IsApplyTipAppearanceAndHooking = false;
+local TT_CurrentRegionID = GetCurrentRegion();
 
 ----------------------------------------------------------------------------------------------------
 --                                        Helper Functions                                        --
@@ -1088,6 +1132,21 @@ tt:RegisterEvent("DISPLAY_SIZE_CHANGED");
 
 -- setup config
 function tt:SetupConfig()
+	-- update default config for custom class colors
+	local numClasses = GetNumClasses();
+	
+	for i = 1, numClasses do
+		local className, classFile = GetClassInfo(i);
+		
+		if (classFile) then
+			local camelCasedClassFile = LibFroznFunctions:CamelCaseText(classFile);
+			
+			TT_DefaultConfig["colorCustomClass" .. camelCasedClassFile] = {
+				RAID_CLASS_COLORS[classFile]:GetRGBA()
+			};
+		end
+	end
+	
 	-- update default config for fonts
 	TT_DefaultConfig.fontFace, TT_DefaultConfig.fontSize, TT_DefaultConfig.fontFlags = GameFontNormal:GetFont();
 	TT_DefaultConfig.fontSize = math.floor(TT_DefaultConfig.fontSize + 0.5);
@@ -1110,8 +1169,27 @@ function tt:SetupConfig()
 		self:Show();
 	end
 	
+	-- set custom class colors config
+	self:SetCustomClassColorsConfig();
+	
 	-- set tooltip backdrop config
 	self:SetTipBackdropConfig();
+end
+
+-- set custom class colors config
+function tt:SetCustomClassColorsConfig()
+	local currentConfig = TT_IsConfigLoaded and cfg or TT_DefaultConfig;
+	local numClasses = GetNumClasses();
+	
+	for i = 1, numClasses do
+		local className, classFile = GetClassInfo(i);
+		
+		if (classFile) then
+			local camelCasedClassFile = LibFroznFunctions:CamelCaseText(classFile);
+			
+			TT_ExtendedConfig.customClassColors[classFile] = CreateColor(unpack(currentConfig["colorCustomClass" .. camelCasedClassFile]));
+		end
+	end
 end
 
 -- set tooltip backdrop config (examples see "Backdrop.lua")
@@ -1152,7 +1230,10 @@ function tt:SetTipPaddingConfig()
 	if (currentConfig.enableBackdrop) then
 		TT_ExtendedConfig.tipPaddingForGameTooltip.right, TT_ExtendedConfig.tipPaddingForGameTooltip.bottom, TT_ExtendedConfig.tipPaddingForGameTooltip.left, TT_ExtendedConfig.tipPaddingForGameTooltip.top = TT_ExtendedConfig.tipBackdrop.insets.right + TT_ExtendedConfig.tipPaddingForGameTooltip.offset, TT_ExtendedConfig.tipBackdrop.insets.bottom + TT_ExtendedConfig.tipPaddingForGameTooltip.offset, TT_ExtendedConfig.tipBackdrop.insets.left + TT_ExtendedConfig.tipPaddingForGameTooltip.offset, TT_ExtendedConfig.tipBackdrop.insets.top + TT_ExtendedConfig.tipPaddingForGameTooltip.offset;
 		
-		if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) then
+		-- no padding if GameTooltip:SetPadding() doesn't have the optional left and top parameters (available since BfA 8.2.0)
+		if (not LibFroznFunctions.hasWoWFlavor.GameTooltipSetPaddingWithLeftAndTop) then
+			TT_ExtendedConfig.tipPaddingForGameTooltip.right = 0;
+			TT_ExtendedConfig.tipPaddingForGameTooltip.bottom = 0;
 			TT_ExtendedConfig.tipPaddingForGameTooltip.left = 0;
 			TT_ExtendedConfig.tipPaddingForGameTooltip.top = 0;
 		end
@@ -1168,6 +1249,9 @@ end
 function tt:ApplyConfig()
 	-- update pixel perfect scale
 	self:UpdatePixelPerfectScale();
+	
+	-- set custom class colors config
+	self:SetCustomClassColorsConfig();
 	
 	-- set tooltip backdrop config
 	self:SetTipBackdropConfig();
@@ -1360,16 +1444,16 @@ function tt:AddTipToCache(tip, frameName, tipParams)
 			end);
 			
 			if (tip:GetObjectType() == "GameTooltip") then
-				hooksecurefunc(tip, "SetUnit", function(tip)
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetUnit", function(tip)
 					tt:SetCurrentDisplayParams(tip, TT_TIP_CONTENT.unit);
 				end);
-				hooksecurefunc(tip, "SetUnitAura", function(tip)
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetUnitAura", function(tip)
 					tt:SetCurrentDisplayParams(tip, TT_TIP_CONTENT.aura);
 				end);
-				hooksecurefunc(tip, "SetUnitBuff", function(tip)
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetUnitBuff", function(tip)
 					tt:SetCurrentDisplayParams(tip, TT_TIP_CONTENT.aura);
 				end);
-				hooksecurefunc(tip, "SetUnitDebuff", function(tip)
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetUnitDebuff", function(tip)
 					tt:SetCurrentDisplayParams(tip, TT_TIP_CONTENT.aura);
 				end);
 				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetUnitBuffByAuraInstanceID", function(tip)
@@ -1387,10 +1471,10 @@ function tt:AddTipToCache(tip, frameName, tipParams)
 				LibFroznFunctions:HookScriptOnTooltipSetSpell(tip, function(tip)
 					tt:SetCurrentDisplayParams(tip, TT_TIP_CONTENT.spell);
 				end);
-				hooksecurefunc(tip, "SetAction", function(tip)
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetAction", function(tip)
 					tt:SetCurrentDisplayParams(tip, TT_TIP_CONTENT.action);
 				end);
-				hooksecurefunc(tip, "SetHyperlink", function(tip)
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetHyperlink", function(tip)
 					tt:SetCurrentDisplayParams(tip, TT_TIP_CONTENT.others);
 				end);
 				
@@ -1585,6 +1669,17 @@ function tt:SetScaleToTip(tip)
 	
 	if (tipWidthWithNewScaling > UIParentWidth) or (tipHeightWithNewScaling > UIParentHeight) then
         newTipScale = newTipScale / math.max(tipWidthWithNewScaling / UIParentWidth, tipHeightWithNewScaling / UIParentHeight) * 0.95; -- 95% of maximum UIParent width/height
+	end
+	
+	-- consider min/max scale from inherited DefaultScaleFrame, see DefaultScaleFrameMixin:UpdateScale() in "SharedUIPanelTemplates.lua"
+	if (DefaultScaleFrameMixin) and (DefaultScaleFrameMixin.UpdateScale == tip.UpdateScale) then
+		if (tip.minScale) then
+			newTipScale = math.max(newTipScale, tip.minScale);
+		end
+
+		if (tip.maxScale) then
+			newTipScale = math.min(newTipScale, tip.maxScale);
+		end
 	end
 	
 	-- set scale to tip
@@ -2496,6 +2591,11 @@ LibFroznFunctions:RegisterForGroupEvents(MOD_NAME, {
 	OnTipSetStyling = function(self, TT_CacheForFrames, tip, currentDisplayParams, tipContent)
 		-- set anchor to tip
 		tt:SetAnchorToTip(tip);
+		
+		-- refreshing anchoring of shopping tooltips after re-anchoring of tip to prevent overlapping tooltips,
+		-- because after GameTooltip_ShowCompareItem() (hook see below) has been called within TooltipDataRules.FinalizeItemTooltip(), the tooltip isn't finished yet, e.g. if hovering over monthly activities reward button.
+		-- so the tooltip may change in size after finishing the remaining TooltipDataHandler calls/callbacks to finalize the tooltip.
+		LibFroznFunctions:RefreshAnchorShoppingTooltips(tip);
 	end,
 	OnApplyTipAppearanceAndHooking = function(self, TT_CacheForFrames, cfg, TT_ExtendedConfig)
 		-- HOOK: GameTooltip_SetDefaultAnchor() for re-anchoring
@@ -2601,6 +2701,16 @@ function tt:SetUnitRecordFromTip(tip)
 	unitRecord.originalName = GameTooltipTextLeft1:GetText();
 	unitRecord.isColorBlind = (GetCVar("colorblindMode") == "1");
 	
+	-- check if it's a unit of a TipTac developer
+	unitRecord.isTipTacDeveloper = false;
+	
+	for _, tipTacDeveloper in ipairs(TT_TipTacDeveloper) do
+		if (tipTacDeveloper.regionID == TT_CurrentRegionID) and (tipTacDeveloper.guid == unitRecord.guid) then
+			unitRecord.isTipTacDeveloper = true;
+			break;
+		end
+	end
+	
 	frameParams.currentDisplayParams.unitRecord = unitRecord;
 end
 
@@ -2635,7 +2745,7 @@ function tt:SetUnitAppearanceToTip(tip, first)
 
 	-- set backdrop border color to tip by unit class or by unit reaction index
 	if (cfg.classColoredBorder) and (unitRecord.isPlayer) then
-		local classColor = LibFroznFunctions:GetClassColor(unitRecord.classID, 5);
+		local classColor = LibFroznFunctions:GetClassColor(unitRecord.classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 		
 		self:SetBackdropBorderColorLocked(tip, classColor:GetRGBA());
 	elseif (cfg.reactColoredBorder) then
@@ -2833,11 +2943,11 @@ LibFroznFunctions:RegisterForGroupEvents(MOD_NAME, {
 						return;
 					end
 					
-					-- only needed for Classic Era and WotLKC: FadeOut() for worldframe unit tips will not be called
+					-- consider if FadeOut() for worldframe unit tips will not be called
 					local unitRecord = frameParams.currentDisplayParams.unitRecord;
 					
-					if ((LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC)) and
-							(unitRecord) and ((IsMouseButtonDown()) or (not UnitExists(unitRecord.id))) then
+					if (LibFroznFunctions.hasWoWFlavor.GameTooltipFadeOutNotBeCalledForWorldFrameUnitTips) and
+							(unitRecord) and (not UnitExists(unitRecord.id)) then
 						
 						tip:FadeOut();
 					end

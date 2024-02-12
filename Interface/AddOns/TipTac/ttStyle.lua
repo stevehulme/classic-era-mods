@@ -56,6 +56,7 @@ local TT_ReactionText = {
 	[LFF_UNIT_REACTION_INDEX.exaltedNPC] = FACTION_STANDING_LABEL8,         -- Exalted
 	[LFF_UNIT_REACTION_INDEX.dead] = DEAD                                   -- Dead
 };
+local TT_TipTacDeveloper = LibFroznFunctions:GetGlobalString("TIPTAC_TIPTAC_DEVELOPER") or "Developer of %s"; -- "Developer of %s"
 
 -- colors
 local TT_COLOR = {
@@ -66,7 +67,9 @@ local TT_COLOR = {
 		guildRank = CreateColor(0.8, 0.8, 0.8, 1), -- light+ grey (QUEST_OBJECTIVE_FONT_COLOR)
 		unitSpeed = CreateColor(0.8, 0.8, 0.8, 1), -- light+ grey (QUEST_OBJECTIVE_FONT_COLOR)
 		mountName = HIGHLIGHT_FONT_COLOR, -- white
-		mountSpeed = LIGHTYELLOW_FONT_COLOR
+		mountSpeed = LIGHTYELLOW_FONT_COLOR,
+		tipTacDeveloper = RED_FONT_COLOR,
+		tipTacDeveloperTipTac = EPIC_PURPLE_COLOR
 	}
 };
 
@@ -84,27 +87,27 @@ local TT_COLOR_TEXT_UNIT_SPEED = CreateColor(0.8, 0.8, 0.8, 1); -- light+ grey (
 --
 -- GameTooltip lines of the player (determined via: UnitIsUnit(unitID, "player")):
 --
--- content                                            color                                                                    example
--- -------------------------------------------------  -----------------------------------------------------------------------  ---------------------------------------------------------------------------------------------------
---  1. <name with optional title>                     white (HIGHLIGHT_FONT_COLOR), color based on reaction if PvP is enabled  "Camassea", "Camassea, Hand von A'dal", "Camassea die Ehrfurchtgebietende" or "Chefköchin Camassea"
--- [2. <guild>]                                       white (HIGHLIGHT_FONT_COLOR)                                             "Blood Omen"
--- [3. <reaction, only colorblind mode>]              white (HIGHLIGHT_FONT_COLOR)                                             "Freundlich"
---  4. <level> - <race>, <class> (Spieler)            white (HIGHLIGHT_FONT_COLOR)                                             "Stufe 60 - Nachtelfe, Druidin (Spieler)"
--- [5. since df 10.1.5: [<specialization> ]<class>]]  white (HIGHLIGHT_FONT_COLOR)                                             "Gleichgewicht Druidin"
--- [6. <faction>]                                     white (HIGHLIGHT_FONT_COLOR)                                             "Allianz" or "Horde"
--- [7. PvP]                                           white (HIGHLIGHT_FONT_COLOR)
+-- content                                           color                                                                    example
+-- ------------------------------------------------  -----------------------------------------------------------------------  ---------------------------------------------------------------------------------------------------
+--  1. <name with optional title>                    white (HIGHLIGHT_FONT_COLOR), color based on reaction if PvP is enabled  "Camassea", "Camassea, Hand von A'dal", "Camassea die Ehrfurchtgebietende" or "Chefköchin Camassea"
+-- [2. since bc: <guild>]                            white (HIGHLIGHT_FONT_COLOR)                                             "Blood Omen"
+-- [3. <reaction, only colorblind mode>]             white (HIGHLIGHT_FONT_COLOR)                                             "Freundlich"
+--  4. <level> - <race>, <class> (Spieler)           white (HIGHLIGHT_FONT_COLOR)                                             "Stufe 60 - Nachtelfe, Druidin (Spieler)"
+-- [5. since df 10.1.5: [<specialization> ]<class>]  white (HIGHLIGHT_FONT_COLOR)                                             "Gleichgewicht Druidin"
+-- [6. <faction>]                                    white (HIGHLIGHT_FONT_COLOR)                                             "Allianz" or "Horde"
+-- [7. PvP]                                          white (HIGHLIGHT_FONT_COLOR)
 --
 -- GameTooltip lines of other player (determined via: UnitIsPlayer(unitID) and not UnitIsUnit(unitID, "player")):
 --
--- content                                            color                                                                    example
--- -------------------------------------------------  -----------------------------------------------------------------------  ------------------------------------------
---  1. <name with optional title>[-<realm>]           white (HIGHLIGHT_FONT_COLOR), color based on reaction if PvP is enabled  "Zoodirektorin Silvette-Alleria"
--- [2. <guild>[-<realm>]]                             white (HIGHLIGHT_FONT_COLOR)                                             "Die teuflischen Engel-Alleria"
--- [3. <reaction, only colorblind mode>]              white (HIGHLIGHT_FONT_COLOR)                                             "Freundlich"
---  4. <level> - <race>, <class> (Spieler)            white (HIGHLIGHT_FONT_COLOR)                                             "Stufe 70 - Leerenelfe, Jägerin (Spieler)"
--- [5. since df 10.1.5: [<specialization> ]<class>]]  white (HIGHLIGHT_FONT_COLOR)                                             "Verwüstung Dämonenjäger" or "Druidin"
--- [6. <faction>]                                     white (HIGHLIGHT_FONT_COLOR)                                             "Allianz" or "Horde"
--- [7. PvP]                                           white (HIGHLIGHT_FONT_COLOR)
+-- content                                           color                                                                    example
+-- ------------------------------------------------  -----------------------------------------------------------------------  ------------------------------------------
+--  1. <name with optional title>[-<realm>]          white (HIGHLIGHT_FONT_COLOR), color based on reaction if PvP is enabled  "Zoodirektorin Silvette-Alleria"
+-- [2. since bc: <guild>[-<realm>]]                  white (HIGHLIGHT_FONT_COLOR)                                             "Die teuflischen Engel-Alleria"
+-- [3. <reaction, only colorblind mode>]             white (HIGHLIGHT_FONT_COLOR)                                             "Freundlich"
+--  4. <level> - <race>, <class> (Spieler)           white (HIGHLIGHT_FONT_COLOR)                                             "Stufe 70 - Leerenelfe, Jägerin (Spieler)"
+-- [5. since df 10.1.5: [<specialization> ]<class>]  white (HIGHLIGHT_FONT_COLOR)                                             "Verwüstung Dämonenjäger" or "Druidin"
+-- [6. <faction>]                                    white (HIGHLIGHT_FONT_COLOR)                                             "Allianz" or "Horde"
+-- [7. PvP]                                          white (HIGHLIGHT_FONT_COLOR)
 --
 -- GameTooltip lines of NPC (determined via: not UnitIsPlayer(unitID) and not UnitPlayerControlled(unitID) and not UnitIsBattlePet(unitID)):
 --
@@ -150,7 +153,7 @@ function ttStyle:RemoveUnwantedLinesFromTip(tip, unitRecord)
 	local creatureFamily, creatureType = UnitCreatureFamily(unitRecord.id), UnitCreatureType(unitRecord.id);
 	
 	local hideCreatureTypeIfNoCreatureFamily = ((not unitRecord.isPlayer) or (unitRecord.isWildBattlePet)) and (not creatureFamily) and (creatureType);
-	local hideSpecializationAndClassText = (cfg.hideSpecializationAndClassText) and (LibFroznFunctions.isWoWFlavor.DF) and (unitRecord.isPlayer);
+	local hideSpecializationAndClassText = (cfg.hideSpecializationAndClassText) and (unitRecord.isPlayer) and (LibFroznFunctions.hasWoWFlavor.specializationAndClassTextInPlayerUnitTip);
 	
 	if (not cfg.hideFactionText) and (not cfg.hidePvpText) and (not hideCreatureTypeIfNoCreatureFamily) and (not hideSpecializationAndClassText) then
 		return;
@@ -192,7 +195,7 @@ local function AddTarget(lineList,target,targetName)
 		lineList:Push(targetReactionColor:WrapTextInColorCode("["));
 		if (UnitIsPlayer(target)) then
 			local targetClassID = select(3, UnitClass(target));
-			local targetClassColor = LibFroznFunctions:GetClassColor(targetClassID) or TT_COLOR.text.targeting;
+			local targetClassColor = LibFroznFunctions:GetClassColor(targetClassID, nil, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil) or TT_COLOR.text.targeting;
 			lineList:Push(targetClassColor:WrapTextInColorCode(targetName));
 		else
 			lineList:Push(targetReactionColor:WrapTextInColorCode(targetName));
@@ -249,7 +252,7 @@ function ttStyle:GenerateTargetedByLines(unitRecord)
 			
 			if (UnitIsPlayer(unit)) then
 				local unitClassID = select(3, UnitClass(unit));
-				local unitClassColor = LibFroznFunctions:GetClassColor(unitClassID) or TT_COLOR.text.targetedBy;
+				local unitClassColor = LibFroznFunctions:GetClassColor(unitClassID, nil, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil) or TT_COLOR.text.targetedBy;
 				lineTargetedBy:Push(unitClassColor:WrapTextInColorCode(unitName));
 			else
 				local unitReactionColor = CreateColor(unpack(cfg["colorReactText"..LibFroznFunctions:GetUnitReactionIndex(unit)]));
@@ -259,8 +262,89 @@ function ttStyle:GenerateTargetedByLines(unitRecord)
 	end
 end
 
+-- highlight TipTac developer
+function ttStyle:HighlightTipTacDeveloper(tip, currentDisplayParams, unitRecord, first)
+	-- no highlighting of TipTac developer
+	if (not cfg.highlightTipTacDeveloper) then
+		return;
+	end
+	
+	-- no TipTac developer
+	if (not unitRecord.isTipTacDeveloper) then
+		return;
+	end
+	
+	-- set top/bottom overlay, only necessary when the tip is first displayed.
+	if (first) then
+		local style = { -- top overlay from GAME_TOOLTIP_BACKDROP_STYLE_RUNEFORGE_LEGENDARY and bottom overlay from GAME_TOOLTIP_BACKDROP_STYLE_AZERITE_ITEM, see "GameTooltip.lua"
+			-- overlayAtlasTop = "AzeriteTooltip-Topper", -- available in DF, but not available in WotLKC
+			overlayTextureTop = "Interface\\AddOns\\" .. MOD_NAME .. "\\media\\AzeriteTooltip",
+			overlayTextureTopWidth = 95,
+			overlayTextureTopHeight = 27,
+			overlayTextureTopLeftTexel = 0.0078125,
+			overlayTextureTopRightTexel = 0.75,
+			overlayTextureTopTopTexel = 0.2265625,
+			overlayTextureTopBottomTexel = 0.4375,
+			
+			overlayAtlasTopScale = 0.75,
+			overlayAtlasTopYOffset = 1 - (TT_ExtendedConfig.tipBackdrop.insets.top + TT_ExtendedConfig.tipPaddingForGameTooltip.offset),
+			
+			-- overlayAtlasBottom = "AzeriteTooltip-Bottom", -- available in DF, but not available in WotLKC
+			overlayTextureBottom = "Interface\\AddOns\\" .. MOD_NAME .. "\\media\\AzeriteTooltip",
+			overlayTextureBottomWidth = 43,
+			overlayTextureBottomHeight = 11,
+			overlayTextureBottomLeftTexel = 0.539062,
+			overlayTextureBottomRightTexel = 0.875,
+			overlayTextureBottomTopTexel = 0.453125,
+			overlayTextureBottomBottomTexel = 0.539062,
+			
+			overlayAtlasBottomYOffset = 2 + (TT_ExtendedConfig.tipBackdrop.insets.bottom + TT_ExtendedConfig.tipPaddingForGameTooltip.offset)
+		};
+		
+		if (tip.TopOverlay) then
+			local isTopOverlayShown = tip.TopOverlay:IsShown();
+		
+			if (style) and (style.overlayTextureTop) then -- part from SharedTooltip_SetBackdropStyle() only for top overlay
+				-- tip.TopOverlay:SetAtlas(style.overlayAtlasTop, true); -- available in DF, but not available in WotLKC
+				tip.TopOverlay:SetTexture(style.overlayTextureTop);
+				tip.TopOverlay:SetSize(style.overlayTextureTopWidth, style.overlayTextureTopHeight);
+				tip.TopOverlay:SetTexCoord(style.overlayTextureTopLeftTexel, style.overlayTextureTopRightTexel, style.overlayTextureTopTopTexel, style.overlayTextureTopBottomTexel);
+				
+				tip.TopOverlay:SetScale(style.overlayAtlasTopScale or 1.0);
+				tip.TopOverlay:SetPoint("CENTER", tip, "TOP", style.overlayAtlasTopXOffset or 0, style.overlayAtlasTopYOffset or 0);
+				tip.TopOverlay:Show();
+			end
+		end
+		
+		if (tip.BottomOverlay) then
+			local isBottomOverlayShown = tip.BottomOverlay:IsShown();
+			
+			if (style) and (style.overlayTextureBottom) then -- part from SharedTooltip_SetBackdropStyle() only for bottom overlay
+				-- tip.BottomOverlay:SetAtlas(style.overlayAtlasBottom, true); -- available in DF, but not available in WotLKC
+				tip.BottomOverlay:SetTexture(style.overlayTextureBottom);
+				tip.BottomOverlay:SetSize(style.overlayTextureBottomWidth, style.overlayTextureBottomHeight);
+				tip.BottomOverlay:SetTexCoord(style.overlayTextureBottomLeftTexel, style.overlayTextureBottomRightTexel, style.overlayTextureBottomTopTexel, style.overlayTextureBottomBottomTexel);
+				
+				tip.BottomOverlay:SetScale(style.overlayAtlasBottomScale or 1.0);
+				tip.BottomOverlay:SetPoint("CENTER", tip, "BOTTOM", style.overlayAtlasBottomXOffset or 0, style.overlayAtlasBottomYOffset or 0);
+				tip.BottomOverlay:Show();
+			end
+		end
+	end
+	
+	-- add text to level
+	-- local tipTacDeveloperText = (CreateAtlasMarkup("UI-QuestPoiLegendary-QuestBang") .. " " .. TT_TipTacDeveloper .. " " .. CreateAtlasMarkup("UI-QuestPoiLegendary-QuestBang")); -- available in DF, but not available in WotLKC
+	local tipScale = tip:GetScale();
+	local tipTacDeveloperText = (CreateTextureMarkup("Interface\\AddOns\\" .. MOD_NAME .. "\\media\\QuestLegendaryMapIcons", 32, 32, 0, 0, 0.261719, 0.386719, 0.0078125, 0.257812, -2.5 * tipScale, 1.5 * tipScale) .. " " .. TT_TipTacDeveloper .. " " .. CreateTextureMarkup("Interface\\AddOns\\" .. MOD_NAME .. "\\media\\QuestLegendaryMapIcons", 32, 32, 0, 0, 0.261719, 0.386719, 0.0078125, 0.257812, -1 * tipScale, 1.5 * tipScale));
+	local modNameText = TT_COLOR.text.tipTacDeveloperTipTac:WrapTextInColorCode(MOD_NAME);
+	
+	-- lineLevel:Push(TT_COLOR.text.tipTacDeveloper:WrapTextInColorCode(("~~ " .. TT_TipTacDeveloper .. " ~~"):format(modNameText)));
+	lineLevel:Push(TT_COLOR.text.tipTacDeveloper:WrapTextInColorCode(tipTacDeveloperText:format(modNameText)));
+	lineLevel:Push("\n");
+end
+
 -- PLAYER Styling
-function ttStyle:GeneratePlayerLines(currentDisplayParams, unitRecord, first)
+function ttStyle:GeneratePlayerLines(tip, currentDisplayParams, unitRecord, first)
 	-- gender
 	if (cfg.showPlayerGender) then
 		local sex = unitRecord.sex;
@@ -277,12 +361,12 @@ function ttStyle:GeneratePlayerLines(currentDisplayParams, unitRecord, first)
 	lineLevel:Push(" ");
 	lineLevel:Push(CreateColor(unpack(cfg.colorRace)):WrapTextInColorCode(race));
 	-- class
-	local classColor = LibFroznFunctions:GetClassColor(unitRecord.classID, 5);
+	local classColor = LibFroznFunctions:GetClassColor(unitRecord.classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 	lineLevel:Push(" ");
 	lineLevel:Push(classColor:WrapTextInColorCode(unitRecord.className));
 	-- name
 	local nameColor = (cfg.colorNameByClass and classColor) or unitRecord.nameColor;
-	local name = (cfg.nameType == "marysueprot" and unitRecord.rpName) or (cfg.nameType == "original" and unitRecord.originalName) or (cfg.nameType == "title" and UnitPVPName(unitRecord.id)) or unitRecord.name;
+	local name = (cfg.nameType == "marysueprot" and unitRecord.rpName) or (cfg.nameType == "original" and unitRecord.originalName) or (cfg.nameType == "title" and unitRecord.nameWithTitle) or unitRecord.name;
 	if (unitRecord.serverName) and (unitRecord.serverName ~= "") and (cfg.showRealm ~= "none") then
 		if (cfg.showRealm == "show") then
 			name = name .. " - " .. unitRecord.serverName;
@@ -318,9 +402,9 @@ function ttStyle:GeneratePlayerLines(currentDisplayParams, unitRecord, first)
 				end
 			end
 			currentDisplayParams.mergeLevelLineWithGuildName = false;
-			if (LibFroznFunctions.isWoWFlavor.ClassicEra) then -- no separate line for guild name in classic era. merge with reaction (only color blind mode) or level line.
+			if (not LibFroznFunctions.hasWoWFlavor.guildNameInPlayerUnitTip) then -- no separate line for guild name. merge with reaction (only color blind mode) or level line.
 				if (unitRecord.isColorBlind) then
-					GameTooltipTextLeft2:SetText(text .. "\n" .. unitRecord.reactionTextInColorBlindModeForClassicEra);
+					GameTooltipTextLeft2:SetText(text .. "\n" .. unitRecord.reactionTextInColorBlindMode);
 				else
 					GameTooltipTextLeft2:SetText(text);
 					currentDisplayParams.mergeLevelLineWithGuildName = true;
@@ -330,7 +414,7 @@ function ttStyle:GeneratePlayerLines(currentDisplayParams, unitRecord, first)
 				lineLevel.Index = (lineLevel.Index + 1);
 			end
 		else -- don't show guild
-			if (not LibFroznFunctions.isWoWFlavor.ClassicEra) then -- no separate line for guild name in classic era
+			if (LibFroznFunctions.hasWoWFlavor.guildNameInPlayerUnitTip) then -- separate line for guild name
 				GameTooltipTextLeft2:SetText(nil);
 				lineLevel.Index = (lineLevel.Index + 1);
 			end
@@ -339,7 +423,7 @@ function ttStyle:GeneratePlayerLines(currentDisplayParams, unitRecord, first)
 end
 
 -- PET Styling
-function ttStyle:GeneratePetLines(currentDisplayParams, unitRecord, first)
+function ttStyle:GeneratePetLines(tip, currentDisplayParams, unitRecord, first)
 	lineName:Push(unitRecord.nameColor:WrapTextInColorCode(unitRecord.name));
 	lineLevel:Push(" ");
 	local petType = UnitBattlePetType(unitRecord.id) or 5;
@@ -371,7 +455,7 @@ function ttStyle:GeneratePetLines(currentDisplayParams, unitRecord, first)
 end
 
 -- NPC Styling
-function ttStyle:GenerateNpcLines(currentDisplayParams, unitRecord, first)
+function ttStyle:GenerateNpcLines(tip, currentDisplayParams, unitRecord, first)
 	-- name
 	lineName:Push(unitRecord.nameColor:WrapTextInColorCode(unitRecord.name));
 
@@ -404,6 +488,11 @@ function ttStyle:ModifyUnitTooltip(tip, currentDisplayParams, unitRecord, first)
 	-- remove unwanted lines from tip
 	self:RemoveUnwantedLinesFromTip(tip, unitRecord);
 	
+	-- highlight TipTac developer
+	if (unitRecord.isPlayer) then
+		self:HighlightTipTacDeveloper(tip, currentDisplayParams, unitRecord, first);
+	end
+	
 	-- Level + Classification
 	lineLevel:Push(((UnitCanAttack(unitRecord.id, "player") or UnitCanAttack("player", unitRecord.id)) and LibFroznFunctions:GetDifficultyColorForUnit(unitRecord.id) or CreateColor(unpack(cfg.colorLevel))):WrapTextInColorCode((cfg["classification_".. (unitRecord.classification or "")] or "%s? "):format(unitRecord.level == -1 and "??" or unitRecord.level)));
 	
@@ -414,11 +503,11 @@ function ttStyle:ModifyUnitTooltip(tip, currentDisplayParams, unitRecord, first)
 	
 	-- Generate Line Modification
 	if (unitRecord.isPlayer) then
-		self:GeneratePlayerLines(currentDisplayParams, unitRecord, first);
+		self:GeneratePlayerLines(tip, currentDisplayParams, unitRecord, first);
 	elseif (cfg.showBattlePetTip) and (unitRecord.isWildBattlePet or unitRecord.isBattlePetCompanion) then
-		self:GeneratePetLines(currentDisplayParams, unitRecord, first);
+		self:GeneratePetLines(tip, currentDisplayParams, unitRecord, first);
 	else
-		self:GenerateNpcLines(currentDisplayParams, unitRecord, first);
+		self:GenerateNpcLines(tip, currentDisplayParams, unitRecord, first);
 	end
 
 	-- Current Unit Speed
@@ -598,6 +687,8 @@ function ttStyle:ModifyUnitTooltip(tip, currentDisplayParams, unitRecord, first)
 		end
 		
 		lineInfo:Clear();
+	elseif (currentDisplayParams.tipLineInfoIndex) then
+		_G["GameTooltipTextLeft" .. currentDisplayParams.tipLineInfoIndex]:SetText(nil);
 	end
 	
 	-- Targeted By Line
@@ -612,6 +703,8 @@ function ttStyle:ModifyUnitTooltip(tip, currentDisplayParams, unitRecord, first)
 		end
 		
 		lineTargetedBy:Clear();
+	elseif (currentDisplayParams.tipLineTargetedByIndex) then
+		_G["GameTooltipTextLeft" .. currentDisplayParams.tipLineTargetedByIndex]:SetText(nil);
 	end
 end
 
@@ -646,9 +739,9 @@ function ttStyle:OnTipStyle(TT_CacheForFrames, tip, first)
 				unitRecord.petOrBattlePetOrNPCTitle = nil;
 			end
 		end
-		-- remember reaction in color blind mode for classic era
-		if (LibFroznFunctions.isWoWFlavor.ClassicEra) and (unitRecord.isColorBlind) then
-			unitRecord.reactionTextInColorBlindModeForClassicEra = GameTooltipTextLeft2:GetText();
+		-- remember reaction in color blind mode if there is no separate line for guild name
+		if (not LibFroznFunctions.hasWoWFlavor.guildNameInPlayerUnitTip) and (unitRecord.isColorBlind) then
+			unitRecord.reactionTextInColorBlindMode = GameTooltipTextLeft2:GetText();
 		end
 	end
 

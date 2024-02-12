@@ -980,7 +980,7 @@ function ArkInventory.TooltipCustomBattlepetShow( tooltip, h, i )
 	
 	if not h then return end
 	
-	--ArkInventory.Output2( "TooltipCustomBattlepetShow" )
+	--ArkInventory.Output( "TooltipCustomBattlepetShow" )
 	
 	ArkInventory.TooltipMyDataClear( tooltip )
 	
@@ -991,11 +991,10 @@ function ArkInventory.TooltipCustomBattlepetShow( tooltip, h, i )
 	
 	if osd.class ~= "battlepet" then return end
 	
-	--ArkInventory.Output2( "[", osd.class, " : ", osd.id, " : ", osd.level, " : ", osd.q, " : ", osd.health, " : ", osd.power, " : ", osd.speed, "]" )
+	--ArkInventory.Output( "[", osd.class, " : ", osd.id, " : ", osd.level, " : ", osd.q, " : ", osd.health, " : ", osd.power, " : ", osd.speed, "]" )
 	
 	if not ArkInventory.db.option.tooltip.battlepet.enable then
-		BattlePetToolTip_Show( osd.id, osd.level, osd.q, osd.health, osd.power, osd.speed, osd.cn )
-		return
+		return BattlePetToolTip_Show( osd.id, osd.level, osd.q, osd.health, osd.power, osd.speed, osd.cn )
 	end
 	
 	local sd = ArkInventory.Collection.Pet.GetSpeciesInfo( osd.id )
@@ -1351,6 +1350,8 @@ local function helper_AcceptableRedText( txt, ignore_known, ignore_level )
 		else
 			return false
 		end
+	elseif string.match( txt, ArkInventory.Localise["EQUIP_COLON"] ) then
+		return true
 	end
 	
 	
@@ -2663,7 +2664,7 @@ function ArkInventory.TooltipObjectCountGet( search_id, thread_id )
 									end
 									
 									local osd = ArkInventory.ObjectStringDecode( ld.e )
-									local txt = ArkInventory.Collection.Reputation.LevelText( osd.id, style, osd.st, osd.bv, osd.bm, osd.ic, osd.pv, osd.pr )
+									local txt = ArkInventory.Collection.Reputation.LevelText( osd.id, style, osd.st, osd.bv, osd.bn, osd.bm, osd.ic, osd.pv, osd.pr, osd.rv, osd.rm )
 									table.insert( location_entries, string.format( "%s%s", c1, txt ) )
 								end
 								
@@ -3104,7 +3105,7 @@ function ArkInventory.TooltipProcessorSetBattlePet( ... )
 	local tooltip, tooltipInfo = ...
 	if checkAbortShow( tooltip ) then return true end
 	
-	ArkInventory.Output( "add battlepet count to ", tooltip:GetName( ), " - ", tooltipInfo.hyperlink )
+	--ArkInventory.Output( "add battlepet count to ", tooltip:GetName( ), " - ", tooltipInfo.hyperlink )
 	ArkInventory.HookOnTooltipSetUnit( ... )
 	
 end

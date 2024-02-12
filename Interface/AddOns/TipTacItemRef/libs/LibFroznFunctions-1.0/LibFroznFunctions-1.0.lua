@@ -9,7 +9,7 @@
 
 -- create new library
 local LIB_NAME = "LibFroznFunctions-1.0";
-local LIB_MINOR = 16; -- bump on changes
+local LIB_MINOR = 18; -- bump on changes
 
 if (not LibStub) then
 	error(LIB_NAME .. " requires LibStub.");
@@ -82,6 +82,79 @@ else -- retail
 		LibFroznFunctions.isWoWFlavor.DF = true;
 	end
 end
+
+-- GearScore algorithms
+LFF_GEAR_SCORE_ALGORITHM = {
+	TacoTip = 1, -- TacoTip's GearScore algorithm
+	TipTac = 2 -- TipTac's GearScore algorithm
+};
+
+-- differences between WoW flavors
+--
+-- @return .guildNameInPlayerUnitTip                                   = true/false if the guild name is included in the player unit tip (since bc)
+--         .specializationAndClassTextInPlayerUnitTip                  = true/false if a specialization and class text is included in the player unit tip (since df 10.1.5)
+--         .needsSuppressingErrorMessageAndSpeechWhenCallingCanInspect = true/false for suppressing error message and speech when calling CanInspect() (till wotlkc)
+--         .talentsAvailableForInspectedUnit                           = true/false if getting talents from other players is available (since bc 2.3.0)
+--         .numTalentTrees                                             = number of talent trees
+--         .talentIconAvailable                                        = true/false if talent icon is available (since bc)
+--         .roleIconAvailable                                          = true/false if role icon is available (since MoP 5.0.4)
+--         .specializationAvailable                                    = true/false if specialization is available (since MoP 5.0.4)
+--         .itemLevelOfFirstRaidTierSet                                = item level of first raid tier set. false if not defined (yet).
+--         .GameTooltipSetPaddingWithLeftAndTop                        = true/false if GameTooltip:SetPadding() has the optional left and top parameters (since BfA 8.2.0)
+--         .GameTooltipFadeOutNotBeCalledForWorldFrameUnitTips         = true/false if GameTooltip:FadeOut() will not be called for worldframe unit tips (till wotlkc)
+--         .barMarginAdjustment                                        = bar margin adjustment (till wotlkc)
+--         .realGetSpellLinkAvailable                                  = true/false if the real GetSpellLink() is available (since bc 2.3.0). in classic era this function only returns the spell name instead of a spell link.
+--         .relatedExpansionForItemAvailable                           = true/false if GetItemInfo() return the related expansion for an item (parameter expacID) (since Legion 7.1.0)
+--         .defaultGearScoreAlgorithm                                  = default GearScore algorithm
+--         .optionsSliderTemplate                                      = options slider template ("OptionsSliderTemplate", since df 10.0.0 "UISliderTemplateWithLabels")
+LibFroznFunctions.hasWoWFlavor = {
+	guildNameInPlayerUnitTip = true,
+	specializationAndClassTextInPlayerUnitTip = true,
+	needsSuppressingErrorMessageAndSpeechWhenCallingCanInspect = false,
+	talentsAvailableForInspectedUnit = true,
+	numTalentTrees = 2,
+	talentIconAvailable = true,
+	roleIconAvailable = true,
+	specializationAvailable = false,
+	itemLevelOfFirstRaidTierSet = false,
+	barMarginAdjustment = 0,
+	GameTooltipSetPaddingWithLeftAndTop = true,
+	GameTooltipFadeOutNotBeCalledForWorldFrameUnitTips = false,
+	realGetSpellLinkAvailable = true,
+	relatedExpansionForItemAvailable = true,
+	defaultGearScoreAlgorithm = LFF_GEAR_SCORE_ALGORITHM.TipTac,
+	optionsSliderTemplate = "UISliderTemplateWithLabels"
+};
+
+if (LibFroznFunctions.isWoWFlavor.ClassicEra) then
+	LibFroznFunctions.hasWoWFlavor.guildNameInPlayerUnitTip = false;
+	LibFroznFunctions.hasWoWFlavor.talentsAvailableForInspectedUnit = false;
+	LibFroznFunctions.hasWoWFlavor.talentIconAvailable = false;
+	LibFroznFunctions.hasWoWFlavor.realGetSpellLinkAvailable = false;
+end
+if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) then
+	LibFroznFunctions.hasWoWFlavor.needsSuppressingErrorMessageAndSpeechWhenCallingCanInspect = true;
+	LibFroznFunctions.hasWoWFlavor.numTalentTrees = 3;
+	LibFroznFunctions.hasWoWFlavor.roleIconAvailable = false;
+	LibFroznFunctions.hasWoWFlavor.specializationAvailable = false;
+	LibFroznFunctions.hasWoWFlavor.GameTooltipSetPaddingWithLeftAndTop = false;
+	LibFroznFunctions.hasWoWFlavor.GameTooltipFadeOutNotBeCalledForWorldFrameUnitTips = true;
+	LibFroznFunctions.hasWoWFlavor.barMarginAdjustment = -2;
+	LibFroznFunctions.hasWoWFlavor.relatedExpansionForItemAvailable = false;
+	LibFroznFunctions.hasWoWFlavor.defaultGearScoreAlgorithm = LFF_GEAR_SCORE_ALGORITHM.TacoTip;
+end
+if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) or (LibFroznFunctions.isWoWFlavor.SL) then
+	LibFroznFunctions.hasWoWFlavor.specializationAndClassTextInPlayerUnitTip = false;
+	LibFroznFunctions.hasWoWFlavor.optionsSliderTemplate = "OptionsSliderTemplate";
+end
+if (LibFroznFunctions.isWoWFlavor.SL) then
+	LibFroznFunctions.hasWoWFlavor.numTalentTrees = 0;
+end
+LibFroznFunctions.hasWoWFlavor.itemLevelOfFirstRaidTierSet = 
+	LibFroznFunctions.isWoWFlavor.ClassicEra and  66 or -- Cenarion Vestments (Druid, Tier 1)
+	LibFroznFunctions.isWoWFlavor.BCC        and 120 or -- Chestguard of Malorne (Druid, Tier 4)
+	LibFroznFunctions.isWoWFlavor.WotLKC     and 213 or -- Valorous Dreamwalker Robe (Druid, Tier 7)
+	LibFroznFunctions.isWoWFlavor.DF         and 395;   -- Lost Landcaller's Robes (Druid, Tier 23)
 
 -- get addon metadata
 --
@@ -180,6 +253,42 @@ function LibFroznFunctions:CreateColorFromHexString(hexColor)
 	else
 		error("CreateColorFromHexString input must be hexadecimal digits in this format: AARRGGBB.");
 	end
+end
+
+-- setup color picker and show
+--
+-- @param info  color picker configuration
+--          .swatchFunc      function called when the color is changed
+--          .hasOpacity      if true, opacity can be customized in addition to color.
+--          .opacityFunc     function called when opacity is changed
+--          .opacity         initial opacity value (0 = fully transparent, 1 = fully opaque)
+--          .previousValues  will be added internally by the color picker. contains the initial rgba color value which will be returned when calling ".cancelFunc".
+--          .r               initial r color value for the color selector
+--          .g               initial g color value for the color selector
+--          .b               initial b color value for the color selector
+--          .cancelFunc      function called when color/opacity alteration is cancelled
+--          .extraInfo       optional. additional custom data.
+function LibFroznFunctions:SetupColorPickerAndShow(info)
+	-- since df 10.2.5
+	if (ColorPickerFrame) and (ColorPickerFrame.SetupColorPickerAndShow) then
+		ColorPickerFrame:SetupColorPickerAndShow(info);
+		return;
+	end
+	
+	-- before df 10.2.5
+	OpenColorPicker(info);
+end
+
+-- get color alpha from color picker
+-- @return opacity value (0 = fully transparent, 1 = fully opaque)
+function LibFroznFunctions:GetColorAlphaFromColorPicker()
+	-- since df 10.2.5
+	if (ColorPickerFrame) and (ColorPickerFrame.GetColorAlpha) then
+		return ColorPickerFrame:GetColorAlpha();
+	end
+	
+	-- before df 10.2.5
+	return OpacitySliderFrame:GetValue();
 end
 
 -- get global string
@@ -462,6 +571,16 @@ function LibFroznFunctions:FormatText(text, replacements, ...)
 	return string.format(newText, ...);
 end
 
+-- camel case text
+--
+-- @param  text  text to camel case, e.g. "warrior" or "WARRIOR"
+-- @return camel cased text
+function LibFroznFunctions:CamelCaseText(text)
+	local newText = tostring(text);
+	
+	return (newText:lower():gsub("^%l", string.upper));
+end
+
 -- convert to table
 --
 -- @param  obj   object
@@ -489,7 +608,7 @@ end
 -- @param  tab[]     table to remove items from
 -- @param  removeFn  function to determine which items should be removed. if function returns true for the current item, it will be removed.
 -- @return number of removed items
-function LibFroznFunctions:removeFromTable(tab, removeFn)
+function LibFroznFunctions:RemoveFromTable(tab, removeFn)
 	-- no table
 	if (type(tab) ~= "table") then
 		return 0;
@@ -518,7 +637,7 @@ end
 -- remove all items from table
 --
 -- @param tab[]  table to remove all items from
-function LibFroznFunctions:removeAllFromTable(tab)
+function LibFroznFunctions:RemoveAllFromTable(tab)
 	-- no table
 	if (type(tab) ~= "table") then
 		return;
@@ -527,7 +646,7 @@ function LibFroznFunctions:removeAllFromTable(tab)
 	-- remove all items from table
 	for key, value in pairs(tab) do
 		if (type(value) == "table") then
-			self:removeAllFromTable(value);
+			self:RemoveAllFromTable(value);
 		end
 	end
 	
@@ -628,7 +747,7 @@ local pushArray = {
 			end
 		end,
 		Remove = function(tab, value)
-			local itemsRemoved = LibFroznFunctions:removeFromTable(tab, function(_value)
+			local itemsRemoved = LibFroznFunctions:RemoveFromTable(tab, function(_value)
 				return (_value == value);
 			end);
 			tab.count = tab.count - itemsRemoved;
@@ -1139,44 +1258,54 @@ end
 --
 -- @param  classID                     class id of unit
 -- @param  alternateClassIDIfNotFound  alternate class id if color for param "classID" doesn't exist
+-- @param  customClassColors           optional. custom class colors
 -- @return ColorMixin  returns nil if class file for param "classID" and "alternateClassIDIfNotFound" doesn't exist.
-local function getClassColor(classFile)
+local function getClassColor(classFile, customClassColors)
 	local classColor; -- see "ColorUtil.lua"
 	
+	-- custom class colors
+	if (customClassColors) then
+		classColor = customClassColors[classFile];
+		
+		if (classColor) then
+			return classColor;
+		end
+	end
+	
+	-- global custom class colors
 	if (CUSTOM_CLASS_COLORS) then
-		-- custom class color
-		classColor = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[classFile];
+		classColor = CUSTOM_CLASS_COLORS[classFile];
 		
 		if (classColor) then
 			-- make shure that ColorMixin methods are available
-			if (classColor) and (type(classColor.WrapTextInColorCode) ~= "function") then
+			if (type(classColor.WrapTextInColorCode) ~= "function") then
 				LibFroznFunctions:MixinDifferingObjects(classColor, ColorMixin);
 			end
-		else
-			-- fallback to default class color
-			classColor = RAID_CLASS_COLORS[classFile];
+			
+			return classColor;
 		end
-	else
-		-- default class color
-		classColor = RAID_CLASS_COLORS[classFile];
 	end
+	
+	-- default class color
+	classColor = RAID_CLASS_COLORS[classFile];
 	
 	return classColor;
 end
 
-function LibFroznFunctions:GetClassColor(classID, alternateClassIDIfNotFound)
+function LibFroznFunctions:GetClassColor(classID, alternateClassIDIfNotFound, customClassColors)
 	local classInfo = (classID and C_CreatureInfo.GetClassInfo(classID)) or (alternateClassIDIfNotFound and C_CreatureInfo.GetClassInfo(alternateClassIDIfNotFound));
 	
-	return classInfo and getClassColor(classInfo.classFile);
+	return classInfo and getClassColor(classInfo.classFile, customClassColors);
 end
 
 -- get class color by class file
 --
 -- @param  classFile                     locale-independent class file of unit, e.g. "WARRIOR"
 -- @param  alternateClassFileIfNotFound  alternate class file if color for param "classFile" doesn't exist
+-- @param  customClassColors             optional. custom class colors
 -- @return ColorMixin  returns nil if class file for param "classFile" and "alternateClassFileIfNotFound" doesn't exist.
 function LibFroznFunctions:GetClassColorByClassFile(classFile, alternateClassFileIfNotFound)
-	return getClassColor(classFile) or getClassColor(alternateClassFileIfNotFound);
+	return getClassColor(classFile, customClassColors) or getClassColor(alternateClassFileIfNotFound, customClassColors);
 end
 
 -- get power color
@@ -1249,15 +1378,10 @@ end
 --
 -- @param  questID     quest id
 -- @param  questLevel  quest level
--- @return ColorMixin  difficulty color. returns nil if no quest id is supplied or quest level is invalid.
+-- @return ColorMixin  difficulty color. returns nil if no quest id is supplied, based on situation.
 function LibFroznFunctions:GetDifficultyColorForQuest(questID, questLevel)
-	-- no quest id or invalid number
-	if (not questID) or (type(questLevel) ~= "number") then
-		return;
-	end
-	
 	-- world quests
-	if (C_QuestLog.IsWorldQuest) and (C_QuestLog.IsWorldQuest(questID)) then -- see GameTooltip_AddQuest()
+	if (C_QuestLog.IsWorldQuest) and (questID) and (C_QuestLog.IsWorldQuest(questID)) then -- see GameTooltip_AddQuest()
 		local tagInfo = C_QuestLog.GetQuestTagInfo(questID);
 		local worldQuestQuality = tagInfo and tagInfo.quality or Enum.WorldQuestQuality.Common;
 		
@@ -1265,7 +1389,13 @@ function LibFroznFunctions:GetDifficultyColorForQuest(questID, questLevel)
 	end
 	
 	-- other quests
-	local difficultyColor = GetDifficultyColor and GetDifficultyColor(C_PlayerInfo.GetContentDifficultyQuestForPlayer(questID)) or GetQuestDifficultyColor(questLevel); -- see "UIParent.lua"
+	
+	-- GetDifficultyColor() will be used and no quest id
+	if (GetDifficultyColor) and (not questID) then
+		return;
+	end
+	
+	local difficultyColor = GetDifficultyColor and GetDifficultyColor(C_PlayerInfo.GetContentDifficultyQuestForPlayer(questID)) or GetQuestDifficultyColor((type(questLevel) == "number") and questLevel or 0); -- see "UIParent.lua"
 	
 	return LibFroznFunctions:CreateColorSmart(difficultyColor);
 end
@@ -1670,7 +1800,8 @@ local getAuraDescriptionFromTooltipScanTip;
 
 function LibFroznFunctions:GetAuraDescription(unitID, index, filter, callbackForAuraData)
 	-- check if spell data for aura is available and queried from server
-	local spellID = select(10, UnitAura(unitID, index, filter));
+	local auraData = LibFroznFunctions:GetAuraDataByIndex(unitID, index, filter);
+	local spellID = (auraData and auraData.spellId);
 	
 	if (not spellID) then
 		return;
@@ -2060,7 +2191,7 @@ end
 --           .name                         name of unit, e.g. "Rugnaer"
 --           .nameWithForeignServerSuffix  name of unit with additional foreign server suffix if needed, e.g. "Rugnaer (*)"
 --           .nameWithServerName           name with server name of unit, e.g. "Rugnaer-DunMorogh"
---           .nameWithTitle                name with title of unit, e.g. "Sternenrufer Rugnaer"
+--           .nameWithTitle                name with title of unit, e.g. "Sternenrufer Rugnaer". if the unit is currently not visible to the client, the title is missing and it only contains the unit name (.name).
 --           .serverName                   server name of unit, e.g. "DunMorogh"
 --           .sex                          sex of unit, e.g. 1 (neutrum / unknown), 2 (male) or 3 (female)
 --           .className                    localized class name of unit, e.g. "Warrior" or "Guerrier"
@@ -2100,7 +2231,6 @@ function LibFroznFunctions:CreateUnitRecord(unitID, unitGUID)
 	unitRecord.name, unitRecord.serverName = UnitName(unitID);
 	unitRecord.nameWithForeignServerSuffix = GetUnitName(unitID);
 	unitRecord.nameWithServerName = GetUnitName(unitID, true);
-	unitRecord.nameWithTitle = UnitPVPName(unitID);
 	
 	unitRecord.sex = UnitSex(unitID);
 	unitRecord.className, unitRecord.classFile, unitRecord.classID = UnitClass(unitID);
@@ -2125,8 +2255,11 @@ function LibFroznFunctions:UpdateUnitRecord(unitRecord, newUnitID)
 	end
 	
 	-- update unit record
+	local unitPVPName = UnitPVPName(unitID); -- returns nil or "" if the unit is currently not visible to the client
+	
 	unitRecord.id = unitID;
 	
+	unitRecord.nameWithTitle = (unitPVPName and unitPVPName ~= "" and unitPVPName or unitRecord.name);
 	unitRecord.level = unitRecord.isBattlePet and UnitBattlePetLevel(unitID) or UnitLevel(unitID) or -1;
 	unitRecord.reactionIndex = LibFroznFunctions:GetUnitReactionIndex(unitID);
 	
@@ -2138,30 +2271,83 @@ function LibFroznFunctions:UpdateUnitRecord(unitRecord, newUnitID)
 	unitRecord.powerMax = UnitPowerMax(unitID);
 end
 
+-- returns the buffs/debuffs for the unit
+--
+-- @param  unitID  unit id, e.g. "player", "target" or "mouseover"
+-- @param  index   index of an aura to query
+-- @param  filter  a list of filters, separated by pipe chars or spaces, see LFF_AURA_FILTERS
+-- @return aura infos as a table of type AuraData
+function LibFroznFunctions:GetAuraDataByIndex(unitID, index, filter)
+	-- see "Deprecated_10_2_5.lua"
+	
+	-- since df 10.2.5
+	if (C_UnitAuras) and (C_UnitAuras.GetAuraDataByIndex) then
+		return C_UnitAuras.GetAuraDataByIndex(unitID, index, filter);
+	end
+	
+	-- before 10.2.5
+	local unitAura = { UnitAura(unitID, index, filter) };
+	
+	-- no aura available
+	local name = unitAura[1];
+	
+	if (not name) then
+		return nil;
+	end
+	
+	return {
+		name = unitAura[1],
+		icon = unitAura[2],
+		applications = unitAura[3],
+		dispelName = unitAura[4],
+		duration = unitAura[5],
+		expirationTime = unitAura[6],
+		sourceUnit = unitAura[7],
+		isStealable = unitAura[8],
+		nameplateShowPersonal = unitAura[9],
+		spellId = unitAura[10],
+		canApplyAura = unitAura[11],
+		isBossAura = unitAura[12],
+		isFromPlayerOrPlayerPet = unitAura[13],
+		nameplateShowAll = unitAura[14],
+		timeMod = unitAura[15],
+		points = { select(16, unitAura) },
+		
+		-- not available
+		auraInstanceID = nil,
+		isHarmful = nil,
+		isHelpful = nil,
+		isNameplateOnly = nil,
+		isRaid = nil,
+		charges = nil,
+		maxCharges = nil
+	};
+end
+
 -- iterate through unit's auras
 --
 -- @param unitID        unit id, e.g. "player", "target" or "mouseover"
 -- @param filter        a list of filters, separated by pipe chars or spaces, see LFF_AURA_FILTERS
 -- @param maxCount      optional. max count of auras to iterate through.
 -- @param func          callback function for each aura. iteration of unit's auras cancelable with returning true.
--- @param usePackedAura optional. if true, aura infos will be passed to callback function "func" as a table of type UnitAuraInfo. otherwise aura infos from UnitAuraBySlot() / UnitAura() will be passed as multiple return values.
+-- @param usePackedAura optional. if true, aura infos will be passed to callback function "func" as a table of type AuraData. otherwise aura infos from UnitAuraBySlot() / UnitAura() will be passed as multiple return values.
 function LibFroznFunctions:ForEachAura(unitID, filter, maxCount, func, usePackedAura)
 	-- see SecureAuraHeader_Update() in "SecureGroupHeaders.lua"
 	
 	-- since df 10.0.0
 	if (AuraUtil) and (AuraUtil.ForEachAura) then
-		local function callbackFunc(nameOrUnitAuraInfo, ...)
+		local function callbackFunc(nameOrAuraData, ...)
 			if (usePackedAura) then
-				if (not nameOrUnitAuraInfo) or (not nameOrUnitAuraInfo.name) then
+				if (not nameOrAuraData) or (not nameOrAuraData.name) then
 					return;
 				end
 			else
-				if (not nameOrUnitAuraInfo) then
+				if (not nameOrAuraData) then
 					return;
 				end
 			end
 			
-			func(nameOrUnitAuraInfo, ...);
+			func(nameOrAuraData, ...);
 		end
 		
 		AuraUtil.ForEachAura(unitID, filter, maxCount, callbackFunc, usePackedAura);
@@ -2178,12 +2364,10 @@ function LibFroznFunctions:ForEachAura(unitID, filter, maxCount, func, usePacked
 	while (true) do
 		index = index + 1;
 		
-		local unitAura = { UnitAura(unitID, index, filter) };
+		local unitAuraData = LibFroznFunctions:GetAuraDataByIndex(unitID, index, filter);
 		
 		-- no more auras available
-		local name = unitAura[1];
-		
-		if (not name) then
+		if (not unitAuraData) or (not unitAuraData.name) then
 			break;
 		end
 		
@@ -2191,35 +2375,26 @@ function LibFroznFunctions:ForEachAura(unitID, filter, maxCount, func, usePacked
 		local done = false;
 		
 		if (usePackedAura) then
-			done = func({
-				name = unitAura[1],
-				icon = unitAura[2],
-				applications = unitAura[3],
-				dispelName = unitAura[4],
-				duration = unitAura[5],
-				expirationTime = unitAura[6],
-				sourceUnit = unitAura[7],
-				isStealable = unitAura[8],
-				nameplateShowPersonal = unitAura[9],
-				spellId = unitAura[10],
-				canApplyAura = unitAura[11],
-				isBossAura = unitAura[12],
-				isFromPlayerOrPlayerPet = unitAura[13],
-				nameplateShowAll = unitAura[14],
-				timeMod = unitAura[15],
-				points = { select(16, unitAura) },
-				
-				-- not available
-				auraInstanceID = nil,
-				isHarmful = nil,
-				isHelpful = nil,
-				isNameplateOnly = nil,
-				isRaid = nil,
-				charges = nil,
-				maxCharges = nil
-			});
+			done = func(unitAuraData);
 		else
-			done = func(unpack(unitAura));
+			done = func(
+				auraData.name,
+				auraData.icon,
+				auraData.applications,
+				auraData.dispelName,
+				auraData.duration,
+				auraData.expirationTime,
+				auraData.sourceUnit,
+				auraData.isStealable,
+				auraData.nameplateShowPersonal,
+				auraData.spellId,
+				auraData.canApplyAura,
+				auraData.isBossAura,
+				auraData.isFromPlayerOrPlayerPet,
+				auraData.nameplateShowAll,
+				auraData.timeMod,
+				unpack(auraData.points)
+			);
 		end
 		
 		if (done) then
@@ -2391,13 +2566,18 @@ function LibFroznFunctions:CanInspect(unitID)
 		return false;
 	end
 	
-	-- check if inspection is possible
-	local function checkFn()
-		return (not LibFroznFunctions:IsInspectFrameOpen()) and (CanInspect(unitID));
+	-- no inspection if inspect frame is open
+	if (LibFroznFunctions:IsInspectFrameOpen()) then
+		return false;
 	end
 	
-	-- suppress error message and speech in Classic Era, BCC and WotLKC
-	if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) then
+	-- check if inspection is possible
+	local function checkFn()
+		return CanInspect(unitID);
+	end
+	
+	-- needs suppressing error message and speech when calling CanInspect()
+	if (LibFroznFunctions.hasWoWFlavor.needsSuppressingErrorMessageAndSpeechWhenCallingCanInspect) then
 		return LibFroznFunctions:CallFunctionAndSuppressErrorMessageAndSpeech(checkFn);
 	end
 	
@@ -2452,12 +2632,13 @@ function frameForDelayedInspection:RemoveQueuedInspectRequest(unitCacheRecord)
 	end
 end
 
--- HOOK: frameForDelayedInspection's OnUpdate -- sends the inspect request after a delay
+-- HOOK: frameForDelayedInspection's OnUpdate() -- sends the inspect request after a delay
 frameForDelayedInspection.NextNotifyInspectTimestamp = GetTime();
+frameForDelayedInspection.NotifyInspectHooked = false;
 
 frameForDelayedInspection:SetScript("OnUpdate", function(self, elapsed)
 	if (self.NextNotifyInspectTimestamp <= GetTime()) then
-		-- send next queued inspect request
+		-- get next unit to send next queued inspect request for
 		local unitCacheRecord, unitID, unitIDForNotifyInspectFound;
 		
 		repeat
@@ -2486,6 +2667,10 @@ frameForDelayedInspection:SetScript("OnUpdate", function(self, elapsed)
 			end
 		until (unitIDForNotifyInspectFound);
 		
+		-- hook NotifyInspect() to monitor inspect requests
+		frameForDelayedInspection:HookNotifyInspect();
+		
+		-- send next queued inspect request
 		NotifyInspect(unitID);
 		
 		-- check if there are no more queued inspect requests available
@@ -2495,22 +2680,32 @@ frameForDelayedInspection:SetScript("OnUpdate", function(self, elapsed)
 	end
 end);
 
--- HOOK: NotifyInspect to monitor inspect requests
-hooksecurefunc("NotifyInspect", function(unitID)
-	-- set queued inspect request to inspect requests waiting for inspect data
-	local unitGUID = UnitGUID(unitID);
-	local unitCacheRecord = frameForDelayedInspection:GetUnitCacheRecord(unitID, unitGUID);
-	
-	if (unitCacheRecord) then
-		unitCacheRecord.inspectStatus = LFF_INSPECT_STATUS.waitingForInspectData;
-		unitCacheRecord.inspectTimestamp = GetTime();
-		
-		frameForDelayedInspection:RemoveQueuedInspectRequest(unitCacheRecord);
+-- HOOK: NotifyInspect() to monitor inspect requests
+function frameForDelayedInspection:HookNotifyInspect()
+	-- check if NotifyInspect() is already hooked
+	if (frameForDelayedInspection.NotifyInspectHooked) then
+		return;
 	end
 	
-	-- set timestamp for next inspect request
-	frameForDelayedInspection.NextNotifyInspectTimestamp = GetTime() + LFF_INSPECT_TIMEOUT;
-end);
+	-- HOOK: NotifyInspect() to monitor inspect requests
+	hooksecurefunc("NotifyInspect", function(unitID)
+		-- set queued inspect request to inspect requests waiting for inspect data
+		local unitGUID = UnitGUID(unitID);
+		local unitCacheRecord = frameForDelayedInspection:GetUnitCacheRecord(unitID, unitGUID);
+		
+		if (unitCacheRecord) then
+			unitCacheRecord.inspectStatus = LFF_INSPECT_STATUS.waitingForInspectData;
+			unitCacheRecord.inspectTimestamp = GetTime();
+			
+			frameForDelayedInspection:RemoveQueuedInspectRequest(unitCacheRecord);
+		end
+		
+		-- set timestamp for next inspect request
+		frameForDelayedInspection.NextNotifyInspectTimestamp = GetTime() + LFF_INSPECT_TIMEOUT;
+	end);
+	
+	frameForDelayedInspection.NotifyInspectHooked = true;
+end
 
 -- EVENT: INSPECT_READY - inspect data available
 function frameForDelayedInspection:INSPECT_READY(event, unitGUID)
@@ -2616,8 +2811,8 @@ function LibFroznFunctions:AreTalentsAvailable(unitID)
 		return LFF_TALENTS.na;
 	end
 	
-	-- getting talents from other players isn't available in classic era
-	if (not isSelf) and (LibFroznFunctions.isWoWFlavor.ClassicEra) then
+	-- consider if getting talents from other players isn't available
+	if (not isSelf) and (not LibFroznFunctions.hasWoWFlavor.talentsAvailableForInspectedUnit) then
 		return LFF_TALENTS.na;
 	end
 	
@@ -2826,12 +3021,6 @@ function LibFroznFunctions:GetAverageItemLevel(unitID, callbackForItemData)
 end
 
 -- get average item level from item data
-LFF_BASE_LEVEL_FOR_TIPTAC_GEAR_SCORE =
-	LibFroznFunctions.isWoWFlavor.ClassicEra and  66 or -- Cenarion Vestments (Druid, Tier 1)
-	LibFroznFunctions.isWoWFlavor.BCC        and 120 or -- Chestguard of Malorne (Druid, Tier 4)
-	LibFroznFunctions.isWoWFlavor.WotLKC     and 213 or -- Valorous Dreamwalker Robe (Druid, Tier 7)
-	LibFroznFunctions.isWoWFlavor.DF         and 395;   -- Lost Landcaller's Robes (Druid, Tier 23)
-
 function LFF_GetAverageItemLevelFromItemData(unitID, callbackForItemData, unitGUID)
 	-- check if unit guid from unit id is still the same when waiting for item data
 	if (callbackForItemData) and (unitGUID) then
@@ -2979,10 +3168,10 @@ function LFF_GetAverageItemLevelFromItemData(unitID, callbackForItemData, unitGU
 			-- 2. weighted item level by inventory type
 			-- 3. weighted item level by item quality
 			-- 4. sum it all up
-			local performancePerILvlForTipTacGearScore = LFF_BASE_LEVEL_FOR_TIPTAC_GEAR_SCORE and math.pow(1.01, (twoHandedMainHandOnly and (iLvlToAdd / 2) or iLvlToAdd) - LFF_BASE_LEVEL_FOR_TIPTAC_GEAR_SCORE) or 1; -- +1 iLvl = +1% performance, source: https://www.wowhead.com/news/gear-inflation-on-target-1-item-level-should-result-in-roughly-1-increased-322062
+			local performancePerILvlForTipTacGearScore = LibFroznFunctions.hasWoWFlavor.itemLevelOfFirstRaidTierSet and math.pow(1.01, (twoHandedMainHandOnly and (iLvlToAdd / 2) or iLvlToAdd) - LibFroznFunctions.hasWoWFlavor.itemLevelOfFirstRaidTierSet) or 1; -- +1 iLvl = +1% performance, source: https://www.wowhead.com/news/gear-inflation-on-target-1-item-level-should-result-in-roughly-1-increased-322062
 			local qualityModForTipTacGearScore = LibFroznFunctions:ExistsInTable(quality, { 0, 1 }) and 0.005 or (quality == 5) and 1.3 or (quality == 6) and 1.69 or 1;
 			
-			TipTacGearScore = TipTacGearScore + (LFF_BASE_LEVEL_FOR_TIPTAC_GEAR_SCORE or iLvlToAdd) * performancePerILvlForTipTacGearScore * (slotModForTipTacGearScore[item.inventoryType] or 1) * (LibFroznFunctions:ExistsInTable(quality, { 0, 1 }) and 0.005 or (quality == 5) and 1.3 or (quality == 6) and 1.69 or 1);
+			TipTacGearScore = TipTacGearScore + (LibFroznFunctions.hasWoWFlavor.itemLevelOfFirstRaidTierSet or iLvlToAdd) * performancePerILvlForTipTacGearScore * (slotModForTipTacGearScore[item.inventoryType] or 1) * (LibFroznFunctions:ExistsInTable(quality, { 0, 1 }) and 0.005 or (quality == 5) and 1.3 or (quality == 6) and 1.69 or 1);
 		end
 	end
 	

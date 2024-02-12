@@ -16,7 +16,7 @@ local LibFroznFunctions = LibStub:GetLibrary("LibFroznFunctions-1.0");
 
 local GetSpellLink = GetSpellLink;
 
-if (LibFroznFunctions.isWoWFlavor.ClassicEra) then
+if (not LibFroznFunctions.hasWoWFlavor.realGetSpellLinkAvailable) then
 	GetSpellLink = function(spellID)
 		local name, _, icon, castTime, minRange, maxRange, _spellID = GetSpellInfo(spellID);	-- [18.07.19] 8.0/BfA: 2nd param "rank/nameSubtext" now returns nil
 		return format("|c%s|Hspell:%d:0|h[%s]|h|r", "FF71D5FF", spellID, name);
@@ -51,7 +51,6 @@ if (TipTac) then
 end
 
 -- Default Config
-local cfg;
 local TTIF_DefaultConfig = {
 	if_enable = true,
 	if_infoColor = { 0.2, 0.6, 1 },
@@ -116,6 +115,9 @@ local TTIF_DefaultConfig = {
 	if_iconOffsetX = 2.5,
 	if_iconOffsetY = -2.5
 };
+local cfg;
+local TT_ExtendedConfig;
+local TT_CacheForFrames;
 
 -- Tooltips to Hook into -- MUST be a GameTooltip widget -- If the main TipTac is installed, the TT_TipsToModify is used instead
 local tipsToModify = {
@@ -411,7 +413,10 @@ end
 --------------------------------------------------------------------------------------------------------
 
 -- Apply Settings -- It seems this may be called from TipTac:OnApplyConfig() before we have received our VARIABLES_LOADED, so ensure we have created the tip objects
-function ttif:OnApplyConfig()
+function ttif:OnApplyConfig(_TT_CacheForFrames, _cfg, _TT_ExtendedConfig)
+	TT_CacheForFrames = _TT_CacheForFrames;
+	TT_ExtendedConfig = _TT_ExtendedConfig;
+	
 	local gameFont = GameFontNormal:GetFont();
 	for index, tip in ipairs(tipsToModify) do
 		if (type(tip) == "table") and (tipsToAddIcon[tip:GetName()]) and (tip.ttIcon) then
@@ -618,17 +623,17 @@ end
 -- HOOK: SetUnitAura + SetUnitBuff + SetUnitDebuff
 local function SetUnitAura_Hook(self, unit, index, filter)
 	if (cfg.if_enable) and (not tipDataAdded[self]) then
-		local name, icon, count, dispelType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff, castByPlayer, nameplateShowAll, timeMod = UnitAura(unit, index, filter); -- [18.07.19] 8.0/BfA: "dropped second parameter"
-		if (spellID) then
-			local link = GetSpellLink(spellID);
+		local auraData = LibFroznFunctions:GetAuraDataByIndex(unit, index, filter); -- [18.07.19] 8.0/BfA: "dropped second parameter"
+		if (auraData) and (auraData.spellId) then
+			local link = GetSpellLink(auraData.spellId);
 			if (link) then
 				local linkType, _spellID = link:match("H?(%a+):(%d+)");
 				if (_spellID) then
 					tipDataAdded[self] = linkType;
-					LinkTypeFuncs.spell(self, true, source, link, linkType, _spellID);
+					LinkTypeFuncs.spell(self, true, auraData.sourceUnit, link, linkType, _spellID);
 
 					-- apply workaround for first mouseover
-					ttif:ApplyWorkaroundForFirstMouseover(self, true, source, link, linkType, _spellID);
+					ttif:ApplyWorkaroundForFirstMouseover(self, true, auraData.sourceUnit, link, linkType, _spellID);
 				end
 			end
 		end
@@ -1866,32 +1871,28 @@ function ttif:ApplyHooksToTips(tips, resolveGlobalNamedObjects, addToTipsToModif
 				hooksecurefunc(tip, "SetPetAction", SetPetAction_Hook);
 				hooksecurefunc(tip, "SetQuestItem", SetQuestItem_Hook);
 				hooksecurefunc(tip, "SetQuestLogItem", SetQuestLogItem_Hook);
-				if (LibFroznFunctions.isWoWFlavor.WotLKC) or (LibFroznFunctions.isWoWFlavor.SL) or (LibFroznFunctions.isWoWFlavor.DF) then
-					hooksecurefunc(tip, "SetCurrencyToken", SetCurrencyToken_Hook);
-					if (tip.SetCurrencyTokenByID) then -- removed since df 10.0.2
-						hooksecurefunc(tip, "SetCurrencyTokenByID", SetCurrencyTokenByID_Hook);
-					end
-					hooksecurefunc(tip, "SetQuestCurrency", SetQuestCurrency_Hook);
-					hooksecurefunc(tip, "SetQuestLogCurrency", SetQuestLogCurrency_Hook);
-					hooksecurefunc(tip, "SetCompanionPet", SetCompanionPet_Hook);
-					hooksecurefunc(tip, "SetMountBySpellID", SetMountBySpellID_Hook);
-					hooksecurefunc(tip, "SetToyByItemID", SetToyByItemID_Hook);
-					hooksecurefunc(tip, "SetLFGDungeonReward", SetLFGDungeonReward_Hook);
-					hooksecurefunc(tip, "SetLFGDungeonShortageReward", SetLFGDungeonShortageReward_Hook);
-				end
-				if (LibFroznFunctions.isWoWFlavor.SL) or (LibFroznFunctions.isWoWFlavor.DF) then
-					hooksecurefunc(tip, "SetConduit", SetConduit_Hook);
-					hooksecurefunc(tip, "SetEnhancedConduit", SetConduit_Hook);
-					hooksecurefunc(tip, "SetAzeriteEssence", SetAzeriteEssence_Hook);
-					hooksecurefunc(tip, "SetAzeriteEssenceSlot", SetAzeriteEssenceSlot_Hook);
-					hooksecurefunc(tip, "SetCurrencyByID", SetCurrencyByID_Hook);
-					hooksecurefunc(tip, "SetQuestPartyProgress", SetQuestPartyProgress_Hook);
-					hooksecurefunc(tip, "SetRecipeReagentItem", SetRecipeReagentItem_Hook);
-				end
-				if (LibFroznFunctions.isWoWFlavor.DF) then
-					hooksecurefunc(tip, "SetUnitBuffByAuraInstanceID", SetUnitBuffByAuraInstanceID_Hook);
-					hooksecurefunc(tip, "SetUnitDebuffByAuraInstanceID", SetUnitBuffByAuraInstanceID_Hook);
-				end
+				-- since wotlkc
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetCurrencyToken", SetCurrencyToken_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetCurrencyTokenByID", SetCurrencyTokenByID_Hook); -- removed with df 10.0.2
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetQuestCurrency", SetQuestCurrency_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetQuestLogCurrency", SetQuestLogCurrency_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetCompanionPet", SetCompanionPet_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetMountBySpellID", SetMountBySpellID_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetToyByItemID", SetToyByItemID_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetLFGDungeonReward", SetLFGDungeonReward_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetLFGDungeonShortageReward", SetLFGDungeonShortageReward_Hook);
+				-- since sl
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetConduit", SetConduit_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetEnhancedConduit", SetConduit_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetAzeriteEssence", SetAzeriteEssence_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetAzeriteEssenceSlot", SetAzeriteEssenceSlot_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetCurrencyByID", SetCurrencyByID_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetQuestPartyProgress", SetQuestPartyProgress_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetRecipeReagentItem", SetRecipeReagentItem_Hook);
+				-- since df
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetUnitBuffByAuraInstanceID", SetUnitBuffByAuraInstanceID_Hook);
+				LibFroznFunctions:HookSecureFuncIfExists(tip, "SetUnitDebuffByAuraInstanceID", SetUnitBuffByAuraInstanceID_Hook);
+				
 				LibFroznFunctions:HookScriptOnTooltipSetUnit(tip, OnTooltipSetUnit);
 				LibFroznFunctions:HookScriptOnTooltipSetItem(tip, OnTooltipSetItem);
 				LibFroznFunctions:HookScriptOnTooltipSetSpell(tip, OnTooltipSetSpell);
@@ -1908,19 +1909,15 @@ function ttif:ApplyHooksToTips(tips, resolveGlobalNamedObjects, addToTipsToModif
 					LibFroznFunctions:HookSecureFuncIfExists("EmbeddedItemTooltip_SetSpellByQuestReward", EITT_SetSpellByQuestReward_Hook); -- removed since WotLKC 3.4.2
 					hooksecurefunc("EmbeddedItemTooltip_SetCurrencyByID", EITT_SetCurrencyByID_Hook);
 					hooksecurefunc("EmbeddedItemTooltip_Clear", EITT_Clear_Hook);
-					-- classic support
-					if (LibFroznFunctions.isWoWFlavor.WotLKC) or (LibFroznFunctions.isWoWFlavor.SL) or (LibFroznFunctions.isWoWFlavor.DF) then
-						hooksecurefunc("QuestMapLogTitleButton_OnEnter", QMLTB_OnEnter_Hook);
-					end
-					if (LibFroznFunctions.isWoWFlavor.SL) or (LibFroznFunctions.isWoWFlavor.DF) then
-						hooksecurefunc("TaskPOI_OnEnter", TPOI_OnEnter_Hook);
-						hooksecurefunc("EmbeddedItemTooltip_SetSpellWithTextureByID", EITT_SetSpellWithTextureByID_Hook);
-						hooksecurefunc(RuneforgePowerBaseMixin, "OnEnter", RPBM_OnEnter_Hook);
-						hooksecurefunc(DressUpOutfitDetailsSlotMixin, "OnEnter", DUODSM_OnEnter_Hook);
-						if (LibFroznFunctions.isWoWFlavor.DF) then
-							hooksecurefunc(TalentDisplayMixin, "OnEnter", TDM_OnEnter_Hook);
-						end
-					end
+					-- since wotlkc
+					LibFroznFunctions:HookSecureFuncIfExists("QuestMapLogTitleButton_OnEnter", QMLTB_OnEnter_Hook);
+					-- since sl
+					LibFroznFunctions:HookSecureFuncIfExists("TaskPOI_OnEnter", TPOI_OnEnter_Hook);
+					LibFroznFunctions:HookSecureFuncIfExists("EmbeddedItemTooltip_SetSpellWithTextureByID", EITT_SetSpellWithTextureByID_Hook);
+					LibFroznFunctions:HookSecureFuncIfExists(RuneforgePowerBaseMixin, "OnEnter", RPBM_OnEnter_Hook);
+					LibFroznFunctions:HookSecureFuncIfExists(DressUpOutfitDetailsSlotMixin, "OnEnter", DUODSM_OnEnter_Hook);
+					-- since df
+					LibFroznFunctions:HookSecureFuncIfExists(TalentDisplayMixin, "OnEnter", TDM_OnEnter_Hook);
 				end
 				tipHooked = true;
 			else
@@ -2227,7 +2224,7 @@ local function SmartIconEvaluation(tip,linkType)
 		return false;
 	-- Item
 	elseif (linkType == "item") then
-		if (owner.hasItem or owner.action or owner.icon or owner.Icon or owner.texture or owner.lootFrame or owner.ItemIcon or owner.iconTexture or
+		if (owner == EquipmentFlyoutFrameButtons or owner.hasItem or owner.action or owner.icon or owner.Icon or owner.texture or owner.lootFrame or owner.ItemIcon or owner.iconTexture or
 				(owner.ContentsContainer and owner.ContentsContainer.Icon) or owner.FrozenSlot) then -- Blizzard_PerksProgram -> PerksProgramTooltip, e.g. for trading post introduced with df 10.0.5
 			return false;
 		end
@@ -2626,12 +2623,12 @@ function LinkTypeFuncs:spell(isAura, source, link, linkType, spellID)
 	rank = (rank and rank ~= "" and ", "..rank or "");
 
 	local mawPowerID = nil;
-	if (LibFroznFunctions.isWoWFlavor.SL) or (LibFroznFunctions.isWoWFlavor.DF) then
+	if (GetMawPowerLinkBySpellID) then
 		local linkMawPower = GetMawPowerLinkBySpellID(spellID);
 		if (linkMawPower) then
 			local _linkType, _mawPowerID = linkMawPower:match("H?(%a+):(%d+)");
 			mawPowerID = _mawPowerID;
-			if (not table_MawPower_by_MawPowerID[mawPowerID]) then -- possible internal blizzard bug: GetMawPowerLinkBySpellID() e.g. returns mawPowerID 1453 for battle shout with spellID 6673, which doesn't exist in table MawPower (from https://wow.tools/dbc/?dbc=mawpower)
+			if (not LFF_MAWPOWERID_TO_MAWPOWER_LOOKUP[mawPowerID]) then -- possible internal blizzard bug: GetMawPowerLinkBySpellID() e.g. returns mawPowerID 1453 for battle shout with spellID 6673, which doesn't exist in table MawPower (from https://wow.tools/dbc/?dbc=mawpower)
 				mawPowerID = nil;
 			end
 		end
@@ -2659,7 +2656,7 @@ function LinkTypeFuncs:spell(isAura, source, link, linkType, spellID)
 			
 			if (UnitIsPlayer(source)) and (cfg.if_colorAuraCasterByClass) then
 				local sourceClassID = select(3, UnitClass(source));
-				colorAuraCaster = LibFroznFunctions:GetClassColor(sourceClassID) or CreateColor(unpack(cfg.if_infoColor));
+				colorAuraCaster = LibFroznFunctions:GetClassColor(sourceClassID, nil, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil) or CreateColor(unpack(cfg.if_infoColor));
 			end
 			
 			if (not colorAuraCaster) and (cfg.if_colorAuraCasterByReaction) then
@@ -2731,8 +2728,8 @@ end
 -- maw power
 function LinkTypeFuncs:mawpower(link, linkType, mawPowerID)
 	local spellID = nil;
-	if (mawPowerID and table_MawPower_by_MawPowerID[mawPowerID]) then
-		spellID = table_MawPower_by_MawPowerID[mawPowerID].spellID;
+	if (mawPowerID and LFF_MAWPOWERID_TO_MAWPOWER_LOOKUP[mawPowerID]) then
+		spellID = LFF_MAWPOWERID_TO_MAWPOWER_LOOKUP[mawPowerID].spellID;
 	end
 	
 	local name, _, icon, castTime, minRange, maxRange, _spellID = GetSpellInfo(spellID);	-- [18.07.19] 8.0/BfA: 2nd param "rank/nameSubtext" now returns nil
@@ -2814,18 +2811,11 @@ function LinkTypeFuncs:quest(link, linkType, questID, level)
 	
   	-- Difficulty Border
 	if (cfg.if_questDifficultyBorder) then
-		local difficultyColorMixin;
+		local difficultyColorMixin = LibFroznFunctions:GetDifficultyColorForQuest(questID, level);
 		
-		if (C_QuestLog.IsWorldQuest and C_QuestLog.IsWorldQuest(questID)) then -- see GameTooltip_AddQuest
-			local tagInfo = C_QuestLog.GetQuestTagInfo(questID);
-			local quality = tagInfo and tagInfo.quality or Enum.WorldQuestQuality.Common;
-			difficultyColorMixin = WORLD_QUEST_QUALITY_COLORS[quality].color;
-		else
-			local difficultyColor = GetDifficultyColor and GetDifficultyColor(C_PlayerInfo.GetContentDifficultyQuestForPlayer(questID)) or GetQuestDifficultyColor(level);
-			difficultyColorMixin = CreateColor(difficultyColor.r, difficultyColor.g, difficultyColor.b, 1);
+		if (difficultyColorMixin) then
+			ttif:SetBackdropBorderColorLocked(self, difficultyColorMixin:GetRGBA());
 		end
-		
-		ttif:SetBackdropBorderColorLocked(self, difficultyColorMixin:GetRGBA());
 	end
 end
 

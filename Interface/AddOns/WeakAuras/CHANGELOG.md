@@ -1,33 +1,28 @@
-# [5.8.7](https://github.com/WeakAuras/WeakAuras2/tree/5.8.7) (2023-12-03)
+# [5.10.1](https://github.com/WeakAuras/WeakAuras2/tree/5.10.1) (2024-02-09)
 
-[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.8.6...5.8.7)
+[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.10.0...5.10.1)
 
 ## Highlights
 
- - Updates for Season of Discovery
-- New option to treat charged combo point as 7 combo points (thanks to @weswigham for initial idea+PR)
-- Bug fixes 
+ - Bug Fixes 
 
 ## Commits
 
-InfusOnWoW (9):
+Putro (1):
 
-- Show an warning on trying to update an aura that can't be updated
-- Add an option to treat a charged combo point as 7 combo points
-- Add CHAT_MSG_LOOT type
-- Tweak frame levels again a bit
-- Improve error message for auras without a region type
-- AuraBar: Fix property names for gradient colors
-- Author Options: Also sort Sound list for the user
-- Drangonflying Load Option
-- Templates: Fix talent load option for Holy Word: Sanctify
+- Localize the title in AuraWarnings
 
-Stanzilla (2):
+Stanzilla (3):
 
-- Bump minor
-- Bump Classic TOC for SoD
+- Add more types to Types
+- A few type and spelling fixes
+- Add workaround for actions/checkout#290
 
-mrbuds (1):
+dependabot[bot] (1):
 
-- Classis SoD: include new spell ids in spell cache
+- Bump peter-evans/create-pull-request from 5 to 6
+
+emptyrivers (1):
+
+- move type checking code for WeakAurasArchive
 

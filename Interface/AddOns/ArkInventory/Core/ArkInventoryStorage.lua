@@ -1156,8 +1156,10 @@ function ArkInventory:EVENT_ARKINV_MAIL_ENTER( ... )
 		ArkInventory.Frame_Main_Generate( loc_id, ArkInventory.Const.Window.Draw.Refresh )
 	end
 	
-	ArkInventory.Global.Action.Mail.process = true
-	--ArkInventory.Action.Mail.Send( )
+	if not IsShiftKeyDown( ) then
+		ArkInventory.Global.Action.Mail.process = true
+		--ArkInventory.Action.Mail.Send( )
+	end
 	
 end
 
@@ -4258,7 +4260,7 @@ function ArkInventory.ScanCollectionReputation_Threaded( blizzard_id, loc_id, ba
 			
 			local h = object.link
 			local sb = ArkInventory.ENUM.BIND.PICKUP
-			local count = object.repValue
+			local count = object.barValue
 			
 			local changed_item = ArkInventory.ScanChanged( i, h, sb, count )
 			

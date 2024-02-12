@@ -2,6 +2,20 @@
 
 ArkInventory.CrossClient = { }
 
+local C_AddOns = _G.C_AddOns
+local C_AzeriteEmpoweredItem = _G.C_AzeriteEmpoweredItem
+local C_Container = _G.C_Container
+local C_CurrencyInfo = _G.C_CurrencyInfo
+local C_CVar = _G.C_CVar
+local C_GossipInfo = _G.C_GossipInfo
+local C_Item = _G.C_Item
+local C_MajorFactions = _G.C_MajorFactions
+local C_Reputation = _G.C_Reputation
+local C_Soulbinds = _G.C_Soulbinds
+local C_TradeSkillUI = _G.C_TradeSkillUI
+local C_TransmogCollection = _G.C_TransmogCollection
+
+
 
 function ArkInventory.CrossClient.GetAverageItemLevel( )
 	
@@ -253,6 +267,28 @@ function ArkInventory.CrossClient.GetCurrencyListSize( ... )
 	end
 end
 
+function ArkInventory.CrossClient.GetCurrencyListLink( ... )
+	local index = ...
+	if index then
+		if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListLink then
+			return C_CurrencyInfo.GetCurrencyListLink( ... )
+		elseif GetCurrencyListLink then
+			return GetCurrencyListLink( ... )
+		end
+	end
+end
+
+function ArkInventory.CrossClient.GetCurrencyIDFromLink( ... )
+	if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyIDFromLink then
+		return C_CurrencyInfo.GetCurrencyIDFromLink( ... )
+	else
+		local osd = ArkInventory.ObjectStringDecode( ... )
+		if osd.class == "reputation" then
+			return osd.id
+		end
+	end
+end
+
 function ArkInventory.CrossClient.GetCurrencyListInfo( ... )
 	
 	local r = { }
@@ -260,16 +296,33 @@ function ArkInventory.CrossClient.GetCurrencyListInfo( ... )
 	if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListInfo then
 		
 		r = C_CurrencyInfo.GetCurrencyListInfo( ... ) or r
+		r.link = ArkInventory.CrossClient.GetCurrencyListLink( ... )
+		r.description = C_CurrencyInfo.GetCurrencyDescription( ... )
 		
 	elseif GetCurrencyListInfo then
 		
 		r.name, r.isHeader, r.isHeaderExpanded, r.isTypeUnused, r.isShowInBackpack, r.quantity, r.iconFileID, r.maxQuantity, r.canEarnPerWeek, r.quantityEarnedThisWeek, unknown, r.itemID = GetCurrencyListInfo( ... )
+		r.link = ArkInventory.CrossClient.GetCurrencyListLink( ... )
 		
+	end
+	
+	if not r.isHeader then
+		r.hasCurrency = true
+	end
+	
+	if r.link then
+		local currencyID = ArkInventory.CrossClient.GetCurrencyIDFromLink( r.link )
+		if currencyID then
+			r.currencyID = currencyID
+		end
 	end
 	
 	return r
 	
 end
+
+
+
 
 function ArkInventory.CrossClient.GetBackpackCurrencyInfo( ... )
 	
@@ -289,14 +342,6 @@ function ArkInventory.CrossClient.GetBackpackCurrencyInfo( ... )
 	
 end
 
-function ArkInventory.CrossClient.GetCurrencyListLink( ... )
-	if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListLink then
-		return C_CurrencyInfo.GetCurrencyListLink( ... )
-	elseif GetCurrencyListLink then
-		return GetCurrencyListLink( ... )
-	end
-end
-
 function ArkInventory.CrossClient.SetCurrencyUnused( ... )
 	if C_CurrencyInfo and C_CurrencyInfo.SetCurrencyUnused then
 		return C_CurrencyInfo.SetCurrencyUnused( ... )
@@ -313,9 +358,86 @@ function ArkInventory.CrossClient.ExpandCurrencyList( ... )
 	end
 end
 
+function ArkInventory.CrossClient.GetNumFactions( ... )
+	if GetNumFactions then
+		return GetNumFactions( ... )
+	end
+end
+
+function ArkInventory.CrossClient.ExpandFactionHeader( ... )
+	if ExpandFactionHeader then
+		return ExpandFactionHeader( ... )
+	end
+end
+
+function ArkInventory.CrossClient.CollapseFactionHeader( ... )
+	if CollapseFactionHeader then
+		return CollapseFactionHeader( ... )
+	end
+end
+
+function ArkInventory.CrossClient.GetFactionInfo( ... )
+	
+	
+	if GetFactionInfo then
+		
+		local r = { }
+		
+		r.name, r.description, r.standingID, r.barMin, r.barMax, r.barValue, r.atWarWith, r.canToggleAtWar, r.isHeader, r.isCollapsed, r.hasRep, r.isWatched, r.isChild, r.factionID, r.hasBonusRepGain, r.canBeLFGBonus = GetFactionInfo( ... )
+		
+		r.standingID = r.standingID or 0
+		r.barMin = r.barMin or 0
+		r.barMax = r.barMax or 0
+		r.barValue = r.barValue or 0
+		
+		return r
+		
+	end
+	
+end
+
+function ArkInventory.CrossClient.GetFactionInfoByID( ... )
+	
+	local r = { }
+	
+	if GetFactionInfoByID then
+		r.name, r.description, r.standingID, r.barMin, r.barMax, r.barValue, r.atWarWith, r.canToggleAtWar, r.isHeader, r.isCollapsed, r.hasRep, r.isWatched, r.isChild, r.factionID, r.hasBonusRepGain, r.canBeLFGBonus = GetFactionInfoByID( ... )
+	end
+	
+	return r
+	
+end
+
 function ArkInventory.CrossClient.GetFriendshipReputation( ... )
-	if GetFriendshipReputation then
-		return GetFriendshipReputation( ... )
+	if C_GossipInfo and C_GossipInfo.GetFriendshipReputation then
+		local r = C_GossipInfo.GetFriendshipReputation( ... )
+		if r.friendshipFactionID > 0 then
+			return r
+		end
+	end
+end
+
+function ArkInventory.CrossClient.GetFriendshipReputationRanks( ... )
+	if C_GossipInfo and C_GossipInfo.GetFriendshipReputationRanks then
+		return C_GossipInfo.GetFriendshipReputationRanks( ... )
+	end
+end
+
+function ArkInventory.CrossClient.IsMajorFaction( ... )
+	if C_Reputation and C_Reputation.IsMajorFaction then
+		return C_Reputation.IsMajorFaction( ... )
+	end
+end
+
+function ArkInventory.CrossClient.GetMajorFactionData( ... )
+	if C_MajorFactions and C_MajorFactions.GetMajorFactionData then
+		return C_MajorFactions.GetMajorFactionData( ... )
+	end
+end
+
+function ArkInventory.CrossClient.HasMaximumRenown( ... )
+	if C_MajorFactions and C_MajorFactions.HasMaximumRenown then
+		return C_MajorFactions.HasMaximumRenown( ... )
 	end
 end
 
@@ -323,6 +445,31 @@ function ArkInventory.CrossClient.IsFactionParagon( ... )
 	if C_Reputation and C_Reputation.IsFactionParagon then
 		return C_Reputation.IsFactionParagon( ... )
 	end
+end
+
+function ArkInventory.CrossClient.GetFactionParagonInfo( ... )
+	
+	if C_Reputation and C_Reputation.GetFactionParagonInfo then
+		
+		local r = { }
+		
+		r.value, r.threshold, r.rewardQuestID, r.rewardPending, r.tooLowLevel = C_Reputation.GetFactionParagonInfo( ... )
+		
+		return r
+		
+	end
+	
+end
+
+function ArkInventory.CrossClient.GetRenownLevels( ... )
+	
+	local r = { }
+	
+	if C_MajorFactions and C_MajorFactions.GetRenownLevels then
+		r = C_MajorFactions.GetRenownLevels( ... )
+	end
+	
+	return r
 end
 
 function ArkInventory.CrossClient.GetCVar( ... )
@@ -681,7 +828,10 @@ end
 if ArkInventory.Const.BLIZZARD.CLIENT.ID == nil then
 	ArkInventory.OutputError( "code error: unable to determine game client, please contact the author with the following client data: project=[", WOW_PROJECT_ID, "], agent=[", a, "], portal=[", p, "] TOC=[", ArkInventory.Const.BLIZZARD.TOC, "]")
 else
-	if string.match( a, "beta" ) then
+	if string.match( a, "alpha" ) then
+		ArkInventory.Const.BLIZZARD.CLIENT.ID = ArkInventory.Const.BLIZZARD.CLIENT.ID + ArkInventory.Const.BLIZZARD.CLIENT.ALPHA
+		ArkInventory.Const.BLIZZARD.CLIENT.NAME = string.format( "%s: Alpha", ArkInventory.Const.BLIZZARD.CLIENT.NAME )
+	elseif string.match( a, "beta" ) then
 		ArkInventory.Const.BLIZZARD.CLIENT.ID = ArkInventory.Const.BLIZZARD.CLIENT.ID + ArkInventory.Const.BLIZZARD.CLIENT.BETA
 		ArkInventory.Const.BLIZZARD.CLIENT.NAME = string.format( "%s: Beta", ArkInventory.Const.BLIZZARD.CLIENT.NAME )
 	elseif string.match( a, "ptr" ) or p == "test" then

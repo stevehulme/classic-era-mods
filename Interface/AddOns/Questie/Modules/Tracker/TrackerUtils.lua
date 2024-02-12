@@ -314,8 +314,11 @@ end
 ---@param quest table Quest Table
 ---@return string|nil completionText Quest Completion text string or nil
 function TrackerUtils:GetCompletionText(quest)
-    local questIndex = GetQuestLogIndexByID(quest.Id)
-    local completionText = GetQuestLogCompletionText(questIndex)
+    local completionText
+    if GetQuestLogCompletionText then
+        local questIndex = GetQuestLogIndexByID(quest.Id)
+        completionText = GetQuestLogCompletionText(questIndex)
+    end
 
     if completionText then
         return completionText
@@ -600,9 +603,9 @@ local function _GetZoneName(zoneOrSort, questId)
     else
         -- Let's create custom Zones based on Sorting type.
         if sortObj == "byComplete" then
-            zoneName = "Quests (By % Complete)"
+            zoneName = "Quests (By %% Complete)"
         elseif sortObj == "byCompleteReversed" then
-            zoneName = "Quests (By % Complete Reversed)"
+            zoneName = "Quests (By %% Complete Reversed)"
         elseif sortObj == "byLevel" then
             zoneName = "Quests (By Level)"
         elseif sortObj == "byLevelReversed" then

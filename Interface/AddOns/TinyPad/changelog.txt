@@ -1,3 +1,6 @@
+v.3.1.12, 01/16/2024
+- toc update for 10.2.5 patch
+
 v3.1.11, 11/23/2023
 - Rework of OnKeyDown handling to remove the need to use the protected PropgateKeyboardInput
 - The Allow Ctrl Keys option now allows for Ctrl+F (Find), Ctrl+N (New), CTRL+Z (Undo) or Ctrl+Y (Redo) while the editbox has focus. This functionality (while editbox had focus) was previously "baked in" but is now an option that's on by default that can be turned off

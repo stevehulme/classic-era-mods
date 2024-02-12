@@ -1,7 +1,7 @@
 ## Interface: 11500
-## Title: Titan Panel Classic |cff00aa001.3.5.11500|r
+## Title: Titan Panel Classic |cff00aa001.3.6.11500|r
 ## Author: Titan Panel Development Team
-## Version: 1.3.5.11500
+## Version: 1.3.6.11500
 ## SavedVariables: TitanAll, TitanSettings, TitanSkins, ServerTimeOffsets, ServerHourFormat
 ## OptionalDeps: Ace3, AceGUI-3.0-SharedMediaWidgets, LibSharedMedia-3.0, LibQTip-1.0, !LibUIDropDownMenu
 ## Notes: Adds a display bar on the top and/or bottom of the screen. Allows users to show and control information/launcher plugins.

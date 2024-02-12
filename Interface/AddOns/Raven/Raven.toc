@@ -1,8 +1,8 @@
-## Interface: 100200
+## Interface: 100205
 ## Title: Raven
 ## Notes: Monitors buffs, debuffs and cooldowns and provides timer bars and icons plus helpful notifications
 ## Author: Tomber, Dicebar, Dorana
-## Version: r639
+## Version: r646
 ## DefaultState: enabled
 ## OptionalDependencies: Masque
 ## SavedVariables: RavenDB

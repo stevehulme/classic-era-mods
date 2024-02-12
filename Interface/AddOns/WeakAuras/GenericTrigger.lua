@@ -70,10 +70,6 @@ local aceEvents = WeakAurasAceEvents
 local WeakAuras = WeakAuras;
 local L = WeakAuras.L;
 local GenericTrigger = {};
-local LCSA
-if WeakAuras.IsClassicEra() then
-  LCSA = LibStub("LibClassicSpellActionCount-1.0")
-end
 
 local event_prototypes = Private.event_prototypes;
 
@@ -490,6 +486,8 @@ local function callFunctionForActivateEvent(func, trigger, fallback, errorHandle
   return ok and value or fallback
 end
 
+--- @class Private
+--- @field ActivateEvent fun(id, triggernum, data, state, errorHandler)
 function Private.ActivateEvent(id, triggernum, data, state, errorHandler)
   local changed = state.changed or false;
   if (state.show ~= true) then
@@ -897,6 +895,8 @@ do
     end
   end
 
+  --- @class Private
+  --- @field RunTriggerFuncWithDelay fun(delay, id, triggernum, data, event, ...)
   function Private.RunTriggerFuncWithDelay(delay, id, triggernum, data, event, ...)
     delayTimerEvents[id] = delayTimerEvents[id] or {}
     delayTimerEvents[id][triggernum] = delayTimerEvents[id][triggernum] or {}
@@ -905,6 +905,8 @@ do
   end
 end
 
+--- @class Private
+--- @field CancelDelayedTrigger fun(id)
 function Private.CancelDelayedTrigger(id)
   if delayTimerEvents[id] then
     for triggernum, timers in pairs(delayTimerEvents[id]) do
@@ -916,12 +918,16 @@ function Private.CancelDelayedTrigger(id)
   end
 end
 
+--- @class Private
+--- @field CancelAllDelayedTriggers fun()
 function Private.CancelAllDelayedTriggers()
   for id in pairs(delayTimerEvents) do
     Private.CancelDelayedTrigger(id)
   end
 end
 
+--- @class Private
+--- @field ScanEventsWatchedTrigger fun(id, watchedTriggernums)
 function Private.ScanEventsWatchedTrigger(id, watchedTriggernums)
   if #watchedTriggernums == 0 then return end
   Private.StartProfileAura(id);
@@ -1764,6 +1770,8 @@ do
   Private.frames["Custom Trigger Every Frame Updater"] = update_frame;
   local updating = false;
 
+  --- @class Private
+  --- @field RegisterEveryFrameUpdate fun(id)
   function Private.RegisterEveryFrameUpdate(id)
     if not(update_clients[id]) then
       update_clients[id] = true;
@@ -1782,11 +1790,15 @@ do
     end
   end
 
+  --- @class Private
+  --- @field EveryFrameUpdateRename fun(oldid, newid)
   function Private.EveryFrameUpdateRename(oldid, newid)
     update_clients[newid] = update_clients[oldid];
     update_clients[oldid] = nil;
   end
 
+  --- @class Private
+  --- @field UnregisterEveryFrameUpdate fun(id)
   function Private.UnregisterEveryFrameUpdate(id)
     if(update_clients[id]) then
       update_clients[id] = nil;
@@ -1798,6 +1810,8 @@ do
     end
   end
 
+  --- @class Private
+  --- @field UnregisterAllEveryFrameUpdate fun()
   function Private.UnregisterAllEveryFrameUpdate()
     if (not update_frame) then
       return;
@@ -2284,6 +2298,8 @@ do
   local spellDetails = {}
   local mark_ACTIONBAR_UPDATE_COOLDOWN, mark_PLAYER_ENTERING_WORLD
 
+  --- @class Private
+  --- @field InitCooldownReady fun()
   function Private.InitCooldownReady()
     cdReadyFrame = CreateFrame("Frame");
     cdReadyFrame.inWorld = 0
@@ -2619,6 +2635,8 @@ do
     WeakAuras.ScanEvents("ITEM_SLOT_COOLDOWN_READY", id);
   end
 
+  --- @class Private
+  --- @field CheckRuneCooldown fun()
   function Private.CheckRuneCooldown()
     local runeDuration = -100;
     for id, _ in pairs(runes) do
@@ -2727,18 +2745,15 @@ do
       end
     end
 
-    local count
-    if WeakAuras.IsClassicEra() then
-      count = LCSA:GetSpellReagentCount(id)
-    else
-      count = GetSpellCount(id)
-    end
+    local count = GetSpellCount(id)
 
     return charges, maxCharges, startTime, duration, unifiedCooldownBecauseRune,
            startTimeCooldown, durationCooldown, cooldownBecauseRune, startTimeCharges, durationCharges,
            count, unifiedModRate, modRate, modRateCharges;
   end
 
+  --- @class Private
+  --- @field CheckSpellKnown fun()
   function Private.CheckSpellKnown()
     local overrides = {}
     -- First check for overrides, if we don't yet track a specific override, add it
@@ -2794,6 +2809,8 @@ do
     end
   end
 
+  --- @class Private
+  --- @field CheckSpellCooldown fun(id, runeDuration)
   function Private.CheckSpellCooldown(id, runeDuration)
     local charges, maxCharges, startTime, duration, unifiedCooldownBecauseRune,
           startTimeCooldown, durationCooldown, cooldownBecauseRune, startTimeCharges, durationCharges,
@@ -2848,12 +2865,16 @@ do
     end
   end
 
+  --- @class Private
+  --- @field CheckSpellCooldows fun(runeDuration)
   function Private.CheckSpellCooldows(runeDuration)
     for id, _ in pairs(spells) do
       Private.CheckSpellCooldown(id, runeDuration)
     end
   end
 
+  --- @class Private
+  --- @field CheckItemCooldowns fun()
   function Private.CheckItemCooldowns()
     for id, _ in pairs(items) do
       local startTime, duration, enabled = GetItemCooldown(id);
@@ -2917,6 +2938,8 @@ do
     end
   end
 
+  --- @class Private
+  --- @field CheckItemSlotCooldowns fun()
   function Private.CheckItemSlotCooldowns()
     for id, itemId in pairs(itemSlots) do
       local startTime, duration, enable = GetInventoryItemCooldown("player", id);
@@ -2974,6 +2997,8 @@ do
     end
   end
 
+  --- @class Private
+  --- @field CheckCooldownReady fun()
   function Private.CheckCooldownReady()
     CheckGCD();
     local runeDuration = Private.CheckRuneCooldown();
@@ -3674,17 +3699,31 @@ do
 end
 
 -- Item Count
-local itemCountWatchFrame;
+local itemCountWatchFrame
 function WeakAuras.RegisterItemCountWatch()
-  if not(itemCountWatchFrame) then
-    itemCountWatchFrame = CreateFrame("Frame");
-    itemCountWatchFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player");
-    itemCountWatchFrame:SetScript("OnEvent", function()
-      Private.StartProfileSystem("generictrigger");
-      timer:ScheduleTimer(WeakAuras.ScanEvents, 0.2, "ITEM_COUNT_UPDATE");
-      timer:ScheduleTimer(WeakAuras.ScanEvents, 0.5, "ITEM_COUNT_UPDATE");
-      Private.StopProfileSystem("generictrigger");
-    end);
+  if not itemCountWatchFrame then
+    itemCountWatchFrame = CreateFrame("Frame")
+    itemCountWatchFrame:RegisterEvent("ACTIONBAR_UPDATE_COOLDOWN")
+    itemCountWatchFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+    local batchUpdateCount = function()
+      itemCountWatchFrame:SetScript("OnUpdate", nil)
+      Private.StartProfileSystem("generictrigger ITEM_COUNT_UPDATE")
+      WeakAuras.ScanEvents("ITEM_COUNT_UPDATE")
+      Private.StopProfileSystem("generictrigger ITEM_COUNT_UPDATE")
+    end
+    itemCountWatchFrame:SetScript("OnEvent", function(self, event)
+      Private.StartProfileSystem("generictrigger itemCountFrame")
+      if event == "ACTIONBAR_UPDATE_COOLDOWN" then
+        -- workaround to blizzard bug: refreshing healthstones from soulwell don't trigger BAG_UPDATE_DELAYED
+        -- so, we fake it by listening to A_U_C and checking on next frame
+        itemCountWatchFrame:SetScript("OnUpdate", batchUpdateCount)
+      else
+        -- if we *do* get a B_U_D, then cancel our fake one
+        -- item count prototype already subscribes to this event so no need to also send an internal event
+        itemCountWatchFrame:SetScript("OnUpdate", nil)
+      end
+      Private.StopProfileSystem("generictrigger itemCountFrame")
+    end)
   end
 end
 
@@ -3734,7 +3773,7 @@ function WeakAuras.GetUniqueCloneId()
   return uniqueId;
 end
 
---- @type fun(trigger: triggerData) : prototypeData
+--- @type fun(trigger: triggerData) : prototypeData?
 function GenericTrigger.GetPrototype(trigger)
   if trigger.type and trigger.event then
     if Private.category_event_prototype[trigger.type] then
@@ -4049,6 +4088,8 @@ local commonConditions = {
   }
 }
 
+--- @class Private
+--- @field ExpandCustomVariables fun(variables: table)
 function Private.ExpandCustomVariables(variables)
   -- Make the life of tsu authors easier, by automatically filling in the details for
   -- expirationTime, duration, value, total, stacks, if those exists but aren't a table value
@@ -4409,6 +4450,20 @@ Private.ExecEnv.GetItemSubClassInfo = function(i)
   return GetItemSubClassInfo(classId, subClassId)
 end
 
+Private.ExecEnv.IsEquippedItemType = function(itemType, itemSlot)
+  if itemSlot then
+    local itemId = GetInventoryItemID("player", itemSlot)
+    if itemId then
+      local triggerSubClassId = itemType % 256
+      local triggerClassId = (itemType - triggerSubClassId) / 256
+      local _, _, _, _, _, classId, subclassId = GetItemInfoInstant(itemId)
+      return classId == triggerClassId and subclassId == triggerSubClassId
+    end
+  else
+    return IsEquippedItemType(Private.ExecEnv.GetItemSubClassInfo(itemType))
+  end
+end
+
 WeakAuras.GetCritChance = function()
   -- Based on what the wow paper doll does
   local spellCrit = 0
@@ -4423,6 +4478,46 @@ WeakAuras.GetHitChance = function()
   local ranged = (GetCombatRatingBonus(CR_HIT_RANGED) or 0) + (GetHitModifier() or 0)
   local spell = (GetCombatRatingBonus(CR_HIT_SPELL) or 0) + (GetSpellHitModifier() or 0)
   return max(melee, ranged, spell)
+end
+
+Private.ExecEnv.GetCurrencyInfo = function(id)
+  if WeakAuras.IsRetail() then
+    return C_CurrencyInfo.GetCurrencyInfo(id)
+  elseif WeakAuras.IsWrathClassic() then
+    local name, currentAmount, texture, earnedThisWeek, weeklyMax, totalMax, isDiscovered, rarity = GetCurrencyInfo(id)
+    local currencyInfo = {
+      name = name,
+      description = "",
+      isHeader = false,
+      isHeaderExpanded = false,
+      isTypeUnused = false,
+      isShowInBackpack = false,
+      quantity = currentAmount,
+      trackedQuantity = 0,
+      iconFileID = texture,
+      maxQuantity = totalMax,
+      canEarnPerWeek = weeklyMax > 0,
+      quantityEarnedThisWeek = earnedThisWeek,
+      isTradeable = false,
+      quality = rarity,
+      maxWeeklyQuantity = weeklyMax,
+      totalEarned = 0,
+      discovered = isDiscovered,
+      useTotalEarnedForMaxQty = false,
+    }
+    return currencyInfo
+  end
+end
+
+--- @class Private
+--- @field GetCurrencyInfoForTrigger fun(trigger: triggerData)
+Private.GetCurrencyInfoForTrigger = function(trigger)
+  if trigger.currencyId then
+    local currencyId = tonumber(trigger.currencyId)
+    if currencyId then
+      return Private.ExecEnv.GetCurrencyInfo(currencyId)
+    end
+  end
 end
 
 

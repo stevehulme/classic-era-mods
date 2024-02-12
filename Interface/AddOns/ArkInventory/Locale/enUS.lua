@@ -299,7 +299,7 @@ if not L then return end
 	L["CONFIG_GENERAL_TOOLTIP_REPUTATION_NORMAL_DESC"] = "What text you want displayed for reputation values in the reputation tooltip."
 	L["CONFIG_GENERAL_TOOLTIP_REPUTATION_ITEMCOUNT"] = "Item Count"
 	L["CONFIG_GENERAL_TOOLTIP_REPUTATION_ITEMCOUNT_DESC"] = "What text you want displayed for reputation values in item counts."
-	L["CONFIG_GENERAL_TOOLTIP_REPUTATION_TOKEN_DESC"] = "\n\nIf you use one of the tokens below it will be replaced with the appropriate reputation information.\n\n*nn* = faction name\n*st* = standing text\n*pv* = paragon level (+N)\n*pr* = paragon reward icon\n*bv* = level value\n*bm* = level max\n*bc* = level value / level max\n*bp* = level percent\n*br* = level remaining"
+	L["CONFIG_GENERAL_TOOLTIP_REPUTATION_TOKEN_DESC"] = "\n\nIf you use one of the tokens below it will be replaced with the appropriate reputation information.\n\n*nn* = faction name\n*st* = standing text\n*bv* = bar value\n*bm* = bar max\n*bp* = bar percent\n*br* = bar remaining\n*rv* = rank value\n*rm* = rank max\n*pv* = paragon level (+N)\n*pr* = paragon reward icon"
 	
 	L["CONFIG_GENERAL_WORKAROUND"] = "Workarounds"
 	L["CONFIG_GENERAL_WORKAROUND_DESC"] = "toggle the code to fix or work around this issue"

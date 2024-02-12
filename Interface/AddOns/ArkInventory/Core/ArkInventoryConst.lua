@@ -716,6 +716,7 @@ ArkInventory.Const = { -- constants
 			EXPANSION = { },
 			PTR = 0.1,
 			BETA = 0.2,
+			ALPHA = 0.3,
 		},
 		
 		GLOBAL = {
@@ -1291,10 +1292,10 @@ ArkInventory.Const = { -- constants
 		},
 		Style = {
 			TooltipNormal = "*st**pv**pr* (*br*)", -- rep tooltip
-			TooltipItemCount = "*st**pv**pr* (*br*)", -- itemcount tooltip
-			TwoLines = "*st**pv**pr*\n*bc*", -- List view
-			OneLine = "*st**pv**pr* *bc*", -- LDB tooltip
-			OneLineWithName = "*nn*: *st**pv**pr* *bc*", -- LDB text
+			TooltipItemCount = "*st**pv**pr*", -- itemcount tooltip
+			TwoLines = "*st**pv**pr* (*bv*/*bm*)\n(*br*)", -- List view
+			OneLine = "*st**pv**pr* (*bv*/*bm*)", -- LDB tooltip
+			OneLineWithName = "*nn*: *st**pv**pr* (*bv*/*bm*)", -- LDB text
 		},
 	},
 	
