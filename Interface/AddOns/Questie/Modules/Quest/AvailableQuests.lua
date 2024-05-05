@@ -61,6 +61,12 @@ function AvailableQuests.DrawAvailableQuest(quest) -- prevent recursion
         for i = 1, #gameObjects do
             local obj = QuestieDB:GetObject(gameObjects[i])
 
+            if (not obj) then
+                -- TODO: This check can be removed once the DB is fixed
+                Questie:Error("Object not found for quest", quest.Id, "NPC ID:", gameObjects[i], "- Please report this on Github or Discord!")
+                return
+            end
+
             _AddStarter(obj, quest, "o_" .. obj.id)
         end
     end
@@ -68,6 +74,12 @@ function AvailableQuests.DrawAvailableQuest(quest) -- prevent recursion
         local npcs = quest.Starts["NPC"]
         for i = 1, #npcs do
             local npc = QuestieDB:GetNPC(npcs[i])
+
+            if (not npc) then
+                -- TODO: This check can be removed once the DB is fixed
+                Questie:Error("NPC not found for quest", quest.Id, "NPC ID:", npcs[i], "- Please report this on Github or Discord!")
+                return
+            end
 
             _AddStarter(npc, quest, "m_" .. npc.id)
         end
@@ -105,7 +117,6 @@ _CalculateAvailableQuests = function()
     local showRaidQuests = Questie.db.profile.showRaidQuests
     local showPvPQuests = Questie.db.profile.showPvPQuests
     local showAQWarEffortQuests = Questie.db.profile.showAQWarEffortQuests
-    local showSoDRunes = Questie.db.profile.showSoDRunes
 
     local autoBlacklist = QuestieDB.autoBlacklist
     local hiddenQuests = QuestieCorrections.hiddenQuests
@@ -139,13 +150,13 @@ _CalculateAvailableQuests = function()
         end
 
         if (
-            ((not showRepeatableQuests) and QuestieDB.IsRepeatable(questId)) or             -- Don't show repeatable quests if option is disabled
-            ((not showPvPQuests) and QuestieDB.IsPvPQuest(questId)) or                      -- Don't show PvP quests if option is disabled
-            ((not showDungeonQuests) and QuestieDB.IsDungeonQuest(questId)) or              -- Don't show dungeon quests if option is disabled
-            ((not showRaidQuests) and QuestieDB.IsRaidQuest(questId)) or                    -- Don't show raid quests if option is disabled
-            ((not showAQWarEffortQuests) and aqWarEffortQuests[questId]) or                 -- Don't show AQ War Effort quests if the option disabled
-            (Questie.IsClassic and currentIsleOfQuelDanasQuests[questId]) or                -- Don't show Isle of Quel'Danas quests for Era/HC/SoX
-            ((not showSoDRunes) and Questie.IsSoD and QuestieDB.IsSoDRuneQuest(questId))    -- Don't show SoD Rune quests with the option disabled
+            ((not showRepeatableQuests) and QuestieDB.IsRepeatable(questId)) or     -- Don't show repeatable quests if option is disabled
+            ((not showPvPQuests) and QuestieDB.IsPvPQuest(questId)) or              -- Don't show PvP quests if option is disabled
+            ((not showDungeonQuests) and QuestieDB.IsDungeonQuest(questId)) or      -- Don't show dungeon quests if option is disabled
+            ((not showRaidQuests) and QuestieDB.IsRaidQuest(questId)) or            -- Don't show raid quests if option is disabled
+            ((not showAQWarEffortQuests) and aqWarEffortQuests[questId]) or         -- Don't show AQ War Effort quests if the option disabled
+            (Questie.IsClassic and currentIsleOfQuelDanasQuests[questId]) or        -- Don't show Isle of Quel'Danas quests for Era/HC/SoX
+            (Questie.IsSoD and QuestieDB.IsRuneAndShouldBeHidden(questId))          -- Don't show SoD Rune quests with the option disabled
         ) then
             return
         end
@@ -266,7 +277,7 @@ end
 ---@param quest Quest
 ---@param tooltipKey string the tooltip key. For objects it's "o_<ID>", for NPCs it's "m_<ID>"
 _AddStarter = function(starter, quest, tooltipKey)
-    if (not starter) or (not starter.spawns) then
+    if (not starter) then
         return
     end
 
@@ -274,7 +285,7 @@ _AddStarter = function(starter, quest, tooltipKey)
 
     local starterIcons = {}
     local starterLocs = {}
-    for zone, spawns in pairs(starter.spawns) do
+    for zone, spawns in pairs(starter.spawns or {}) do
         local alreadyAddedSpawns = {}
         if (zone and spawns) then
             local coords
@@ -300,7 +311,7 @@ _AddStarter = function(starter, quest, tooltipKey)
                             end
                         end
                     else
-                        local icon = QuestieMap:DrawWorldIcon(data, zone, coords[1], coords[2])
+                        local icon = QuestieMap:DrawWorldIcon(data, zone, coords[1], coords[2], coords[3])
                         if starter.waypoints then
                             -- This is only relevant for waypoint drawing
                             starterIcons[zone] = icon
@@ -308,7 +319,9 @@ _AddStarter = function(starter, quest, tooltipKey)
                                 starterLocs[zone] = { coords[1], coords[2] }
                             end
                         end
-                        tinsert(alreadyAddedSpawns, coords)
+                        if icon then
+                            tinsert(alreadyAddedSpawns, coords)
+                        end
                     end
                 end
             end
@@ -317,7 +330,7 @@ _AddStarter = function(starter, quest, tooltipKey)
 
     -- Only for NPCs since objects do not move
     if starter.waypoints then
-        for zone, waypoints in pairs(starter.waypoints) do
+        for zone, waypoints in pairs(starter.waypoints or {}) do
             if not dungeons[zone] and waypoints[1] and waypoints[1][1] and waypoints[1][1][1] then
                 if not starterIcons[zone] then
                     local data = {

@@ -1,4 +1,53 @@
-﻿# 3.10.23 (20-JAN-2024)
+﻿# 3.10.28 (30-APR-2024)
+ - fixed - issue with pawn based item upgrade icon not displaying
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1879 - code updated to handle tooltips with empty info values
+ - fixed - issue with mount selection code where preferring normal flying mounts would fail down to ground mounts in zones where only dragonriding mounts are usable (primalist future) instead of selecting a dragonriding mount.  it should now select the other mount type when the preferred type is not usable in that zone
+ - fixed - issue with zone restricted mounts getting selected when not in that zone
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1857 - issue with currency headers not restoring to their original state after scanning
+ - fixed - ldb currency menu (unused) wasnt triggering a rescan on being changed
+ - fixed - ldb reputation menu (inactive) wasnt triggering a rescan on being changed
+ - fixed - ldb reputation menu (inactive) was enabled when it shouldnt be
+ - fixed - ldb reputation menu (at war) was enabled when it shouldnt be
+ - fixed - stock value for reputation items should now display properly
+ - fixed - stock value for container items should now display properly (INVTYPE_BAG is no longer assigned to them)
+ - fixed - issue with item level config options display not being applied properly
+ - fixed - issue with bag highlight
+ - fixed - typo on the LDB pet object
+ - changed - (cata beta) disabling void storage temporarily as it has not been implemented which is causing equipment manager outfit rules to not work properly.
+ - changed - broke apart the onenter and updatetooltip code for item frames to reduce resource usage
+ - changed - (classic) toc updated to 11502
+ - added - individual item charges will now display in the item level text, total will not
+ - added - rule function `category( )`
+ - updated - category for some items
+
+ - added - stack compression - only one stack of each item in each bar is displayed, all stacks of that item (from the same bar) are then shown in a popup bar when you enter the compressed item frame
+ - added - config > settings > designs > items > stack
+ - added - config > settings > designs > items > stack > identify
+ - moved - moved original stack limit settings to config > settings > designs > items > stack > identify
+ - note - only the bag and bank are currently enabled for compression
+ - note - instant sort is forced on by default when stack compression is active. you can disable it if youre ok with the mess between refreshes
+ - note - clicking on the compressed item will toggle the popup bar
+
+# 3.10.27 (20-MAR-2024)
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1871 - updated object code to handle any new INVTYPE values better
+
+# 3.10.26 (20-MAR-2024)
+ - changed - (retail) toc updated to 100206
+ - changed - (classic) toc updated to 11501
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1871 - issue with INVTYPE_NON_EQUIP_IGNORE
+
+# 3.10.25 (07-MAR-2024)
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1829 - issue with add fields in config pages accepting a dropped item but not being able to handle it, they will now ignore it unless it can be used (adding an item to a custom category)
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1867 - menu library issue with ColorPickerFrame
+ - changed - the search window should now load a bit faster, and should update significantly faster
+ - changed - switch character menu layout to accomodate people with characters on lots of servers
+
+# 3.10.24 (30-JAN-2024)
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1855 - issue with TRADE_SKILL_ITEM_CRAFTED_RESULT event in non dragonflight clients
+ - added - holding the shift key down when opening the mailbox will stop any automatic send actions from being run
+ - updated - category for some items
+
+# 3.10.23 (20-JAN-2024)
  - changed - (retail) toc updated to 100205
  - fixed - should now ignore red text for old equip bonus
  - fixed - https://github.com/arkayenro/arkinventory/issues/1852 - issue with nil reputation cache
@@ -35,7 +84,7 @@
  - changed - holding the CTRL key when using the mount summon macro, or clicking on the mount icon, allows you to use the other type of mount
  - fixed - https://github.com/arkayenro/arkinventory/issues/1832 - issue with tooltip code when its not meant to be processed
  - fixed - https://github.com/arkayenro/arkinventory/issues/1831 - issue with automatic mail send action
- - fixed - https://github.com/arkayenro/arkinventory/issues/1813 - currency will no longer be scanned while mounted (to help with dragriding races).  will be scanned (up to) five seconds after dismounting (if there was an update while you were mounted)
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1813 - currency will no longer be scanned while mounted (to help with dragonriding races).  will be scanned (up to) five seconds after dismounting (if there was an update while you were mounted)
  - added - addon icons
  - updated - category for some items
 

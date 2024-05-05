@@ -1,7 +1,9 @@
 @cont1nuity:
-- Fixing SoD nameplate aura bugs.
-- Fixing DK rune visuals not updating properly when on cooldown.
-- Adding 'isLooseTarget', 'isSoftEnemy' and 'isSoftFriend' to 'unitFrame'.
-- Adding more cast animations for 10.2.
-- 'Plater.GetHealthCutoffValue(getOnly)' now returns 'lower' and 'upper' execute range
+- Sending NPC information to other players would not work if the name contained a ','.
+- Fixing options alignment issue with Cata.
+- Base support for TWW.
+- Ensuring Gladiator Stance is not considered tanking in SoD.
+
+@Terciob:
+- Backend changes to options layout.
 

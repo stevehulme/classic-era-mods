@@ -22,21 +22,19 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Raven")
 local media = LibStub("LibSharedMedia-3.0")
 local MOD = Raven
 local MOD_Options = "Raven_Options"
+local SHIM = {}
+MOD.SHIM = SHIM
 local _
 local addonInitialized = false -- set when the addon is initialized
 local addonEnabled = false -- set when the addon is enabled
 local optionsLoaded = false -- set when the load-on-demand options panel module has been loaded
 local optionsFailed = false -- set if loading the option panel module failed
-local v, b, d, t = GetBuildInfo()
--- check if v is 3.4.1 or higher
-local v1, v2, v3 = strsplit(".", v)
-local release = tonumber(v1);
-local major = tonumber(v2);
-local minor = tonumber(v3)
 
 MOD.isVanilla = LE_EXPANSION_LEVEL_CURRENT == 0;
 MOD.isWrath = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_WRATH_OF_THE_LICH_KING
-MOD.isClassic = MOD.isWrath or MOD.isVanilla
+MOD.isCata = LE_EXPANSION_LEVEL_CURRENT == LE_EXPANSION_CATACLYSM
+MOD.isClassic = MOD.isWrath or MOD.isVanilla or MOD.isCata
+MOD.isModernUI = LE_EXPANSION_LEVEL_CURRENT >= LE_EXPANSION_DRAGONFLIGHT
 
 function MOD.ExpansionIsOrAbove(exp)
 	if exp == nil then return false end --This is Vanilla
@@ -122,8 +120,9 @@ local throttleCounter = 0 -- throttle counter included for testing
 local throttleTracker = 0 -- throttle max count seen included for testing
 local now = 0 -- refresh time value set at combat log and update events
 local buffTooltip = nil -- used to store tooltip for scanning weapon buffs
-local mhLastBuff = nil -- saves name of most recent main hand weapon buff
-local ohLastBuff = nil -- saves name of most recent off hand weapon buff
+local mainHandLastBuff = nil -- saves name of most recent main hand weapon buff
+local offHandLastBuff = nil -- saves name of most recent off hand weapon buff
+local rangedLastBuff = nil -- saves name of most recent ranged weapon buff
 local iconGCD = nil -- icon for global cooldown
 local iconPotion = nil -- icon for shared potions cooldown
 local iconElixir = nil -- icon for shared elixirs cooldown
@@ -177,11 +176,16 @@ local band = bit.band -- shortcut for common bit logic operator
 
 -- Functions for reading Auras
 function MOD:GetAuraData(unitToken, index, filter)
-	if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex and AuraUtil.UnpackAuraData then
-		return AuraUtil.UnpackAuraData(C_UnitAuras.GetAuraDataByIndex(unitToken, index, filter))
-	else
+	-- Rely on the LCD shim when reading target buffs and debuffs.
+	if MOD.isClassic and not MOD.isCata and unitToken == "target" then
 		return UnitAura(unitToken, index, filter)
 	end
+
+	if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex and AuraUtil.UnpackAuraData then
+		return AuraUtil.UnpackAuraData(C_UnitAuras.GetAuraDataByIndex(unitToken, index, filter))
+	end
+
+	return UnitAura(unitToken, index, filter)
 end
 
 
@@ -215,6 +219,7 @@ function MOD:OnInitialize()
 	C_AddOns.LoadAddOn("LibDBIcon-1.0")
 	C_AddOns.LoadAddOn("LibBossIDs-1.0", true)
 	MOD.MSQ = LibStub("Masque", true)
+	SHIM = MOD.SHIM
 	now = GetTime() -- start tracking time
 	suppressTime = now -- start suppression period for certain special effects
 end
@@ -258,10 +263,6 @@ local function HideShow(key, frame, check, options)
 		if hide then
 			BuffFrame:Hide();
 
-			if MOD.ExpansionIsOrAbove(LE_EXPANSION_DRAGONFLIGHT) then
-				DebuffFrame:Hide();
-			end
-
 			if TemporaryEnchantFrame then
 				TemporaryEnchantFrame:Hide();
 			end
@@ -270,15 +271,22 @@ local function HideShow(key, frame, check, options)
 			hiding[key] = true;
 		elseif show then
 			BuffFrame:Show();
-			if MOD.ExpansionIsOrAbove(LE_EXPANSION_DRAGONFLIGHT) then
-				DebuffFrame:Show();
-			end
 
 			if TemporaryEnchantFrame then
 				TemporaryEnchantFrame:Show();
 			end
 
 			BuffFrame:RegisterEvent("UNIT_AURA");
+			hiding[key] = false;
+		end
+	elseif options == "debuffs" then
+		if hide then
+			DebuffFrame:Hide();
+
+			hiding[key] = true;
+		elseif show then
+			DebuffFrame:Show();
+
 			hiding[key] = false;
 		end
 	end
@@ -290,6 +298,10 @@ local function CheckBlizzFrames()
 
 	local p = MOD.db.profile
 	HideShow("buffs", _G.BuffFrame, p.hideBlizzBuffs, "buffs")
+
+	if MOD.ExpansionIsOrAbove(LE_EXPANSION_DRAGONFLIGHT) then
+		HideShow("debuffs", _G.DebuffFrame, p.hideBlizzDebuffs, "debuffs")
+	end
 
 	if _G.TemporaryEnchantFrame then
 		HideShow("enchants", _G.TemporaryEnchantFrame, p.hideBlizzBuffs, "enchants")
@@ -1022,12 +1034,12 @@ function MOD:UNIT_INVENTORY_CHANGED(e, unit)
 		for slot = 0, 19 do -- check each inventory slot for usable items
 			local itemID = GetInventoryItemID("player", slot)
 			if itemID then
-				local _, spellID = GetItemSpell(itemID)
+				local _, spellID = SHIM:GetItemSpell(itemID)
 				if spellID then inventoryCooldowns[itemID] = slot end
 			end
 		end
 	end
-	-- for k, v in pairs(inventoryCooldowns) do local name = GetItemInfo(k); MOD.Debug("slot", name, v) end
+	-- for k, v in pairs(inventoryCooldowns) do local name = SHIM:GetItemInfo(k); MOD.Debug("slot", name, v) end
 end
 
 -- Event called when content of the player's bags changes
@@ -1035,29 +1047,18 @@ function MOD:BAG_UPDATE(e)
 	TriggerCooldownUpdate()
 	table.wipe(bagCooldowns) -- update bag item cooldown table
 	for bag = 0, NUM_BAG_SLOTS do
-		local numSlots
-		if _G.GetContainerNumSlots == nil then
-			numSlots = C_Container.GetContainerNumSlots(bag)
-		else
-			numSlots = GetContainerNumSlots(bag)
-		end
+		local numSlots = SHIM:GetContainerNumSlots(bag)
 
 		for slot = 1, numSlots do
-			local itemID
-
-			if _G.GetContainerItemID == nil then
-				itemID = C_Container.GetContainerItemID(bag, slot)
-			else
-				itemID = GetContainerItemID(bag, slot)
-			end
+			local itemID = SHIM:GetContainerItemID(bag, slot)
 
 			if itemID then
-				local _, spellID = GetItemSpell(itemID)
+				local _, spellID = SHIM:GetItemSpell(itemID)
 				if spellID then bagCooldowns[itemID] = spellID end
 			end
 		end
 	end
-	-- for k, v in pairs(bagCooldowns) do local name = GetItemInfo(k); MOD.Debug("bag", name, v) end
+	-- for k, v in pairs(bagCooldowns) do local name = SHIM:GetItemInfo(k); MOD.Debug("bag", name, v) end
 end
 
 -- Create cache of talent info
@@ -1555,72 +1556,103 @@ local function ResetWeaponBuffDuration(buff) MOD.db.profile.WeaponBuffDurations[
 -- Add player weapon buffs for mainhand and offhand to the aura table
 local function GetWeaponBuffs()
 	-- old weapons buffs are now out-of-date so release them before regenerating
-	if mhLastBuff then
-		ReleasePlayerBuff(mhLastBuff)
+	if mainHandLastBuff then
+		ReleasePlayerBuff(mainHandLastBuff)
 	end
 
-	if ohLastBuff then
-		ReleasePlayerBuff(ohLastBuff)
+	if offHandLastBuff then
+		ReleasePlayerBuff(offHandLastBuff)
+	end
+
+	if MOD.isCata and rangedLastBuff then
+		ReleasePlayerBuff(rangedLastBuff)
 	end
 
 	-- first check if there are weapon auras then, only if necessary, use tooltip to scan for the buff names
-	local mh, mhms, mhc, mx, oh, ohms, ohc, ox = GetWeaponEnchantInfo()
-	if mh then -- add the mainhand buff, if any, to the table
-		local islot = INVSLOT_MAINHAND
-		local mhbuff
+	local hasMainHandEnchant, mainHandExpiration, mainHandCharges, _,
+	      hasOffHandEnchant, offHandExpiration, offHandCharges, _,
+	      hasRangedEnchant, rangedExpiration, rangedCharges, _
+	      = GetWeaponEnchantInfo()
+
+	if hasMainHandEnchant then -- add the mainhand buff, if any, to the table
+		local invSlot = INVSLOT_MAINHAND
+		local mainHandBuff
 
 		if not MOD.isClassic then
-			mhbuff = GetWeaponBuffName(islot)
+			mainHandBuff = GetWeaponBuffName(invSlot)
 		else
-			mhbuff = GetWeaponBuffNameOld(islot)
+			mainHandBuff = GetWeaponBuffNameOld(invSlot)
 		end
+
 		local name, rank, icon, castTime, minRange, maxRange
-		= GetSpellInfo(spellId or spellName or spellLink)
+			= GetSpellInfo(spellId or spellName or spellLink)
 
-		if not mhbuff then -- if tooltip scan fails then use fallback of weapon name or slot name
-			local weaponLink = GetInventoryItemLink("player", islot)
-			if weaponLink then mhbuff = GetItemInfo(weaponLink) end
-			if not mhbuff then mhbuff = L["Mainhand Weapon"] end
+		if not mainHandBuff then -- if tooltip scan fails then use fallback of weapon name or slot name
+			local weaponLink = GetInventoryItemLink("player", invSlot)
+			if weaponLink then mainHandBuff = SHIM:GetItemInfo(weaponLink) end
+			if not mainHandBuff then mainHandBuff = L["Mainhand Weapon"] end
 		end
 
-		local icon = GetInventoryItemTexture("player", islot)
-		local timeLeft = mhms / 1000
+		local icon = GetInventoryItemTexture("player", invSlot)
+		local timeLeft = mainHandExpiration / 1000
 		local expire = now + timeLeft
-		local duration = GetWeaponBuffDuration(mhbuff, timeLeft)
+		local duration = GetWeaponBuffDuration(mainHandBuff, timeLeft)
 
-		AddAura("player", mhbuff, true, nil, mhc, "Mainhand", duration, "player", nil, nil, 1, icon, expire, "weapon", "MainHandSlot")
-		mhLastBuff = mhbuff -- caches the name of the weapon buff so can clear it later
-	elseif mhLastBuff then
-		ResetWeaponBuffDuration(mhLastBuff);
-		mhLastBuff = nil
+		AddAura("player", mainHandBuff, true, nil, mainHandCharges, "Mainhand", duration, "player", nil, nil, 1, icon, expire, "weapon", "MainHandSlot")
+		mainHandLastBuff = mainHandBuff -- caches the name of the weapon buff so can clear it later
+	elseif mainHandLastBuff then
+		ResetWeaponBuffDuration(mainHandLastBuff);
+		mainHandLastBuff = nil
 	end
 
-	if oh then -- add the offhand buff, if any, to the table
-		local islot = INVSLOT_OFFHAND
-		local ohbuff
+	if hasOffHandEnchant then -- add the offhand buff, if any, to the table
+		local invSlot = INVSLOT_OFFHAND
+		local offHandBuff
 
 		if not MOD.isClassic then
-			ohbuff = GetWeaponBuffName(islot)
+			offHandBuff = GetWeaponBuffName(invSlot)
 		else
-			ohbuff = GetWeaponBuffNameOld(islot)
+			offHandBuff = GetWeaponBuffNameOld(invSlot)
 		end
 
-		if not ohbuff then -- if tooltip scan fails then use fallback of weapon name or slot name
-			local weaponLink = GetInventoryItemLink("player", islot)
-			if weaponLink then ohbuff = GetItemInfo(weaponLink) end
-			if not ohbuff then ohbuff = L["Offhand Weapon"] end
+		if not offHandBuff then -- if tooltip scan fails then use fallback of weapon name or slot name
+			local weaponLink = GetInventoryItemLink("player", invSlot)
+			if weaponLink then offHandBuff = SHIM:GetItemInfo(weaponLink) end
+			if not offHandBuff then offHandBuff = L["Offhand Weapon"] end
 		end
 
-		local icon = GetInventoryItemTexture("player", islot)
-		local timeLeft = ohms / 1000
+		local icon = GetInventoryItemTexture("player", invSlot)
+		local timeLeft = offHandExpiration / 1000
 		local expire = now + timeLeft
-		local duration = GetWeaponBuffDuration(ohbuff, timeLeft)
+		local duration = GetWeaponBuffDuration(offHandBuff, timeLeft)
 
-		AddAura("player", ohbuff, true, nil, ohc, "Offhand", duration, "player", nil, nil, 1, icon, expire, "weapon", "SecondaryHandSlot")
-		ohLastBuff = ohbuff -- caches the name of the weapon buff so can clear it later
-	elseif ohLastBuff then
-		ResetWeaponBuffDuration(ohLastBuff);
-		ohLastBuff = nil
+		AddAura("player", offHandBuff, true, nil, offHandCharges, "Offhand", duration, "player", nil, nil, 1, icon, expire, "weapon", "SecondaryHandSlot")
+		offHandLastBuff = offHandBuff -- caches the name of the weapon buff so can clear it later
+	elseif offHandEnchantLastBuff then
+		ResetWeaponBuffDuration(offHandLastBuff);
+		offHandLastBuff = nil
+	end
+
+	if MOD.isCata and hasRangedEnchant then -- add the offhand buff, if any, to the table
+		local invSlot = INVSLOT_RANGED
+		local rangedBuff = GetWeaponBuffNameOld(invSlot)
+
+		if not rangedBuff then -- if tooltip scan fails then use fallback of weapon name or slot name
+			local weaponLink = GetInventoryItemLink("player", invSlot)
+			if weaponLink then rangedBuff = SHIM:GetItemInfo(weaponLink) end
+			if not rangedBuff then rangedBuff = L["Ranged Weapon"] end
+		end
+
+		local icon = GetInventoryItemTexture("player", invSlot)
+		local timeLeft = rangedExpiration / 1000
+		local expire = now + timeLeft
+		local duration = GetWeaponBuffDuration(rangedBuff, timeLeft)
+
+		AddAura("player", rangedBuff, true, nil, rangedCharges, "Ranged", duration, "player", nil, nil, 1, icon, expire, "weapon", "RangedSlot")
+		rangedLastBuff = rangedBuff -- caches the name of the weapon buff so can clear it later
+	elseif rangedLastBuff then
+		ResetWeaponBuffDuration(rangedLastBuff);
+		rangedLastBuff = nil
 	end
 end
 
@@ -1683,19 +1715,18 @@ end
 
 -- Add tracking auras (updated for Cataclysm which allows multiple active tracking types)
 local function GetTracking()
+	if MOD.isVanilla then
+		return
+	end
+
 	local found = false
 	local trackingTypes = nil
 
 	if C_Minimap.GetNumTrackingTypes == nil then
-		if MOD.ExpansionIsOrAbove(LE_EXPANSION_WRATH_OF_THE_LICH_KING) then
-			trackingTypes = GetNumTrackingTypes()
-		else
-			return
-		end
+		trackingTypes = GetNumTrackingTypes()
 	else
 		trackingTypes = C_Minimap.GetNumTrackingTypes()
 	end
-
 
 	for i = 1, trackingTypes do
 		local tracking, trackingIcon, active = C_Minimap.GetTrackingInfo(i)
@@ -2044,8 +2075,8 @@ function MOD:UpdateCooldownTimes() for _, b in pairs(activeCooldowns) do Validat
 local function CheckInventoryCooldown(itemID, slot)
 	local start, duration, enable = GetInventoryItemCooldown("player", slot)
 	if start and (start > 0) and (enable == 1) and (duration > 1.5) then
-		local spell = GetItemSpell(itemID)
-		local name, _, _, _, _, _, _, _, equipSlot, icon = GetItemInfo(itemID)
+		local spell = SHIM:GetItemSpell(itemID)
+		local name, _, _, _, _, _, _, _, equipSlot, icon = SHIM:GetItemInfo(itemID)
 		if spell and equipSlot ~= "INVTYPE_TRINKET" then name = spell end
 		if name and icon then AddCooldown(name, slot, icon, start, duration, "inventory", slot, "player") end
 	end
@@ -2080,19 +2111,14 @@ end
 
 -- Check if an item is on cooldown
 local function CheckItemCooldown(itemID)
-	local start = 0
-	local duration = 0
-	local ignore = 0
-	if _G.GetItemCooldown == nil then
-		start, duration, ignore = C_Container.GetItemCooldown(itemID)
-	else
-		start, duration = GetItemCooldown(itemID)
-	end
+	local start, duration = SHIM:GetItemCooldown(itemID);
+
 	if start == nil or duration == nil then
 		return
 	end
+
 	if (start > 0) and (duration > 1.5) then -- don't include global cooldowns or really short cooldowns
-		local name, link, _, _, _, itemType, itemSubType, _, _, icon = GetItemInfo(itemID)
+		local name, link, _, _, _, itemType, itemSubType, _, _, icon = SHIM:GetItemInfo(itemID)
 		if name then
 			local found = false
 			if itemType == "Consumable" and (itemID ~= 86569) then -- check for shared cooldowns for potions/elixirs/flasks (special case Crystal of Insanity)

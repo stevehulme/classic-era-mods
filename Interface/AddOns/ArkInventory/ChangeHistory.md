@@ -1,7 +1,12 @@
-# 3.10.24 (30-JAN-2024)
- - fixed - https://github.com/arkayenro/arkinventory/issues/1855 - issue with TRADE_SKILL_ITEM_CRAFTED_RESULT event in non dragonflight clients
- - added - holding the shift key down when opening the mailbox will stop any automatic send actions from being run
- - updated - category for some items
+# 3.10.29 (05-MAY-2024)
+ - fixed - issue with packager not handling cataclysm toc files/values
+ - fixed - issue with pawn based item upgrade icon displaying on non equipable items
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1880 - issue with CONTAINER_SLOTS in most non english languages using a conditional format, as well as being reversed, which breaks the matching and the value capture
+ - changed - (cataclysm) enabled mounts location
+ - changed - (cataclysm) enabled toys location
+ - added - cataclysm toc files 40400
+ - added - ability to disable the text for each bag type in the status bar - config > design > window > style > status > empty slot
+ - added - ability to disable the text for each bag type in the ldb object text - right click > ldb > display
 
 
 # known issues

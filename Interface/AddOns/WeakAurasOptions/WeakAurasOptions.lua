@@ -1,5 +1,8 @@
 if not WeakAuras.IsLibsOK() then return end
-local AddonName, OptionsPrivate = ...
+---@type string
+local AddonName = ...
+---@class OptionsPrivate
+local OptionsPrivate = select(2, ...)
 
 -- Lua APIs
 local tinsert, tremove, wipe = table.insert, table.remove, wipe
@@ -14,6 +17,7 @@ local CreateFrame, IsAddOnLoaded, LoadAddOn = CreateFrame, IsAddOnLoaded, LoadAd
 
 local AceGUI = LibStub("AceGUI-3.0")
 
+---@class WeakAuras
 local WeakAuras = WeakAuras
 local L = WeakAuras.L
 local ADDON_NAME = "WeakAurasOptions";
@@ -567,6 +571,7 @@ local function OptionsFrame()
   end
 end
 
+---@type fun(msg: string, Private: Private)
 function WeakAuras.ToggleOptions(msg, Private)
   if not Private then
     return
@@ -1207,7 +1212,7 @@ function OptionsPrivate.SortDisplayButtons(filter, overrideReset, id)
   end
 
   for _, id in ipairs(topLevelLoadedAuras) do
-    for child in OptionsPrivate.Private.TraverseAllChildren(WeakAuras.GetData(id)) do
+    for child in OptionsPrivate.Private.TraverseLeafsOrAura(WeakAuras.GetData(id)) do
       tinsert(frame.loadedButton.childButtons, displayButtons[child.id])
     end
   end
@@ -1225,7 +1230,7 @@ function OptionsPrivate.SortDisplayButtons(filter, overrideReset, id)
   end
 
   for _, id in ipairs(topLevelUnloadedAuras) do
-    for child in OptionsPrivate.Private.TraverseAllChildren(WeakAuras.GetData(id)) do
+    for child in OptionsPrivate.Private.TraverseLeafsOrAura(WeakAuras.GetData(id)) do
       tinsert(frame.unloadedButton.childButtons, displayButtons[child.id])
     end
   end
@@ -1679,8 +1684,8 @@ function WeakAuras.UpdateThumbnail(data)
   button:UpdateThumbnail()
 end
 
-function OptionsPrivate.OpenTexturePicker(baseObject, path, properties, textures, SetTextureFunc, adjustSize)
-  frame.texturePicker:Open(baseObject, path, properties, textures, SetTextureFunc, adjustSize)
+function OptionsPrivate.OpenTexturePicker(baseObject, paths, properties, textures, SetTextureFunc, adjustSize)
+  frame.texturePicker:Open(baseObject, paths, properties, textures, SetTextureFunc, adjustSize)
 end
 
 function OptionsPrivate.OpenIconPicker(baseObject, paths, groupIcon)

@@ -86,7 +86,7 @@ MoveAny:AddToEMMap("PartyFrame", "ShowPartyFrames")
 MoveAny:AddToEMMap("CompactRaidFrameContainer", "ShowRaidFrames")
 MoveAny:AddToEMMap("CompactArenaFrame", "ShowArenaFrames")
 function MoveAny:IsBlizEditModeEnabled()
-	if MoveAny:GetWoWBuild() == "RETAIL" or (EditModeManagerFrame and EditModeManagerFrame.numLayouts) then return true end
+	if D4:GetWoWBuild() == "RETAIL" or (EditModeManagerFrame and EditModeManagerFrame.numLayouts) then return true end
 
 	return false
 end
@@ -192,7 +192,7 @@ local function AddCheckBox(x, key, val, func, id, editModeEnum, showReload)
 			end
 
 			local ele = MoveAny:GetSelectEleName("LID_" .. key)
-			if ele and _G[ele .. "_DRAG"] and MoveAny:GetCurrentEle() == _G[ele .. "_DRAG"] then
+			if ele and _G[ele .. "_MA_DRAG"] and MoveAny:GetCurrentEle() == _G[ele .. "_MA_DRAG"] then
 				lstr = "|cFFFFFF00" .. lstr .. "|r"
 				MoveAny:ResetSelectedText()
 				lastSelected = cb
@@ -208,7 +208,7 @@ local function AddCheckBox(x, key, val, func, id, editModeEnum, showReload)
 				end
 			end
 
-			if (EMMap[key] or EMMapForced[key]) and MoveAny:IsBlizEditModeEnabled() and not MoveAny:IsEnabled("EDITMODE", MoveAny:GetWoWBuildNr() < 100000) then
+			if (EMMap[key] or EMMapForced[key]) and MoveAny:IsBlizEditModeEnabled() and not MoveAny:IsEnabled("EDITMODE", D4:GetWoWBuildNr() < 100000) then
 				bGreyed = true
 				lstr = "(" .. MoveAny:GT("LID_EDITMODE") .. ") |c88888888" .. lstr
 			else
@@ -248,7 +248,7 @@ local function AddCheckBox(x, key, val, func, id, editModeEnum, showReload)
 			function(sel)
 				local ele = MoveAny:GetSelectEleName("LID_" .. key)
 				if ele then
-					MoveAny:SelectEle(_G[ele .. "_DRAG"])
+					MoveAny:SelectEle(_G[ele .. "_MA_DRAG"])
 					cb:UpdateText()
 				end
 			end
@@ -374,8 +374,8 @@ function MoveAny:InitMALock()
 		end
 	)
 
-	D4:SetVersion(AddonName, 135994, "1.6.126")
-	MALock.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.6.126"))
+	D4:SetVersion(AddonName, 135994, "1.6.165")
+	MALock.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.6.165"))
 	MALock.CloseButton:SetScript(
 		"OnClick",
 		function()
@@ -430,7 +430,7 @@ function MoveAny:InitMALock()
 		AddCategory("BUILTIN")
 		local posx = 4
 		if MoveAny:IsBlizEditModeEnabled() then
-			AddCheckBox(4, "EDITMODE", MoveAny:GetWoWBuildNr() < 100000)
+			AddCheckBox(4, "EDITMODE", D4:GetWoWBuildNr() < 100000)
 			posx = 24
 		end
 
@@ -440,17 +440,17 @@ function MoveAny:InitMALock()
 			AddCheckBox(posx, "COMBOFRAME", false)
 		end
 
-		if MoveAny:GetWoWBuild() ~= "RETAIL" then
+		if D4:GetWoWBuild() ~= "RETAIL" then
 			AddCheckBox(posx, "TARGETFRAMEBUFF1", false, nil, nil, "ShowTargetAndFocus")
 		end
 
-		if MoveAny:GetWoWBuild() ~= "RETAIL" then
+		if D4:GetWoWBuild() ~= "RETAIL" then
 			AddCheckBox(posx, "TARGETFRAMETOTDEBUFF1", false, nil, nil, "ShowTargetAndFocus")
 		end
 
 		if FocusFrame then
 			AddCheckBox(posx, "FOCUSFRAME", false, nil, nil, "ShowTargetAndFocus")
-			if MoveAny:GetWoWBuild() ~= "RETAIL" then
+			if D4:GetWoWBuild() ~= "RETAIL" then
 				AddCheckBox(posx, "FOCUSFRAMEBUFF1", false, nil, nil, "ShowTargetAndFocus")
 			end
 		end
@@ -479,7 +479,7 @@ function MoveAny:InitMALock()
 		end
 
 		AddCheckBox(posx, "OVERRIDEACTIONBAR", false)
-		if MoveAny:GetWoWBuild() ~= "RETAIL" then
+		if D4:GetWoWBuild() ~= "RETAIL" then
 			AddCheckBox(posx, "ACTIONBARS", false)
 			AddCheckBox(4, "ACTIONBAR3", false)
 			AddCheckBox(4, "ACTIONBAR4", false)
@@ -556,97 +556,111 @@ function MoveAny:InitMALock()
 		AddCheckBox(4, "DURABILITY", false)
 		AddCheckBox(4, "MICROMENU", false)
 		AddCheckBox(4, "BAGS", false)
-		if QueueStatusButton then
+		if MoveAny:IsValidFrame(QueueStatusButton) then
 			AddCheckBox(4, "QUEUESTATUSBUTTON", false)
 		end
 
-		if QueueStatusFrame then
+		if MoveAny:IsValidFrame(QueueStatusFrame) then
 			AddCheckBox(4, "QUEUESTATUSFRAME", false)
 		end
 
-		if MainMenuExpBar then
+		if MoveAny:IsValidFrame(MainMenuExpBar) then
 			AddCheckBox(4, "MAINMENUEXPBAR", false)
 			AddCheckBox(4, "REPUTATIONWATCHBAR", false)
 		end
 
 		AddCheckBox(4, "MAFPSFrame", false)
-		if ZoneAbilityFrame then
+		if MoveAny:IsValidFrame(ZoneAbilityFrame) then
 			AddCheckBox(4, "ZONEABILITYFRAME", false)
 		end
 
-		if PlayerPowerBarAlt then
+		if MoveAny:IsValidFrame(PlayerPowerBarAlt) then
 			AddCheckBox(4, "POWERBAR", false)
 		end
 
-		if UIWidgetPowerBarContainerFrame then
+		if MoveAny:IsValidFrame(UIWidgetPowerBarContainerFrame) then
 			AddCheckBox(4, "UIWIDGETPOWERBAR", false)
 		end
 
 		--AddCheckBox( 4, "BUFFTIMER1", true )
-		if ArcheologyDigsiteProgressBar then
+		if MoveAny:IsValidFrame(ArcheologyDigsiteProgressBar) then
 			AddCheckBox(4, "ARCHEOLOGYDIGSITEPROGRESSBAR", false)
 		end
 
 		AddCheckBox(4, "UIERRORSFRAME", false)
-		if QuickJoinToastButton then
+		if MoveAny:IsValidFrame(QuickJoinToastButton) then
 			AddCheckBox(4, "CHATQUICKJOIN", false)
 		end
 
-		if SpellActivationOverlayFrame then
+		if MoveAny:IsValidFrame(SpellActivationOverlayFrame) then
 			AddCheckBox(4, "SPELLACTIVATIONOVERLAYFRAME", false)
 		end
 
-		if LossOfControlFrame then
+		if MoveAny:IsValidFrame(LossOfControlFrame) then
 			AddCheckBox(4, "LOSSOFCONTROLFRAME", false)
 		end
 
-		if GhostFrame then
+		if MoveAny:IsValidFrame(GhostFrame) then
 			AddCheckBox(4, "GHOSTFRAME", false)
 		end
 
 		AddCategory("CLASSSPECIFIC")
-		if RuneFrame and class == "DEATHKNIGHT" then
+		if MoveAny:IsValidFrame(RuneFrame) and class == "DEATHKNIGHT" then
 			AddCheckBox(4, "RUNEFRAME", false)
 		end
 
-		if MoveAny:GetWoWBuild() == "WRATH" and class == "SHAMAN" then
+		if (D4:GetWoWBuild() == "WRATH" or D4:GetWoWBuild() == "CATA") and class == "SHAMAN" then
 			AddCheckBox(4, "TOTEMBAR", false)
 		end
 
-		if WarlockPowerFrame and class == "WARLOCK" then
+		if MoveAny:IsValidFrame(WarlockPowerFrame) and class == "WARLOCK" then
 			AddCheckBox(4, "WARLOCKPOWERFRAME", false)
 		end
 
-		if MonkHarmonyBarFrame and class == "MONK" then
+		-- CATA
+		if MoveAny:IsValidFrame(ShardBarFrame) and class == "WARLOCK" then
+			AddCheckBox(4, "SHARDBARFRAME", false)
+		end
+
+		if MoveAny:IsValidFrame(MonkHarmonyBarFrame) and class == "MONK" then
 			AddCheckBox(4, "MONKHARMONYBARFRAME", false)
 		end
 
-		if MonkStaggerBar and class == "MONK" then
+		if MoveAny:IsValidFrame(MonkStaggerBar) and class == "MONK" then
 			AddCheckBox(4, "MONKSTAGGERBAR", false)
 		end
 
-		if MageArcaneChargesFrame and class == "MAGE" then
+		if MoveAny:IsValidFrame(MageArcaneChargesFrame) and class == "MAGE" then
 			AddCheckBox(4, "MAGEARCANECHARGESFRAME", false)
 		end
 
-		if (RogueComboPointBarFrame or DruidComboPointBarFrame) and (class == "ROGUE" or class == "DRUID") then
+		if (MoveAny:IsValidFrame(RogueComboPointBarFrame) or MoveAny:IsValidFrame(DruidComboPointBarFrame)) and (class == "ROGUE" or class == "DRUID") then
 			AddCheckBox(4, "COMBOPOINTPLAYERFRAME", false)
 		end
 
-		if EssencePlayerFrame and class == "EVOKER" then
+		if class == "DRUID" and MoveAny:IsValidFrame(EclipseBarFrame) then
+			AddCheckBox(4, "EclipseBarFrame", false)
+		end
+
+		if MoveAny:IsValidFrame(EssencePlayerFrame) and class == "EVOKER" then
 			AddCheckBox(4, "ESSENCEPLAYERFRAME", false)
 		end
 
-		if PaladinPowerBarFrame and class == "PALADIN" then
+		if MoveAny:IsValidFrame(PaladinPowerBarFrame) and class == "PALADIN" then
 			AddCheckBox(4, "PALADINPOWERBARFRAME", false)
 		end
 
+		-- CATA
+		if MoveAny:IsValidFrame(PaladinPowerBar) and class == "PALADIN" then
+			AddCheckBox(4, "PALADINPOWERBAR", false)
+		end
+
 		AddCategory("ADVANCED")
-		if TotemFrame then
+		if MoveAny:IsValidFrame(TotemFrame) then
 			AddCheckBox(4, "TOTEMFRAME", false)
 		end
 
-		if MinimapZoneTextButton then
+		if MoveAny:IsValidFrame(MinimapZoneTextButton) then
 			AddCheckBox(4, "MINIMAPZONETEXT", false)
 		end
 
@@ -660,19 +674,23 @@ function MoveAny:InitMALock()
 		end
 
 		AddCheckBox(4, "TARGETFRAMESPELLBAR", false)
-		if FocusFrame then
+		if MoveAny:IsValidFrame(FocusFrame) then
 			AddCheckBox(4, "FOCUSFRAMESPELLBAR", false)
 		end
 
 		AddCheckBox(4, "UIWIDGETTOPCENTER", false)
 		AddCheckBox(4, "UIWIDGETBELOWMINIMAP", false)
 		AddCheckBox(4, "MIRRORTIMER1", false)
+		if TimerTrackerTimer1 then
+			AddCheckBox(4, "TIMERTRACKER1", false)
+		end
+
 		if Arena_LoadUI then
 			AddCheckBox(4, "ARENAENEMYFRAMES", false)
 			AddCheckBox(4, "ARENAPREPFRAMES", false)
 		end
 
-		if CompactArenaFrame then
+		if MoveAny:IsValidFrame(CompactArenaFrame) then
 			AddCheckBox(4, "COMPACTARENAFRAME", false)
 		end
 
@@ -713,7 +731,10 @@ function MoveAny:InitMALock()
 
 		AddCheckBox(4, "EventToastManagerFrame", false)
 		AddCheckBox(4, "COMPACTRAIDFRAMEMANAGER", false)
-		AddCheckBox(4, "TICKETSTATUSFRAME", false)
+		if TicketStatusFrame then
+			AddCheckBox(4, "TICKETSTATUSFRAME", false)
+		end
+
 		if TargetFrame and TargetFrameNumericalThreat then
 			AddCheckBox(4, "TargetFrameNumericalThreat", false)
 		end
@@ -728,7 +749,7 @@ function MoveAny:InitMALock()
 
 		if IsAddOnLoaded("ImproveAny") then
 			AddCategory("ImproveAny")
-			if MoveAny:GetWoWBuild() ~= "RETAIL" then
+			if D4:GetWoWBuild() ~= "RETAIL" then
 				AddCheckBox(4, "IASKILLS", true)
 			end
 
@@ -980,7 +1001,7 @@ function MoveAny:ShowProfiles()
 			end
 		)
 
-		MAProfiles.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.6.126"))
+		MAProfiles.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.6.165"))
 		MAProfiles.CloseButton:SetScript(
 			"OnClick",
 			function()
@@ -1719,10 +1740,18 @@ local function OnEvent(sel, event, ...)
 	end
 end
 
+function MoveAny:IsValidFrame(frame)
+	if frame and frame.GetName then return true end
+
+	return false
+end
+
 local f = CreateFrame("Frame")
 f:RegisterEvent("CHAT_MSG_ADDON")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", OnEvent)
+local hookedRep = false
+local hookedRepStatus = false
 function MoveAny:LoadAddon()
 	MoveAny.init = MoveAny.init or false
 	if MoveAny.init then return end
@@ -1756,7 +1785,7 @@ function MoveAny:LoadAddon()
 		MoveAny:MSG(MoveAny:GT("LID_STARTHELP3"))
 	end
 
-	if MoveAny:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("ACTIONBARS", false) then
+	if D4:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("ACTIONBARS", false) then
 		if MainMenuBarPerformanceBarFrame then
 			MainMenuBarPerformanceBarFrame:SetParent(MAHIDDEN)
 		end
@@ -1927,6 +1956,15 @@ function MoveAny:LoadAddon()
 		)
 	end
 
+	if ShardBarFrame and MoveAny:IsEnabled("SHARDBARFRAME", false) and class == "WARLOCK" then
+		MoveAny:RegisterWidget(
+			{
+				["name"] = "ShardBarFrame",
+				["lstr"] = "LID_SHARDBARFRAME"
+			}
+		)
+	end
+
 	if MonkHarmonyBarFrame and MoveAny:IsEnabled("MONKHARMONYBARFRAME", false) and class == "MONK" then
 		MonkHarmonyBarFrame.unit = "player"
 		MonkHarmonyBarFrame:SetParent(MoveAny:GetMainPanel())
@@ -1982,6 +2020,15 @@ function MoveAny:LoadAddon()
 		end
 	end
 
+	if EclipseBarFrame and MoveAny:IsEnabled("EclipseBarFrame", false) then
+		MoveAny:RegisterWidget(
+			{
+				["name"] = "EclipseBarFrame",
+				["lstr"] = "LID_EclipseBarFrame"
+			}
+		)
+	end
+
 	if EssencePlayerFrame and MoveAny:IsEnabled("ESSENCEPLAYERFRAME", false) and class == "EVOKER" then
 		local wasrun = false
 		hooksecurefunc(
@@ -2018,7 +2065,7 @@ function MoveAny:LoadAddon()
 		)
 	end
 
-	if PaladinPowerBarFrame and MoveAny:IsEnabled("PALADINPOWERBARFRAME", false) and class == "PALADIN" then
+	if MoveAny:IsValidFrame(PaladinPowerBarFrame) and MoveAny:IsEnabled("PALADINPOWERBARFRAME", false) and class == "PALADIN" then
 		PaladinPowerBarFrame.unit = "player"
 		PaladinPowerBarFrame:SetParent(MoveAny:GetMainPanel())
 		MoveAny:RegisterWidget(
@@ -2029,7 +2076,16 @@ function MoveAny:LoadAddon()
 		)
 	end
 
-	if MoveAny:IsEnabled("EDITMODE", MoveAny:GetWoWBuildNr() < 100000) then
+	if MoveAny:IsValidFrame(PaladinPowerBar) and MoveAny:IsEnabled("PALADINPOWERBAR", false) and class == "PALADIN" then
+		MoveAny:RegisterWidget(
+			{
+				["name"] = "PaladinPowerBar",
+				["lstr"] = "LID_PALADINPOWERBAR"
+			}
+		)
+	end
+
+	if MoveAny:IsEnabled("EDITMODE", D4:GetWoWBuildNr() < 100000) then
 		if PlayerFrameBackground and MoveAny:IsEnabled("PLAYERFRAMEBACKGROUND", false) then
 			MoveAny:RegisterWidget(
 				{
@@ -2080,7 +2136,7 @@ function MoveAny:LoadAddon()
 			)
 		end
 
-		if MoveAny:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("TARGETFRAMEBUFF1", false) then
+		if D4:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("TARGETFRAMEBUFF1", false) then
 			MoveAny:RegisterWidget(
 				{
 					["name"] = "TargetFrameBuff1",
@@ -2138,7 +2194,7 @@ function MoveAny:LoadAddon()
 			)
 		end
 
-		if MoveAny:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("TARGETFRAMETOTDEBUFF1", false) then
+		if D4:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("TARGETFRAMETOTDEBUFF1", false) then
 			MoveAny:RegisterWidget(
 				{
 					["name"] = "TargetFrameToTDebuff1",
@@ -2252,7 +2308,7 @@ function MoveAny:LoadAddon()
 			)
 		end
 
-		if FocusFrame and MoveAny:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("FOCUSFRAMEBUFF1", false) then
+		if FocusFrame and D4:GetWoWBuild() ~= "RETAIL" and MoveAny:IsEnabled("FOCUSFRAMEBUFF1", false) then
 			MoveAny:RegisterWidget(
 				{
 					["name"] = "FocusFrameBuff1",
@@ -2438,7 +2494,7 @@ function MoveAny:LoadAddon()
 			)
 		end
 
-		if MoveAny:GetWoWBuild() == "RETAIL" then
+		if D4:GetWoWBuild() == "RETAIL" then
 			local ABNames = {}
 			ABNames[1] = "MainMenuBar"
 			ABNames[2] = "MultiBarBottomLeft"
@@ -2509,8 +2565,8 @@ function MoveAny:LoadAddon()
 			end
 		end
 
-		if MoveAny:GetWoWBuild() ~= "RETAIL" and (MoveAny:IsEnabled("ACTIONBAR" .. 3, false) or MoveAny:IsEnabled("ACTIONBAR" .. 3, false) or MoveAny:IsEnabled("MINIMAP", false)) and MultiBarRight and MultiBarLeft then end
-		if MoveAny:GetWoWBuild() ~= "RETAIL" and MoveAny:AnyActionbarEnabled() then
+		if D4:GetWoWBuild() ~= "RETAIL" and (MoveAny:IsEnabled("ACTIONBAR" .. 3, false) or MoveAny:IsEnabled("ACTIONBAR" .. 3, false) or MoveAny:IsEnabled("MINIMAP", false)) and MultiBarRight and MultiBarLeft then end
+		if D4:GetWoWBuild() ~= "RETAIL" and MoveAny:AnyActionbarEnabled() then
 			for i = 1, 10 do
 				if i ~= 2 and ((i == 1 or i == 5 or i == 6) and MoveAny:IsEnabled("ACTIONBARS", false)) or MoveAny:IsEnabled("ACTIONBAR" .. i, false) then
 					MoveAny:RegisterWidget(
@@ -2712,7 +2768,7 @@ function MoveAny:LoadAddon()
 				local cright = 2
 				local ctop = 22
 				local cbottom = -34
-				if MoveAny:GetWoWBuild() == "RETAIL" then
+				if D4:GetWoWBuild() == "RETAIL" then
 					cright = 16
 				end
 
@@ -3121,6 +3177,15 @@ function MoveAny:LoadAddon()
 		)
 	end
 
+	if TimerTrackerTimer1 and MoveAny:IsEnabled("TIMERTRACKER1", false) then
+		MoveAny:RegisterWidget(
+			{
+				["name"] = "TimerTrackerTimer1",
+				["lstr"] = "LID_TIMERTRACKER1",
+			}
+		)
+	end
+
 	if MoveAny:IsEnabled("MIRRORTIMER1", false) then
 		if MirrorTimerContainer then
 			MirrorTimerContainer:SetSize(206, 32)
@@ -3269,7 +3334,7 @@ function MoveAny:LoadAddon()
 			)
 		end
 
-		if MoveAny:IsEnabled("IASKILLS", true) and MoveAny:GetWoWBuild() ~= "RETAIL" then
+		if MoveAny:IsEnabled("IASKILLS", true) and D4:GetWoWBuild() ~= "RETAIL" then
 			MoveAny:RegisterWidget(
 				{
 					["name"] = "IASkills",
@@ -3412,7 +3477,7 @@ function MoveAny:LoadAddon()
 		end
 	end
 
-	if MoveAny:IsEnabled("TICKETSTATUSFRAME", false) then
+	if TicketStatusFrame and MoveAny:IsEnabled("TICKETSTATUSFRAME", false) then
 		MoveAny:RegisterWidget(
 			{
 				["name"] = "TicketStatusFrame",
@@ -3434,7 +3499,7 @@ function MoveAny:LoadAddon()
 	end
 
 	if MoveAny:IsEnabled("MINIMAP", false) then
-		if MoveAny:GetWoWBuild() == "RETAIL" then
+		if D4:GetWoWBuild() == "RETAIL" then
 			MoveAny:RegisterWidget(
 				{
 					["name"] = "MinimapCluster",
@@ -3661,7 +3726,7 @@ function MoveAny:LoadAddon()
 		)
 	end
 
-	if MoveAny:GetWoWBuild() == "RETAIL" then
+	if D4:GetWoWBuild() == "RETAIL" then
 		LoadAddOn("Blizzard_ArchaeologyUI")
 	end
 
@@ -3852,25 +3917,10 @@ function MoveAny:LoadAddon()
 				opts["WIDTH"] = opts["WIDTH"] or 1024
 				opts["HEIGHT"] = opts["HEIGHT"] or 15
 				if opts["WIDTH"] and opts["HEIGHT"] then
-					hooksecurefunc(
-						ReputationWatchBar,
-						"SetHeight",
-						function(sel, nh)
-							if sel.ma_setheight then return end
-							sel.ma_setheight = true
-							sel:SetSize(opts["WIDTH"], opts["HEIGHT"])
-							sel.ma_setheight = false
-						end
-					)
-
-					ReputationWatchBar:SetSize(opts["WIDTH"], opts["HEIGHT"])
-					if ReputationWatchBar_Drag then
-						ReputationWatchBar_Drag:SetSize(opts["WIDTH"], opts["HEIGHT"])
-					end
-
-					if ReputationWatchBar.StatusBar then
+					if hookedRep == false then
+						hookedRep = true
 						hooksecurefunc(
-							ReputationWatchBar.StatusBar,
+							ReputationWatchBar,
 							"SetHeight",
 							function(sel, nh)
 								if sel.ma_setheight then return end
@@ -3879,6 +3929,27 @@ function MoveAny:LoadAddon()
 								sel.ma_setheight = false
 							end
 						)
+					end
+
+					ReputationWatchBar:SetSize(opts["WIDTH"], opts["HEIGHT"])
+					if ReputationWatchBar_MA_DRAG then
+						ReputationWatchBar_MA_DRAG:SetSize(opts["WIDTH"], opts["HEIGHT"])
+					end
+
+					if ReputationWatchBar.StatusBar then
+						if hookedRepStatus == false then
+							hookedRepStatus = true
+							hooksecurefunc(
+								ReputationWatchBar.StatusBar,
+								"SetHeight",
+								function(sel, nh)
+									if sel.ma_setheight then return end
+									sel.ma_setheight = true
+									sel:SetSize(opts["WIDTH"], opts["HEIGHT"])
+									sel.ma_setheight = false
+								end
+							)
+						end
 
 						ReputationWatchBar.StatusBar:SetSize(opts["WIDTH"], opts["HEIGHT"])
 						local last = nil
@@ -3901,6 +3972,10 @@ function MoveAny:LoadAddon()
 								id = id + 1
 							end
 						end
+					end
+
+					if ReputationWatchBar.OverlayFrame and ReputationWatchBar.OverlayFrame.Text then
+						ReputationWatchBar.OverlayFrame.Text:SetText(ReputationWatchBar.OverlayFrame.Text:GetText())
 					end
 				end
 			end
@@ -3928,8 +4003,8 @@ function MoveAny:LoadAddon()
 				opts["HEIGHT"] = opts["HEIGHT"] or 15
 				if opts["WIDTH"] and opts["HEIGHT"] then
 					MainMenuExpBar:SetSize(opts["WIDTH"], opts["HEIGHT"])
-					if MainMenuExpBar_Drag then
-						MainMenuExpBar_Drag:SetSize(opts["WIDTH"], opts["HEIGHT"])
+					if MainMenuExpBar_MA_DRAG then
+						MainMenuExpBar_MA_DRAG:SetSize(opts["WIDTH"], opts["HEIGHT"])
 					end
 
 					local last = nil
@@ -3950,6 +4025,10 @@ function MoveAny:LoadAddon()
 							last = v
 						end
 					end
+
+					if MainMenuBarExpText then
+						MainMenuBarExpText:SetText(MainMenuBarExpText:GetText())
+					end
 				end
 			end
 
@@ -3967,7 +4046,7 @@ function MoveAny:LoadAddon()
 		end
 	end
 
-	if MoveAny:GetWoWBuild() == "WRATH" and class == "SHAMAN" then
+	if (D4:GetWoWBuild() == "WRATH" or D4:GetWoWBuild() == "CATA") and class == "SHAMAN" then
 		if MultiCastActionBarFrame then
 			MultiCastActionBarFrame:SetParent(MoveAny:GetMainPanel())
 		end
@@ -4152,7 +4231,7 @@ function MoveAny:LoadAddon()
 	end
 
 	MoveAny:InitMALock()
-	if MoveAny:IsEnabled("EDITMODE", MoveAny:GetWoWBuildNr() < 100000) then
+	if MoveAny:IsEnabled("EDITMODE", D4:GetWoWBuildNr() < 100000) then
 		if MoveAny.InitMinimap then
 			MoveAny:InitMinimap()
 		end
@@ -4215,7 +4294,7 @@ function MoveAny:LoadAddon()
 			)
 		end
 
-		if WorldMapFrame and MoveAny:GetWoWBuild() ~= "RETAIL" then
+		if WorldMapFrame and D4:GetWoWBuild() ~= "RETAIL" then
 			WorldMapFrame.ScrollContainer.GetCursorPosition = function(fr)
 				local x, y = MapCanvasScrollControllerMixin.GetCursorPosition(fr)
 				local scale = WorldMapFrame:GetScale()

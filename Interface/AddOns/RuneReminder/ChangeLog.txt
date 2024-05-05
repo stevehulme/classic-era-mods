@@ -1,0 +1,454 @@
+v 1.1.0
+----------
+* Added Labels to Rune Slot Buttons, and Option to disable or resize their text
+* Removed Commanding Shout from Warrior Runes (is actually a skill book)
+* Adjusted default glow opacity 
+
+
+v 1.0.9
+----------
+* Removed extra Shadowstep entry incorrectly in Legs Slot
+
+
+v 1.0.8
+----------
+* Now automatically dismounts when trying to change runes while mounted, rather than giving an error (unless moving or in combat)
+
+
+v 1.0.7
+----------
+* Change default for notification when swapping to engraved gear
+
+
+v 1.0.6
+----------
+* Fix Lua error when Updating existing Rune Set
+
+
+v 1.0.5
+----------
+* Fixes for Rune Sets giving errors when updating/deleting sets
+* Minor text adjustments
+
+
+v 1.0.4
+----------
+* Fix for Rune Sets option not saving consistently
+* Minor cleanup
+
+
+v 1.0.3
+----------
+* Fix for performance issue caused by extra calls and amplified by API changes in 1.15.1 
+
+
+v 1.0.2
+----------
+* Fix to hide/remove some QoL Books/Scrolls that are in the data files/API as Runes (Shadowfiend and Aspect of the Viper)
+NOTE: If you notice any others like this that are displaying as runes that should not be, please let me know.
+
+
+v 1.0.1
+----------
+* Fix for error on load with Ace-3/Localization if not using any other addons with Ace-3
+
+
+v 1.0.0
+----------
+* Update for Patch 1.15.1 (SoD Phase 2)
+
+
+0.7.7.6
+----------
+* minor settings adjustments for consistency
+
+
+0.7.7.5
+----------
+* Preparation for future phases (New slots/runes are now ready and will be working immediately for Phase 2 launch) 
+* (Runes Widget) Added options to Show/Hide each rune slot individually
+* (Runes Widget) Added option to Show/Hide Rune Slots that haven't been discovered yet (defaults to hide, and they will show when you find a rune in that category)
+* Removed option to toggle notifications per slot - with the other settings the individual slot notification options are redundant/unnecessary
+
+
+0.7.7.4
+----------
+* Added option to hide individual slots from the Runes Widget
+* Phase 2 prep 
+
+
+0.7.7.3
+----------
+* Added localization support, with initial translation for Portuguese  (courtesy of Sir_Linho)
+* Reworked options panel layout 
+* minor text adjustments 
+
+
+0.7.7.2
+----------
+* Fixed conflict with "Stat Weights Classic" addon
+
+
+0.7.7.1
+----------
+* Added option to switch between character specific settings and a Shared Profile.
+NOTE: The default for new characters will be the Shared Profile, but any characters that have positioning data saved prior to this update will default to their own profile with their respective location.
+
+
+0.7.7.0
+----------
+* Minor cleanup and foundation for future updates (prep for Phase 2 & settings profiles)
+
+
+0.7.6.9
+----------
+* Correcting issue introduced with previous version
+
+
+0.7.6.8
+----------
+* Updated Options Panel, enable/disable specific options based on other options (ie if widget is disabled, disable the settings that only apply to the widget, etc) 
+* Fixed issue with anchor (and it's tooltip) display/positioning
+* Fixed issue with Tooltip Position Dropdown not displaying values after opened/closed once
+
+
+
+0.7.6.7
+----------
+* Fixed issue with Rune Sets button re-appearing upon opening the Options Panel via Esc 
+* Modified logic around first-login, no longer resets display (but positioning will still need to be set, if it's set to display)
+
+
+0.7.6.6
+----------
+* Added tooltips to the "Load Set: {SetName}" menu items, indicates which runes are part of that set, as well as which of those are currently active
+
+
+0.7.6.5
+----------
+* Added new option for Rune Sets, "Begin Engraving Immediately". This is enabled by default and starts the engraving process immediately instead of requiring 1 extra click after the set is chosen. Due to limitations with the API, each subsequent rune will still require clicking the button. 
+* Fixed bug/error when Rune Sets get disabled in the middle of applying a rune
+
+
+0.7.6.4
+----------
+Options Updates:
+* Added new option for "Rune Sets Toggle Expands All" - When using the option to toggle/display rune slots by right clicking the Rune Sets button, this will automatically expand all runes.
+* Alphabetically ordered the Rune Textures dropdown (INV_MISC_RUNE_06 is the standard in-game icon)
+* Set enabled/disabled states for related rune sets options when changing them
+* Minor labeling adjustments 
+
+
+0.7.6.3
+----------
+* adjustment to storing/loading position when frame position isn't cached by WoW 
+
+
+0.7.6.2
+----------
+* fixed bug causing rune set button to not displaying correct icon until using /reload in some scenarios
+
+
+0.7.6.1
+----------
+* Added option to change the Rune Sets button icon
+* Fixed placement of Rune Sets button when switching between Horizontal and Vertical layouts
+
+
+0.7.6.0
+----------
+* Changed Right Click on Rune Sets to expand/collapse Widget (when enabled in Options), for consistency
+* Alt+Click now opens the Delete Rune Sets menu (apologies for any confusion from the change of this + above)
+* Fixed issue where Rune Sets wouldn't display on load if Runes Widget was disabled
+* Other minor text adjustments & cleanup
+
+
+0.7.5.9
+----------
+* Beta/WIP version of RuneSets is now available, and will show up alongside the Runes Widget (but can be disabled in Options).  
+Click the Rune Sets button to Save or Apply a Rune Set, or Right click to delete rune sets.  Due to the way the API works, runes have to be applied 1 by 1 (can't automate back to back), but the Rune Set button will update to indicate that runes don't match, and clicking on the button will engrave the missing rune, and move on to the next. 
+* New commands /rr save {setname}, /rr delete {setname}, and /rr sets
+
+NOTE: This is very much a WIP. There may be some bugs, and the interface for this will almost certainly change with time, but it's in a usable state and already feeling helpful for me, so figured I'd release it. 
+
+
+0.7.5.8
+----------
+* Fix for position not getting saved if you never use the anchor/drag handle (and only use the options buttons)
+
+
+0.7.5.7
+----------
+* Added tooltips to positioning buttons for more clarity on their function
+
+
+0.7.5.6
+----------
+* Brought back positioning buttons in options for fine tuning 
+
+
+0.7.5.5
+----------
+* Drag and Drop is here! 
+
+I've removed the x and y offset positioning and replaced it with a much more user friendly anchor which can be moved with ease. Since positioning is handled differently now (and per character), the first time you log in after this update the widget will be in the center of your screen, and you will need to position it with the anchor. Left click & drag to position.  Ctrl + click to lock it in place, and Right click to hide the anchor.  You will need to do this once for each character.  If at any point you need to reset the position, typing /rr reset will put it back to the center of your screen, unlocked and ready to move.  
+
+0.7.5.4
+----------
+* Bug fix for runes initially loading as not learned in some scenarios
+* Fixed lua error introduced in prior update when Rune Reminder saved settings not found
+
+
+0.7.5.3
+----------
+* Added option to disable popup when removing gear 
+* Added option to set the Checked State. Previously this was enabled at all times when using Masque, and never otherwise, which was more confusing than anything. They can now be controlled independently, whether using Masque or not. Masque will allow you to customize the Checked state even further, though. 
+* Removed Alternate Load from Options Panel.  This setting still exists and can be controlled with /rr altload, but it should no longer be needed. If you experience conflicts with other addons, please let me know which ones and I will look into it. 
+
+
+0.7.5.2
+----------
+* Adjusted default setting for Blizzard Engraving to TOGGLE
+* minor code tweaks/refactoring
+
+
+0.7.5.1
+----------
+* Added option to control whether or not the Blizzard Engraving window shows when you open the character screen.
+
+
+0.7.5.0
+----------
+* Fix for bug that could cause engraving to incorrectly click the wrong popup window confirmation
+
+
+0.7.4.9
+----------
+* minor cleanup & performance tweaks
+
+
+0.7.4.8
+----------
+* Updated Masque support, most color settings should now be taking effect including cooldown, checked, pushed, and highlight states. 
+* Adjustment to cooldown text positioning, should no longer be "behind" the cooldown animation. 
+
+NOTE: If you're using Masque, you may want to disable RR's Glow option, as the "Checked" state will overlap with it. 
+
+
+0.7.4.7
+----------
+* Fix for disabled buttons not displaying greyscale without Masque 
+
+
+0.7.4.6
+----------
+* Added option to change glow opacity and texture
+* Added uncollected runes to widget, and option to hide them
+* other minor options panel adjustments
+
+
+0.7.4.5
+----------
+* Added option to toggle cooldown text, and disable it separately from the cooldown animation itself. Ensure this is turned off if you experience double countdown timers as a result of another addon. 
+
+
+0.7.4.4
+----------
+* Updated engraved rune slot tooltips to display the actual spell/ability tooltip instead of Engraving version with "Engrave your {slot} with {rune}:" and "<Click to Engrave Rune>"
+
+
+0.7.4.3
+----------
+* Added option for tooltip positioning/anchor (in relation to the rune/button)
+* Minor adjustments to options panel
+
+
+0.7.4.2
+----------
+* Added cooldown timers for engraved runes, can be turned off in options 
+
+
+0.7.4.1
+----------
+* Minor cleanup - removal of unnecessary logic, and adjustments to help commands
+
+
+0.7.4.0
+----------
+* Fix for bug with casting detection that caused "cannot apply runes while casting" error to fire incorrectly sometimes
+
+
+0.7.3.9
+----------
+* Added Button Padding setting
+* Now prevents attempts to change runes while dead (since you can't anyways)
+* No longer prevents left-click toggling open specific slots while in combat 
+
+
+0.7.3.8
+----------
+* Updates and fixes for Masque Support, should work MUCH better now :) 
+
+
+0.7.3.7
+----------
+* Fix for potential issue with widget population when runes have been searched or filtered
+
+
+0.7.3.6
+----------
+* Adjustment to options & positioning
+
+
+0.7.3.5
+----------
+* Minor adjustments to expand/collapse 
+
+
+0.7.3.4
+----------
+* Added option for Auto Toggle on Hover - when hovering over a rune slot/button, this will automatically expand those runes, and when your mouse moves off of that set of runes, they will collapse. 
+
+
+0.7.3.3
+----------
+* minor cleanup
+
+
+0.7.3.2
+----------
+* Added more options/buttons for positioning 
+
+
+0.7.3.1
+----------
+* Modified defaults for enable widget and keep open
+
+
+0.7.3.0
+----------
+* Modified "Keep Open" option and logic surrounding it, no longer toggled from right clicking the widget  
+* New option - "Disable LeftClick-to-Toggle w/Keep Open" (not the best name, but idk how else to label it lol)
+NOTE: Right click will continue to force open/close all runes, it just is no longer coupled with the Keep Open setting.  
+
+Previously right clicking on the widget would toggle the "Keep Open" setting and in turn force open/collapse. This could be quite useful for someone that always wants the runes either fully expanded or closed, but caused confusion being tied in to the Keep Open setting since it could easily change without the user really thinking about it. Now, the two are separate, so you can still right click hide or display all without it affecting your Keep Open setting or future rune applications.
+
+This new logic alone did present a slightly less ideal scenario for the user that always wants to have their runes either fully expanded or collapsed, because previously "Keep Open" prevented [accidental] left-clicks on the already-engraved rune slots from collapsing their runes, and now it doesn't (by default). Since some users DO want to be able to use Keep Open while still being able to close them individually at will, I split that logic off, and added the additional option that is specifically for that first user I described, not wanting to accidentally close a row.
+
+
+0.7.2.9
+----------
+* Initial foundation for RuneSets. This is very much a WIP, but here's what's currently in place:
+ * /rr save {RuneSetName} - Create a RuneSet (associated with your character/realm) for your the currently engraved runes
+ * /rr load {RuneSetName} - Plan is for this eventually to actually apply the RuneSet, but currently it will just compare your current runes and let you know which runes you need to adjust
+ * /rr delete {RuneSetName} - Deletes data for the given RuneSet
+ * /rr sets - List your saved RuneSets
+
+0.7.2.8
+----------
+* Expanded on Options Panel for fine tuning/precision - textbox and increment/decrement buttons
+* Minor text updates 
+
+0.7.2.7
+----------
+* "Keep Open" now prevents engraved slots from triggering/collapsing runes (instead of just preventing the rune engraving doing it)
+* Added option to disable popup notification when swapping to gear that has another rune engraved
+* Widget now refreshes runes automatically when a new rune is learned
+* Shift clicking on the widget will toggle the Options Panel
+* Cleaned up Options panel 
+
+0.7.2.6
+----------
+* Right clicking the widget will toggle the "Keep Open" option (in turn essentially force expand/collapsing the entire widget)
+
+0.7.2.5
+----------
+* prevent attempting to engrave while casting (mostly only a concern if using keep open and accidentally double clicking)
+
+0.7.2.4
+----------
+* minor cleanup
+
+0.7.2.3
+----------
+* Fix for Keep Open option, when toggling layout  which prevents the Rune buttons from collapsing when applying a new one
+* Adjustments to Masque support - still buggy with resize, but should be more stable now otherwise... I think?
+
+0.7.2.2
+----------
+* Added "Keep Open" option which prevents the Rune buttons from collapsing when applying a new one
+* Initial Masque support added - NOTE: There is one bug with this I haven't been able to figure out yet. When you change/apply your skin through Masque, the button icons will disappear. You can get them back by type "/rr refresh" and then it should work after that (until/unless you change it again). 
+
+0.7.2.1
+----------
+* Added /rr pos command, to go alongside /rr setpos, for those who would like to reposition without using the options panel
+
+0.7.2.0
+----------
+* Added button size option/slider 
+* Added /rr setpos <x> <y> command
+NOTE: the starting point for this is currently the top center(ish) of your screen, so /rr setpos 0 0 will put it there.  
+Your Y value will need to be 0 or negative for it to show.  This may change eventually, but top center was our starting point.
+* Options adjustments
+
+
+0.7.1.9
+----------
+* Fixed a bug that caused rune slots not to update if popup notifications were turned off
+* Updated Simple Tooltips option to apply to all runes in the widget, not just those equipped
+
+0.7.1.8
+----------
+* added option to disable the glow effect on the widget buttons
+
+0.7.1.7
+----------
+* minor error handling adjustment
+
+0.7.1.6
+----------
+* added fix for altload not working properly, missing events
+
+0.7.1.5
+----------
+* added error handling and prevention of some actions that the game will not allow (in combat, moving, etc) 
+* minor text updates
+
+0.7.1.4
+----------
+* Updated options panel to be clearer
+* added /rr displayrunes command to commands list
+* Fixed bug with /rr displayrunes command toggle not working properly
+* Updated default widget location
+* minor text updates 
+
+0.7.1.3
+----------
+* Fixed bug when equipping an engraved item into an empty slot while having the rune buttons expanded, previously caused duplicate button
+* minor text updates/slight tweaks
+
+0.7.1.2
+----------
+* Multiple widget enhancements:
+* Quick swap enabled, clicking on a slot in the widget will show the other runes you have unlocked, for 1 click engraving
+* minor visual tweaks 
+* /rr rotate command - switches between horizontal and vertical widget layout
+* /rr swapdir command - switches between the standard and alternate direction when toggling runes
+
+0.7.1.1
+----------
+* Fixed bug on initial login displaying runes widget when they are set to not display in options 
+
+0.7.1.0
+----------
+* Updated Rune Widget Tooltips to their in-game tooltips
+* Added simple tooltips option, to display as they previously were
+* minor text updates
+
+0.7.0.9
+----------
+* Added display of currently equipped rune slots 
+* Added /rr displayrunes toggle 
+* Cleaned up options & added new options for display and position of runes 
+* minor text updates 
+

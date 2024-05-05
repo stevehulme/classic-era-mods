@@ -9,7 +9,7 @@
 
 -- create new library
 local LIB_NAME = "LibFroznFunctions-1.0";
-local LIB_MINOR = 18; -- bump on changes
+local LIB_MINOR = 21; -- bump on changes
 
 if (not LibStub) then
 	error(LIB_NAME .. " requires LibStub.");
@@ -59,12 +59,14 @@ end
 -- @return .ClassicEra = true/false for Classic Era
 --         .BCC        = true/false for BCC
 --         .WotLKC     = true/false for WotLKC
+--         .CataC      = true/false for CataC
 --         .SL         = true/false for SL
 --         .DF         = true/false for DF
 LibFroznFunctions.isWoWFlavor = {
 	ClassicEra = false,
 	BCC = false,
 	WotLKC = false,
+	CataC = false,
 	SL = false,
 	DF = false
 };
@@ -75,6 +77,8 @@ elseif (_G["WOW_PROJECT_ID"] == _G["WOW_PROJECT_BURNING_CRUSADE_CLASSIC"]) then
 	LibFroznFunctions.isWoWFlavor.BCC = true;
 elseif (_G["WOW_PROJECT_ID"] == _G["WOW_PROJECT_WRATH_CLASSIC"]) then
 	LibFroznFunctions.isWoWFlavor.WotLKC = true;
+elseif (_G["WOW_PROJECT_ID"] == _G["WOW_PROJECT_CATACLYSM_CLASSIC"]) then
+	LibFroznFunctions.isWoWFlavor.CataC = true;
 else -- retail
 	if (_G["LE_EXPANSION_LEVEL_CURRENT"] == _G["LE_EXPANSION_SHADOWLANDS"]) then
 		LibFroznFunctions.isWoWFlavor.SL = true;
@@ -97,6 +101,7 @@ LFF_GEAR_SCORE_ALGORITHM = {
 --         .talentsAvailableForInspectedUnit                           = true/false if getting talents from other players is available (since bc 2.3.0)
 --         .numTalentTrees                                             = number of talent trees
 --         .talentIconAvailable                                        = true/false if talent icon is available (since bc)
+--         .GetTalentTabInfoReturnValuesFromCataC                      = true/false if GetTalentTabInfo() return values from catac (since catac 4.4.0)
 --         .roleIconAvailable                                          = true/false if role icon is available (since MoP 5.0.4)
 --         .specializationAvailable                                    = true/false if specialization is available (since MoP 5.0.4)
 --         .itemLevelOfFirstRaidTierSet                                = item level of first raid tier set. false if not defined (yet).
@@ -106,7 +111,8 @@ LFF_GEAR_SCORE_ALGORITHM = {
 --         .realGetSpellLinkAvailable                                  = true/false if the real GetSpellLink() is available (since bc 2.3.0). in classic era this function only returns the spell name instead of a spell link.
 --         .relatedExpansionForItemAvailable                           = true/false if GetItemInfo() return the related expansion for an item (parameter expacID) (since Legion 7.1.0)
 --         .defaultGearScoreAlgorithm                                  = default GearScore algorithm
---         .optionsSliderTemplate                                      = options slider template ("OptionsSliderTemplate", since df 10.0.0 "UISliderTemplateWithLabels")
+--         .optionsSliderTemplate                                      = options slider template ("OptionsSliderTemplate", since df 10.0.0 and catac 4.4.0 "UISliderTemplateWithLabels")
+--         .dragonriding                                               = true/false if dragonriding is available (since df)
 LibFroznFunctions.hasWoWFlavor = {
 	guildNameInPlayerUnitTip = true,
 	specializationAndClassTextInPlayerUnitTip = true,
@@ -114,8 +120,9 @@ LibFroznFunctions.hasWoWFlavor = {
 	talentsAvailableForInspectedUnit = true,
 	numTalentTrees = 2,
 	talentIconAvailable = true,
+	GetTalentTabInfoReturnValuesFromCataC = false,
 	roleIconAvailable = true,
-	specializationAvailable = false,
+	specializationAvailable = true,
 	itemLevelOfFirstRaidTierSet = false,
 	barMarginAdjustment = 0,
 	GameTooltipSetPaddingWithLeftAndTop = true,
@@ -123,7 +130,8 @@ LibFroznFunctions.hasWoWFlavor = {
 	realGetSpellLinkAvailable = true,
 	relatedExpansionForItemAvailable = true,
 	defaultGearScoreAlgorithm = LFF_GEAR_SCORE_ALGORITHM.TipTac,
-	optionsSliderTemplate = "UISliderTemplateWithLabels"
+	optionsSliderTemplate = "UISliderTemplateWithLabels",
+	dragonriding = (GetAchievementInfo(15794) and true or false) -- see DRAGONRIDING_ACCOUNT_ACHIEVEMENT_ID in "Blizzard_DragonflightLandingPage.lua"
 };
 
 if (LibFroznFunctions.isWoWFlavor.ClassicEra) then
@@ -133,6 +141,9 @@ if (LibFroznFunctions.isWoWFlavor.ClassicEra) then
 	LibFroznFunctions.hasWoWFlavor.realGetSpellLinkAvailable = false;
 end
 if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) then
+	LibFroznFunctions.hasWoWFlavor.defaultGearScoreAlgorithm = LFF_GEAR_SCORE_ALGORITHM.TacoTip;
+end
+if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) or (LibFroznFunctions.isWoWFlavor.CataC) then
 	LibFroznFunctions.hasWoWFlavor.needsSuppressingErrorMessageAndSpeechWhenCallingCanInspect = true;
 	LibFroznFunctions.hasWoWFlavor.numTalentTrees = 3;
 	LibFroznFunctions.hasWoWFlavor.roleIconAvailable = false;
@@ -141,11 +152,15 @@ if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.
 	LibFroznFunctions.hasWoWFlavor.GameTooltipFadeOutNotBeCalledForWorldFrameUnitTips = true;
 	LibFroznFunctions.hasWoWFlavor.barMarginAdjustment = -2;
 	LibFroznFunctions.hasWoWFlavor.relatedExpansionForItemAvailable = false;
-	LibFroznFunctions.hasWoWFlavor.defaultGearScoreAlgorithm = LFF_GEAR_SCORE_ALGORITHM.TacoTip;
 end
 if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) or (LibFroznFunctions.isWoWFlavor.SL) then
-	LibFroznFunctions.hasWoWFlavor.specializationAndClassTextInPlayerUnitTip = false;
 	LibFroznFunctions.hasWoWFlavor.optionsSliderTemplate = "OptionsSliderTemplate";
+end
+if (LibFroznFunctions.isWoWFlavor.ClassicEra) or (LibFroznFunctions.isWoWFlavor.BCC) or (LibFroznFunctions.isWoWFlavor.WotLKC) or (LibFroznFunctions.isWoWFlavor.CataC) or (LibFroznFunctions.isWoWFlavor.SL) then
+	LibFroznFunctions.hasWoWFlavor.specializationAndClassTextInPlayerUnitTip = false;
+end
+if (LibFroznFunctions.isWoWFlavor.CataC) then
+	LibFroznFunctions.hasWoWFlavor.GetTalentTabInfoReturnValuesFromCataC = true;
 end
 if (LibFroznFunctions.isWoWFlavor.SL) then
 	LibFroznFunctions.hasWoWFlavor.numTalentTrees = 0;
@@ -154,6 +169,7 @@ LibFroznFunctions.hasWoWFlavor.itemLevelOfFirstRaidTierSet =
 	LibFroznFunctions.isWoWFlavor.ClassicEra and  66 or -- Cenarion Vestments (Druid, Tier 1)
 	LibFroznFunctions.isWoWFlavor.BCC        and 120 or -- Chestguard of Malorne (Druid, Tier 4)
 	LibFroznFunctions.isWoWFlavor.WotLKC     and 213 or -- Valorous Dreamwalker Robe (Druid, Tier 7)
+	LibFroznFunctions.isWoWFlavor.CataC      and 359 or -- Stormrider's Robes (Druid, Tier 11)
 	LibFroznFunctions.isWoWFlavor.DF         and 395;   -- Lost Landcaller's Robes (Druid, Tier 23)
 
 -- get addon metadata
@@ -228,6 +244,18 @@ end
 function LibFroznFunctions:UnitIsBattlePetCompanion(unitID)
 	if (UnitIsBattlePetCompanion) then
 		return UnitIsBattlePetCompanion(unitID);
+	end
+	
+	return false;
+end
+
+-- is unit a mercenary
+--
+-- @param  unitID  unit id, e.g. "player", "target" or "mouseover"
+-- @return true if the unit has enabled mercenary mode, false otherwise.
+function LibFroznFunctions:UnitIsMercenary(unitID)
+	if (UnitIsMercenary) then
+		return UnitIsMercenary(unitID);
 	end
 	
 	return false;
@@ -325,6 +353,12 @@ end
 -- @param tip       tooltip
 -- @param callback  callback function. parameters: self, ... (additional payload)
 function LibFroznFunctions:HookScriptOnTooltipSetUnit(tip, callback)
+	-- before df 10.0.2
+	if (tip:HasScript("OnTooltipSetUnit")) then
+		tip:HookScript("OnTooltipSetUnit", callback);
+		return;
+	end
+	
 	-- since df 10.0.2
 	if (TooltipDataProcessor) then
 		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(self, ...)
@@ -332,12 +366,7 @@ function LibFroznFunctions:HookScriptOnTooltipSetUnit(tip, callback)
 				callback(self, ...);
 			end
 		end);
-		
-		return;
 	end
-	
-	-- before df 10.0.2
-	tip:HookScript("OnTooltipSetUnit", callback);
 end
 
 -- get item from tooltip
@@ -368,6 +397,12 @@ end
 -- @param tip       tooltip
 -- @param callback  callback function. parameters: self, ... (additional payload)
 function LibFroznFunctions:HookScriptOnTooltipSetItem(tip, callback)
+	-- before df 10.0.2
+	if (tip:HasScript("OnTooltipSetItem")) then
+		tip:HookScript("OnTooltipSetItem", callback);
+		return;
+	end
+	
 	-- since df 10.0.2
 	if (TooltipDataProcessor) then
 		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(self, ...)
@@ -375,12 +410,7 @@ function LibFroznFunctions:HookScriptOnTooltipSetItem(tip, callback)
 				callback(self, ...);
 			end
 		end);
-		
-		return;
 	end
-	
-	-- before df 10.0.2
-	tip:HookScript("OnTooltipSetItem", callback);
 end
 
 -- get spell from tooltip
@@ -402,6 +432,12 @@ end
 -- @param tip       tooltip
 -- @param callback  callback function. parameters: self, ... (additional payload)
 function LibFroznFunctions:HookScriptOnTooltipSetSpell(tip, callback)
+	-- before df 10.0.2
+	if (tip:HasScript("OnTooltipSetSpell")) then
+		tip:HookScript("OnTooltipSetSpell", callback);
+		return;
+	end
+	
 	-- since df 10.0.2
 	if (TooltipDataProcessor) then
 		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Spell, function(self, ...)
@@ -409,12 +445,7 @@ function LibFroznFunctions:HookScriptOnTooltipSetSpell(tip, callback)
 				callback(self, ...);
 			end
 		end);
-		
-		return;
 	end
-	
-	-- before df 10.0.2
-	tip:HookScript("OnTooltipSetSpell", callback);
 end
 
 -- get mount from tooltip
@@ -579,6 +610,55 @@ function LibFroznFunctions:CamelCaseText(text)
 	local newText = tostring(text);
 	
 	return (newText:lower():gsub("^%l", string.upper));
+end
+
+-- format number
+--
+-- @param  number      number
+-- @param  abbreviate  optional. true if number should be abbreviated.
+-- @return formatted number
+function LibFroznFunctions:FormatNumber(number, abbreviate)
+	local realNumber = tonumber(number);
+	
+	if (abbreviate) then
+		-- use the correct symbol for long scale number locales
+		local BILLION_NUMBER = 10^9;
+		local locale = GetLocale();
+		
+		if (LibFroznFunctions:ExistsInTable(quality, { "frFR", "esMX", "esES" })) then
+			BILLION_NUMBER = 10^12
+		end
+		
+		local absRealNumber = math.abs(realNumber);
+		local abbreviatedRealNumber, abbreviatedFormat;
+		
+		if (absRealNumber >= BILLION_NUMBER) then
+			abbreviatedFormat = "%.1fb";
+			abbreviatedRealNumber = realNumber / BILLION_NUMBER;
+		elseif (absRealNumber >= 1000000000) then
+			abbreviatedFormat = "%.0fm";
+			abbreviatedRealNumber = realNumber / 1000000;
+		elseif (absRealNumber >= 10000000) then
+			abbreviatedFormat = "%.1fm";
+			abbreviatedRealNumber = realNumber / 1000000;
+		elseif (absRealNumber >= 1000000) then
+			abbreviatedFormat = "%.2fm";
+			abbreviatedRealNumber = realNumber / 1000000;
+		elseif (absRealNumber >= 100000) then
+			abbreviatedFormat = "%.0fk";
+			abbreviatedRealNumber = realNumber / 1000;
+		elseif (absRealNumber >= 10000) then
+			abbreviatedFormat = "%.1fk";
+			abbreviatedRealNumber = realNumber / 1000;
+		else
+			abbreviatedFormat = "%.0f";
+			abbreviatedRealNumber = realNumber;
+		end
+		
+		return string.format(abbreviatedFormat, abbreviatedRealNumber);
+	end
+	
+	return BreakUpLargeNumbers(realNumber);
 end
 
 -- convert to table
@@ -965,6 +1045,46 @@ function LibFroznFunctions:HookSecureFuncIfExists(tab, functionName, hookfunc)
 	hooksecurefunc(tab, functionName, hookfunc);
 end
 
+-- register the frame to an event if event exists
+--
+-- @param frame      frame to register the event to
+-- @param eventName  name of the event
+-- @return true if the frame is successfully registered to the event, false if the frame was already registered to this event.
+function LibFroznFunctions:RegisterEventIfExists(frame, eventName)
+	if (not C_EventUtils.IsEventValid(eventName)) then
+		return;
+	end
+	
+	return frame:RegisterEvent(eventName);
+end
+
+-- register the frame to an event for specified units if event exists
+--
+-- @param frame      frame to register the event to
+-- @param eventName  name of the event
+-- @param ...        unit ids, e.g. "player", "target" or "mouseover"
+-- @return true if the frame is successfully registered to the event, false if the frame was already registered to this event.
+function LibFroznFunctions:RegisterUnitEventIfExists(frame, eventName, ...)
+	if (not C_EventUtils.IsEventValid(eventName)) then
+		return;
+	end
+	
+	return frame:RegisterUnitEvent(eventName, ...);
+end
+
+-- unregister an event from the frame if event exists
+--
+-- @param frame      frame to unregister the event from
+-- @param eventName  name of the event
+-- @return true if the event is successfully unregistered from the frame, false if the event was already unregistered from the frame.
+function LibFroznFunctions:UnregisterEventIfExists(frame, eventName)
+	if (not C_EventUtils.IsEventValid(eventName)) then
+		return;
+	end
+	
+	return frame:UnregisterEvent(eventName);
+end
+
 ----------------------------------------------------------------------------------------------------
 --                                         Custom Events                                          --
 ----------------------------------------------------------------------------------------------------
@@ -1005,7 +1125,7 @@ end
 -- fire group event
 --
 -- @param group      string with group name
--- @param eventName  event name
+-- @param eventName  name of the event
 -- @param ...        event payload
 function LibFroznFunctions:FireGroupEvent(group, eventName, ...)
 	-- one of the parameters are invalid
@@ -1279,7 +1399,7 @@ local function getClassColor(classFile, customClassColors)
 		if (classColor) then
 			-- make shure that ColorMixin methods are available
 			if (type(classColor.WrapTextInColorCode) ~= "function") then
-				LibFroznFunctions:MixinDifferingObjects(classColor, ColorMixin);
+				classColor = CreateColor(classColor.r, classColor.g, classColor.b, classColor.a);
 			end
 			
 			return classColor;
@@ -1865,7 +1985,7 @@ function LFF_GetAuraDescriptionFromSpellData(unitID, index, filter, callbackForA
 	-- before df 10.0.2
 	
 	-- create scanning tooltip
-	local scanTipName = LIB_NAME .. "_GetAuraDescription";
+	local scanTipName = LIB_NAME .. "-" .. LIB_MINOR .. "_GetAuraDescription";
 	
 	if (not getAuraDescriptionFromTooltipScanTip) then
 		getAuraDescriptionFromTooltipScanTip = CreateFrame("GameTooltip", scanTipName, nil, "GameTooltipTemplate");
@@ -1905,7 +2025,7 @@ function LibFroznFunctions:FontExists(fontFile)
 	
 	-- create font
 	if (not fontExistsFont) then
-		fontExistsFont = CreateFont(LIB_NAME .. "FontExists");
+		fontExistsFont = CreateFont(LIB_NAME .. "-" .. LIB_MINOR .. "FontExists");
 	end
 	
 	-- check if font exists
@@ -1932,7 +2052,7 @@ function LibFroznFunctions:TextureExists(textureFile)
 	
 	-- create frame
 	if (not textureExistsFrame) then
-		textureExistsFrame = CreateFrame("Frame");
+		textureExistsFrame = CreateFrame("Frame", LIB_NAME .. "-" .. LIB_MINOR .. "_TextureExists");
 	end
 	
 	-- create texture
@@ -2408,6 +2528,63 @@ function LibFroznFunctions:ForEachAura(unitID, filter, maxCount, func, usePacked
 	end
 end
 
+-- get information about the spell currently being cast/channeled/charged from unit id
+--
+-- @param unitID  unit id, e.g. "player", "target" or "mouseover"
+-- @return information about the spell currently being cast/channeled/charged
+--           .isCasting         true if spell is cast
+--           .isChanneling      true if spell is channeled
+--           .isCharging        true if spell is charging
+--           .name              name of the spell
+--           .displayName       name to be displayed
+--           .textureFile       texture file of spell icon
+--           .startTime         time when castin/channeling began
+--           .endTime           time when casting/channeling will end
+--           .isTradeSkill      true if cast is a trade skill
+--           .castID            guid of spell cast
+--           .notInterruptible  true if cast cannot be interrupted with abilities
+--           .spellID           id of spell
+--           .isEmpowered       true if spell is empower spell
+--           .numEmpowerStages  number of stages of empower spell
+function LibFroznFunctions:GetUnitCastingSpell(unitID)
+	local name, displayName, textureFile, startTimeMs, endTimeMs, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unitID);
+	local isEmpowered, numEmpowerStages;
+	
+	local isCasting, isChanneling, isCharging = false, false, false;
+	
+	if (name) then
+		isCasting = true;
+	else
+		name, displayName, textureFile, startTimeMs, endTimeMs, isTradeSkill, notInterruptible, spellID, isEmpowered, numEmpowerStages = UnitChannelInfo(unitID);
+		
+		if (name) then
+			if (numEmpowerStages and (numEmpowerStages > 0)) then -- see CastingBarMixin:OnEvent() handling event UNIT_SPELLCAST_EMPOWER_START in "CastingBarFrame.lua"
+				isCharging = true;
+			else
+				isChanneling = true;
+			end
+		end
+		
+	end
+	
+	return {
+		isCasting = isCasting,
+		isChanneling = isChanneling,
+		isCharging = isCharging,
+		name = name,
+		displayName = displayName,
+		textureFile = textureFile,
+		startTime = startTimeMs and (startTimeMs / 1000),
+		endTime = endTimeMs and (endTimeMs / 1000),
+		isTradeSkill = isTradeSkill,
+		castID = castID,
+		notInterruptible = notInterruptible,
+		spellID = spellID,
+		isEmpowered = isEmpowered,
+		numEmpowerStages = numEmpowerStages
+	};
+end
+
 ----------------------------------------------------------------------------------------------------
 --                                           Inspecting                                           --
 ----------------------------------------------------------------------------------------------------
@@ -2418,7 +2595,7 @@ local LFF_INSPECT_FAIL_TIMEOUT = 1; -- time to wait for event INSPECT_READY with
 local LFF_CACHE_TIMEOUT = 5; -- seconds to keep stale information before issuing a new inspect
 
 -- create frame for delayed inspection
-local frameForDelayedInspection = CreateFrame("Frame", LIB_NAME .. "_DelayedInspection");
+local frameForDelayedInspection = CreateFrame("Frame", LIB_NAME .. "-" .. LIB_MINOR .. "_DelayedInspection");
 frameForDelayedInspection:Hide();
 
 frameForDelayedInspection:SetScript("OnEvent", function(self, event, ...)
@@ -2886,7 +3063,7 @@ function LibFroznFunctions:GetTalents(unitID)
 						if (treeCurrencyInfo) then
 							for _, treeCurrencyInfoItem in ipairs(treeCurrencyInfo) do
 								if (treeCurrencyInfoItem.spent) then
-									pointsSpent[#pointsSpent + 1] = treeCurrencyInfoItem.spent;
+									tinsert(pointsSpent, treeCurrencyInfoItem.spent);
 								end
 							end
 						end
@@ -2912,8 +3089,15 @@ function LibFroznFunctions:GetTalents(unitID)
 		local maxPointsSpent;
 		
 		for tabIndex = 1, numTalentTabs do
-			local _talentTabName, _talentTabIcon, _pointsSpent = GetTalentTabInfo(tabIndex, not isSelf, nil, activeTalentGroup);
-			pointsSpent[#pointsSpent + 1] = _pointsSpent;
+			local _talentTabName, _talentTabIcon, _pointsSpent;
+			
+			if (LibFroznFunctions.hasWoWFlavor.GetTalentTabInfoReturnValuesFromCataC) then
+				_, _talentTabName, _, _talentTabIcon, _pointsSpent = GetTalentTabInfo(tabIndex, not isSelf, nil, activeTalentGroup);
+			else
+				_talentTabName, _talentTabIcon, _pointsSpent = GetTalentTabInfo(tabIndex, not isSelf, nil, activeTalentGroup);
+			end
+			
+			tinsert(pointsSpent, _pointsSpent);
 			
 			if (not maxPointsSpent) or (_pointsSpent > maxPointsSpent) then
 				maxPointsSpent = _pointsSpent;

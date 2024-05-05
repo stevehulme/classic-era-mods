@@ -22,28 +22,25 @@ ArkInventory.LDB = {
 		text = BLIZZARD_STORE_LOADING,
 	} ),
 	Pets = ArkInventory.Lib.DataBroker:NewDataObject( string.format( "%s_%s", ArkInventory.Const.Program.Name, "Pets" ), {
-		proj = ArkInventory.Global.Location[ArkInventory.Const.Location.Pet].proj,
-		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Pet].proj ) and "data source" or "hiddden",
+		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Pet].ClientCheck ) and "data source" or "hidden",
 		text = BLIZZARD_STORE_LOADING,
 		next = 0,
 	} ),
 	Mounts = ArkInventory.Lib.DataBroker:NewDataObject( string.format( "%s_%s", ArkInventory.Const.Program.Name, "Mounts" ), {
-		proj = ArkInventory.Global.Location[ArkInventory.Const.Location.Mount].proj,
-		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Mount].proj ) and "data source" or "hidden",
+		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Mount].ClientCheck ) and "data source" or "hidden",
 		text = BLIZZARD_STORE_LOADING,
 		next = 0,
 	} ),
 	Tracking_Currency = ArkInventory.Lib.DataBroker:NewDataObject( string.format( "%s_%s_%s", ArkInventory.Const.Program.Name, "Tracking", "Currency" ), {
-		proj = ArkInventory.Global.Location[ArkInventory.Const.Location.Currency].proj,
-		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Currency].proj ) and "data source" or "hidden",
+		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Currency].ClientCheck ) and "data source" or "hidden",
 		text = BLIZZARD_STORE_LOADING,
 	} ),
 	Tracking_Reputation = ArkInventory.Lib.DataBroker:NewDataObject( string.format( "%s_%s_%s", ArkInventory.Const.Program.Name, "Tracking", "Reputation" ), {
-		proj = ArkInventory.Global.Location[ArkInventory.Const.Location.Reputation].proj,
-		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Reputation].proj ) and "data source" or "hidden",
+		type = ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Reputation].ClientCheck ) and "data source" or "hidden",
 		text = BLIZZARD_STORE_LOADING,
 	} ),
 }
+
 
 local companionTable = { }
 
@@ -360,14 +357,14 @@ function ArkInventory.LDB.Tracking_Item:Update( )
 	local hasText
 	
 	local ready = true
-	local me = ArkInventory.GetPlayerCodex( )
+	local codex = ArkInventory.GetPlayerCodex( )
 	
 	for k in ArkInventory.spairs( ArkInventory.db.option.tracking.items )  do
 		
 		local info = ArkInventory.GetObjectInfo( k )
 		ready = ready and info.ready
 		
-		if me.player.data.ldb.tracking.item.tracked[k] then
+		if codex.player.data.ldb.tracking.item.tracked[k] then
 			local count = GetItemCount( k, true ) or 0
 			if count > 0 or ( count == 0 and ArkInventory.db.option.tracking.item.showzero ) then
 				hasText = string.format( "%s  |T%s:0|t %s", hasText or "", info.texture or ArkInventory.Const.Texture.Missing, FormatLargeNumber( count ) )
@@ -401,14 +398,14 @@ function ArkInventory.LDB.Tracking_Item:OnTooltipShow( )
 	self:AddLine( string.format( "%s: %s", ArkInventory.Localise["TRACKING"], ArkInventory.Localise["ITEMS"] ) )
 	self:AddLine( " " )
 	
-	local me = ArkInventory.GetPlayerCodex( )
+	local codex = ArkInventory.GetPlayerCodex( )
 	
 	for k in ArkInventory.spairs( ArkInventory.db.option.tracking.items ) do
 		
 		local info = ArkInventory.GetObjectInfo( k )
 		
 		local count = GetItemCount( k, true )
-		local checked = me.player.data.ldb.tracking.item.tracked[k]
+		local checked = codex.player.data.ldb.tracking.item.tracked[k]
 		
 		if checked then
 			self:AddDoubleLine( info.name, count, 0, 1, 0, 0, 1, 0 )
@@ -437,8 +434,8 @@ function ArkInventory.LDB.Pets.Cleanup( )
 	if ArkInventory.Collection.Pet.IsReady( ) then
 		
 		-- check for and remove any selected companions we no longer have (theyve either been caged or released)
-		local me = ArkInventory.GetPlayerCodex( )
-		local selected = me.player.data.ldb.pets.selected
+		local codex = ArkInventory.GetPlayerCodex( )
+		local selected = codex.player.data.ldb.pets.selected
 		for k, v in pairs( selected ) do
 			if v ~= nil and not ArkInventory.Collection.Pet.GetByID( k ) then
 				selected[k] = nil
@@ -462,8 +459,8 @@ function ArkInventory.LDB.Pets.BuildList( ignoreActive )
 	--ArkInventory.Output( "pet count = ", n )
 	if n == 0 then return end
 	
-	local me = ArkInventory.GetPlayerCodex( )
-	local selected = me.player.data.ldb.pets.selected
+	local codex = ArkInventory.GetPlayerCodex( )
+	local selected = codex.player.data.ldb.pets.selected
 	local selectedCount = 0
 	for k, v in pairs( selected ) do
 		if v == true then
@@ -540,9 +537,9 @@ function ArkInventory.LDB.Pets:OnTooltipShow( )
 			local numtotal = ArkInventory.Collection.Pet.GetCount( )
 			if numtotal > 0 then
 				
-				local me = ArkInventory.GetPlayerCodex( )
+				local codex = ArkInventory.GetPlayerCodex( )
 				
-				local selected = me.player.data.ldb.pets.selected
+				local selected = codex.player.data.ldb.pets.selected
 				local numselected = 0
 				for k, v in pairs( selected ) do
 					if v == true then
@@ -550,7 +547,7 @@ function ArkInventory.LDB.Pets:OnTooltipShow( )
 					end
 				end
 				
-				if me.player.data.ldb.pets.useall then
+				if codex.player.data.ldb.pets.useall then
 					
 					self:AddLine( string.format( "%s (%s)", ArkInventory.Localise["ALL"], numtotal ), 1, 1, 1 )
 					
@@ -633,8 +630,8 @@ function ArkInventory.LDB.Pets:OnClick( button )
 			
 		else
 			
-			local me = ArkInventory.GetPlayerCodex( )
-			local userandom = me.player.data.ldb.pets.randomise
+			local codex = ArkInventory.GetPlayerCodex( )
+			local userandom = codex.player.data.ldb.pets.randomise
 			
 			if #companionTable <= 3 then
 				userandom = false
@@ -672,13 +669,13 @@ function ArkInventory.LDB.Mounts.Cleanup( )
 	
 	-- remove any selected mounts we no longer have (not sure how but just in case)
 	
-	local me = ArkInventory.GetPlayerCodex( )
+	local codex = ArkInventory.GetPlayerCodex( )
 	
 	for mta, mt in pairs( ArkInventory.Const.Mount.Types ) do
 		
 		if mta ~= "x" then
 			
-			local selected = me.player.data.ldb.mounts.type[mta].selected
+			local selected = codex.player.data.ldb.mounts.type[mta].selected
 			
 			for spell, value in pairs( selected ) do
 				local md = ArkInventory.Collection.Mount.GetMountBySpell( spell )
@@ -694,98 +691,6 @@ function ArkInventory.LDB.Mounts.Cleanup( )
 		end
 		
 	end
-	
-end
-
-function ArkInventory.LDB.Mounts.IsFlyable( )
-	
-	if IsIndoors( ) or ArkInventory.Collection.Mount.SkillLevel( ) < 225 then
-		return false
-	end
-	
-	local IsFlyable = IsFlyableArea( )  -- its dynamic based off skill and location but its got some issues.  its usually only wrong about flying zones but it got worse in 7.3.5
-	
-	--local name, instanceType, difficulty, difficultyName, maxPlayers, playerDifficulty, isDynamicInstance, instanceMapId, instanceGroupSize, lfgID = GetInstanceInfo( )
-	local instancemapid = select( 8, GetInstanceInfo( ) )
-	local uimapid = C_Map.GetBestMapForUnit( "player" )
-	
-	if IsFlyable then
-		
-		--ArkInventory.Output( "blizzard says this is a flyable area" )
-		
-		-- dont care what blizzard says, you cant actually fly in this zone
-		if IsFlyable and ArkInventory.Const.Flying.Never.Instance[instancemapid] then
-			--ArkInventory.Output( "zone ", instancemapid, " is non flyable" )
-			IsFlyable = false
-		end
-		
-		-- you can fly here but you need a specific achievement
-		if IsFlyable and ArkInventory.Const.Flying.Achievement[instancemapid] then
-			local known = select( 4, GetAchievementInfo( ArkInventory.Const.Flying.Achievement[instancemapid] ) )
-			if not known then
-				--ArkInventory.Output( "zone ", instancemapid, " but you do not have achievement ", ArkInventory.Const.Flying.Achievement[instancemapid] )
-				IsFlyable = false
-			end
-		end
-		
-		-- you can fly here but you need a specific quest
-		if IsFlyable and ArkInventory.Const.Flying.Quest[instancemapid] then
-			local known = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted( ArkInventory.Const.Flying.Quest[instancemapid] )
-			if not known then
-				--ArkInventory.Output( "zone ", instancemapid, " but you do not have quest ", ArkInventory.Const.Flying.Spell[instancemapid] )
-				IsFlyable = false
-			end
-		end
-		
-		-- you can fly here but you need a specific spell
-		if IsFlyable and ArkInventory.Const.Flying.Spell[instancemapid] then
-			local known = IsSpellKnown( ArkInventory.Const.Flying.Spell[instancemapid] )
-			if not known then
-				--ArkInventory.Output( "zone ", instancemapid, " but you do not have spell ", ArkInventory.Const.Flying.Spell[instancemapid] )
-				IsFlyable = false
-			end
-		end
-		
-		-- while you can fly in this zone, you cannot fly in this particular map
-		if IsFlyable and ArkInventory.Const.Flying.Never.Map[uimapid] then
-			--ArkInventory.Output( "zone ", instancemapid, " is flyable but map ", uimapid, " is not" )
-			IsFlyable = false
-		end
-		
-	else
-		
-		--ArkInventory.Output( "blizzard says this is NOT a flyable area" )
-		
-		-- /run ArkInventory.Output(IsFlyableArea())
-		-- /run ArkInventory.Output({GetInstanceInfo()})
-		
-		if ArkInventory.Const.Flying.Bug735[instancemapid] then
-			--ArkInventory.Output( "zone, instancemapid, " is not flyable, but you can actually fly here" )
-			IsFlyable = true
-		end
-		
-	end
-	
-	if IsFlyable then
-		
-		-- world pvp battle in progress?
-		
-		for index = 1, GetNumWorldPVPAreas( ) do
-			
-			local pvpID, pvpZone, isActive = GetWorldPVPAreaInfo( index )
-			--ArkInventory.Output( pvpID, " / ", pvpZone, " / ", isActive )
-			
-			if isActive and GetRealZoneText( ) == pvpZone then
-				-- ArkInventory.Output( "battle in progress, no flying allowed" )
-				IsFlyable = false
-				break
-			end
-			
-		end
-		
-	end
-	
-	return IsFlyable
 	
 end
 
@@ -861,7 +766,7 @@ function ArkInventory.LDB.Mounts.GetUsable( forceAlternative, forceDragonridingA
 		else
 			
 			ArkInventory.OutputDebug( "ignore underwater, force flying (or land if you cant fly here)" )
-			if ArkInventory.LDB.Mounts.IsFlyable( ) then
+			if ArkInventory.Collection.Mount.IsFlyable( ) then
 				forceAlternative = false
 			end
 		end
@@ -879,7 +784,7 @@ function ArkInventory.LDB.Mounts.GetUsable( forceAlternative, forceDragonridingA
 --				end
 			else
 				ArkInventory.OutputDebug( "ignore surface, force flying (or land if you cant fly here)" )
-				if ArkInventory.LDB.Mounts.IsFlyable( ) then
+				if ArkInventory.Collection.Mount.IsFlyable( ) then
 					forceAlternative = false
 				end
 			end
@@ -888,7 +793,7 @@ function ArkInventory.LDB.Mounts.GetUsable( forceAlternative, forceDragonridingA
 		
 	end
 	
-	if ArkInventory.LDB.Mounts.IsFlyable( ) then
+	if ArkInventory.Collection.Mount.IsFlyable( ) then
 		ArkInventory.OutputDebug( "flight check - can fly here" )
 		if not forceAlternative then
 			ArkInventory.OutputDebug( "primary - check flying" )
@@ -913,14 +818,14 @@ function ArkInventory.LDB.Mounts.GetUsable( forceAlternative, forceDragonridingA
 			helper_companionTable_update( ArkInventory.Collection.Mount.GetUsable( "l" ) )
 		end
 		
-		local me = ArkInventory.GetPlayerCodex( )
+		local codex = ArkInventory.GetPlayerCodex( )
 		
---		if me.player.data.ldb.mounts.type.l.usesurface and ArkInventory.Collection.Mount.GetCount( "s" ) > 0 then
+--		if codex.player.data.ldb.mounts.type.l.usesurface and ArkInventory.Collection.Mount.GetCount( "s" ) > 0 then
 --			ArkInventory.OutputDebug( "primary - adding surface" )
 --			helper_companionTable_update( ArkInventory.Collection.Mount.GetUsable( "s" ) )
 --		end
 		
-		if me.player.data.ldb.mounts.type.l.useflying and ArkInventory.Collection.Mount.GetCount( "a" ) > 0 then
+		if codex.player.data.ldb.mounts.type.l.useflying and ArkInventory.Collection.Mount.GetCount( "a" ) > 0 then
 			ArkInventory.OutputDebug( "primary - adding flying" )
 			helper_companionTable_update( ArkInventory.Collection.Mount.GetUsable( "a" ) )
 		end
@@ -1087,9 +992,9 @@ function ArkInventory.LDB.Mounts:OnTooltipShow( ... )
 		
 		if ArkInventory.Collection.Mount.IsReady( ) then
 			
-			ArkInventory.Collection.Mount.UpdateUsable( )
+			local codex = ArkInventory.GetPlayerCodex( )
 			
-			local me = ArkInventory.GetPlayerCodex( )
+			ArkInventory.Collection.Mount.UpdateUsable( codex.player.data.ldb.mounts.dragonriding )
 			
 			for mta in pairs( ArkInventory.Const.Mount.Types ) do
 				
@@ -1106,7 +1011,7 @@ function ArkInventory.LDB.Mounts:OnTooltipShow( ... )
 						
 					else
 						
-						local selected = me.player.data.ldb.mounts.type[mta].selected
+						local selected = codex.player.data.ldb.mounts.type[mta].selected
 						local numselected = 0
 						for k, v in pairs( selected ) do
 							if v == true then
@@ -1114,7 +1019,7 @@ function ArkInventory.LDB.Mounts:OnTooltipShow( ... )
 							end
 						end
 						
-						if me.player.data.ldb.mounts.type[mta].useall then
+						if codex.player.data.ldb.mounts.type[mta].useall then
 							
 							self:AddDoubleLine( mode, string.format( "%s (%s)", ArkInventory.Localise["ALL"], numtotal ), 1, 1, 1, 1, 1, 1 )
 							

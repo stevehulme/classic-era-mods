@@ -89,7 +89,9 @@ local colours = {
     MONK        = { .3, 1, .9 },
     WARLOCK     = { 1, .5, 1 },
     overflow    = { 1, .3, .3 },
-    inactive    = { .5, .5, .5, .5 }
+    inactive    = { .5, .5, .5, .7 },
+    animacharged = {0,.874,1,1},
+    animacharged_active = {1,0,0,1}
 }
 
 -- stagger colours
@@ -210,6 +212,12 @@ local function CreateIcon()
                 self:SetVertexColor(unpack(colours.overflow))
                 self:SetAlpha(1)
             end
+            icon.AnimaCharged = function(self)
+                self:SetVertexColor(unpack(colours.animacharged))
+            end
+            icon.AnimaChargedActive = function(self)
+                self:SetVertexColor(unpack(colours.animacharged_active))
+            end
         end
     end
 
@@ -249,7 +257,7 @@ local function UpdateIcons()
     end
 
     -- hack: for some reason UnitPowerMax returns 0 for DK runes in Wrath classic
-    if kui.WRATH and power_type == 5 then
+    if kui.CATA and power_type == 5 then
         power_max = 6
     end
 
@@ -317,14 +325,19 @@ local function PowerUpdate()
     -- toggle icons based on current power
     local form = GetShapeshiftForm()
     local cur
+    local animacharged = false
+    local isKnownAnimaCharged = IsSpellKnown(385616,false)
+    if(isKnownAnimaCharged) then
+        animacharged = GetUnitChargedPowerPoints('player')
+    end
 
-    if kui.WRATH and power_type == 14 then
+    if kui.CATA and power_type == 14 then
         cur = GetComboPoints('player','target')
     else
         cur = UnitPower('player',power_type,true)
     end
 
-    if kui.WRATH and class == 'DRUID' and form ~= 3 then
+    if kui.CATA and class == 'DRUID' and form ~= 3 then
         cpf:Hide()
         return
     end
@@ -353,17 +366,35 @@ local function PowerUpdate()
         end
     else
         local at_max = cur == #cpf.icons
+        local is_animacharged = false
         for i,icon in ipairs(cpf.icons) do
+            is_animacharged = false
+            if animacharged then
+                for j in pairs(animacharged) do
+                    if animacharged[j] == i then
+                        is_animacharged = true
+                        break
+                    end
+                end
+            end
             if at_max then
-                icon:Active()
+                if(is_animacharged == true) then
+                    icon:AnimaChargedActive()
+                else
+                    icon:Active()
+                end
                 icon:GraduateFill(1)
-
+                
                 if icon.glow then
                     icon.glow:Show()
                 end
             else
                 if i <= cur then
-                    icon:Active()
+                    if(is_animacharged == true) then
+                        icon:AnimaChargedActive()
+                    else
+                        icon:Active()
+                    end
                     icon:GraduateFill(1)
                 else
                     if ICON_SPRITE and
@@ -372,15 +403,28 @@ local function PowerUpdate()
                     then
                         if i > ceil(cur) then
                             -- empty
-                            icon:Inactive()
-                            icon:GraduateFill(0)
+                            if(is_animacharged == true) then
+                                icon:AnimaCharged()
+                                icon:GraduateFill(0)
+                            else
+                                icon:Inactive()
+                                icon:GraduateFill(0)
+                            end
                         else
                             -- partially filled
-                            icon:Active()
+                            if(is_animacharged == true) then
+                                icon:AnimaChargedActive()
+                            else
+                                icon:Active()
+                            end
                             icon:GraduateFill(cur - floor(cur))
                         end
                     else
-                        icon:Inactive()
+                        if(is_animacharged == true) then
+                            icon:AnimaCharged()
+                        else
+                            icon:Inactive()
+                        end
                     end
                 end
 
@@ -536,7 +580,7 @@ end
 -- messages ####################################################################
 function ele:TargetUpdate()
     PositionFrame()
-    if kui.WRATH and class ~= 'DEATHKNIGHT' then
+    if kui.CATA and class ~= 'DEATHKNIGHT' then
         PowerUpdate()
     end
 end
@@ -581,7 +625,7 @@ function ele:PowerInit()
                 power_type = Enum.PowerType.ComboPoints
             end
         end
-    elseif kui.WRATH and class == 'DRUID' then
+    elseif kui.CATA and class == 'DRUID' then
         -- watch for shapeshifts into cat form
         self:RegisterEvent('UPDATE_SHAPESHIFT_FORM')
         local form = GetShapeshiftForm()
@@ -719,7 +763,7 @@ function ele:PowerEvent(event,_,power_type_rcv)
 end
 function ele:UPDATE_SHAPESHIFT_FORM()
     self:PowerInit()
-    if kui.WRATH then
+    if kui.CATA then
         PowerUpdate()
     end
 end
@@ -817,7 +861,7 @@ function ele:Initialise()
     self:RegisterCallback('PostPositionFrame')
 
     -- initialise powers
-    if kui.CLASSIC and not kui.WRATH then
+    if kui.CLASSIC and not kui.CATA then
         -- power types by class/spec
         powers = {
             DRUID = Enum.PowerType.ComboPoints,
@@ -827,7 +871,7 @@ function ele:Initialise()
         power_tags = {
             [Enum.PowerType.ComboPoints] = 'COMBO_POINTS',
         }
-    elseif kui.WRATH then
+    elseif kui.CATA then
         powers = {
             DEATHKNIGHT = Enum.PowerType.Runes,
             DRUID       = Enum.PowerType.ComboPoints,

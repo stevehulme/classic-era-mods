@@ -1,0 +1,13 @@
+tag 2f6fb6237fcd3a6541d6ccfec09d0a1244df7313 1.2.5
+Author:	Road-block <dridzt.addons@hotmail.com>
+Date:	Sat Apr 27 13:57:22 2024 +0300
+
+updates
+
+commit c341649c98510fd4d28d94651417e920e06158ad
+Author: Road-block <dridzt.addons@hotmail.com>
+Date:   Sat Apr 27 13:56:04 2024 +0300
+
+    add a little more space for future rune slots to runesets frame
+    better handling of multiple un-engraved pieces equipped in quick succession
+

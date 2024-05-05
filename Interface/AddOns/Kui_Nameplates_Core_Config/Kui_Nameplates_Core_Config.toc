@@ -1,4 +1,4 @@
-## Interface: 11403
+## Interface: 11501
 
 ## Author: Kesava
 ## Title: Kui |cff9966ffNameplates:|r |cffffffffCore Config|r

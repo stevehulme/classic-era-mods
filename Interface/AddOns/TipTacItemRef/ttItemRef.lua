@@ -318,6 +318,12 @@ end
 
 -- Set Texture and Text
 local function ttSetIconTextureAndText(self, texture, stackCount)
+	-- check if insecure interaction with the tip is currently forbidden
+	if (self:IsForbidden()) then
+		return;
+	end
+	
+	-- Set Texture and Text
 	if (texture) then
 		self.ttIcon:SetTexture(texture ~= "" and texture or "Interface\\Icons\\INV_Misc_QuestionMark");
 		local outputStackCount = ttifGetOutputStackCount(stackCount);
@@ -452,6 +458,11 @@ end
 -- 3   = tooltip modification reapplied (triggered)
 function ttif:ApplyWorkaroundForFirstMouseover(self, isAura, source, link, linkType, id, rank)
 	local tooltip = self;
+	
+	-- check if insecure interaction with the tip is currently forbidden
+	if (tooltip:IsForbidden()) then
+		return;
+	end
 	
 	-- functions
 	local resetVarsFn = function(tooltip)
@@ -1856,7 +1867,7 @@ function ttif:ApplyHooksToTips(tips, resolveGlobalNamedObjects, addToTipsToModif
 			local tipHooked = false;
 			
 			if (addToTipsToModify) then
-				tipsToModify[#tipsToModify + 1] = tip;
+				tinsert(tipsToModify, tip);
 			end
 			
 			if (tip:GetObjectType() == "GameTooltip") then
@@ -2618,17 +2629,23 @@ end
 
 -- spell
 function LinkTypeFuncs:spell(isAura, source, link, linkType, spellID)
+	-- check if insecure interaction with the tip is currently forbidden
+	if (self:IsForbidden()) then
+		return;
+	end
+	
+	-- spell
 	local name, _, icon, castTime, minRange, maxRange, _spellID = GetSpellInfo(spellID);	-- [18.07.19] 8.0/BfA: 2nd param "rank/nameSubtext" now returns nil
 	local rank = GetSpellSubtext(spellID);	-- will return nil at first unless its locally cached
 	rank = (rank and rank ~= "" and ", "..rank or "");
 
 	local mawPowerID = nil;
-	if (GetMawPowerLinkBySpellID) then
-		local linkMawPower = GetMawPowerLinkBySpellID(spellID);
+	if (C_Spell) and (C_Spell.GetMawPowerLinkBySpellID) then
+		local linkMawPower = C_Spell.GetMawPowerLinkBySpellID(spellID);
 		if (linkMawPower) then
 			local _linkType, _mawPowerID = linkMawPower:match("H?(%a+):(%d+)");
 			mawPowerID = _mawPowerID;
-			if (not LFF_MAWPOWERID_TO_MAWPOWER_LOOKUP[mawPowerID]) then -- possible internal blizzard bug: GetMawPowerLinkBySpellID() e.g. returns mawPowerID 1453 for battle shout with spellID 6673, which doesn't exist in table MawPower (from https://wow.tools/dbc/?dbc=mawpower)
+			if (not LFF_MAWPOWERID_TO_MAWPOWER_LOOKUP[mawPowerID]) then -- possible internal blizzard bug: C_Spell.GetMawPowerLinkBySpellID() e.g. returns mawPowerID 1453 for battle shout with spellID 6673, which doesn't exist in table MawPower (from https://wow.tools/dbc/?dbc=mawpower)
 				mawPowerID = nil;
 			end
 		end
@@ -2896,13 +2913,13 @@ function LinkTypeFuncs:achievement(link, linkType, achievementID, guid, complete
 			local leftText = left:GetText();
 			local rightText = right:GetText();
 			if (leftText and leftText ~= " ") then
-				criteriaList[#criteriaList + 1] = { label = leftText, done = left:GetTextColor() < 0.5 };
+				tinsert(criteriaList, { label = leftText, done = left:GetTextColor() < 0.5 });
 				if (criteriaList[#criteriaList].done) then
 					criteriaComplete = (criteriaComplete + 1);
 				end
 			end
 			if (rightText and rightText ~= " ") then
-				criteriaList[#criteriaList + 1] = { label = rightText, done = right:GetTextColor() < 0.5 };
+				tinsert(criteriaList, { label = rightText, done = right:GetTextColor() < 0.5 });
 				if (criteriaList[#criteriaList].done) then
 					criteriaComplete = (criteriaComplete + 1);
 				end

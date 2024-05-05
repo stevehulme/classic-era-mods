@@ -1,8 +1,8 @@
-## Interface: 100205
+## Interface: 100206
 ## Title: TinyPad
 ## Notes: TinyPad is a notepad addon
 ## Author: Gello
-## Version: 3.1.12
+## Version: 3.1.15
 ## X-WoWI-ID: 4417
 ## X-Wago-ID: RqGZpQ6d
 ## X-Curse-Project-ID: 84962

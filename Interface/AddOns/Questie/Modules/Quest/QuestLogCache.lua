@@ -71,11 +71,11 @@ local cache = {
 
 ---@type table<QuestId, QuestLogCacheData>
 local cache = {}
+local questCount = 0
 
 --- NEVER EVER EDIT this table outside of the QuestLogCache module!  !!!
 ---@type table<QuestId, QuestLogCacheData>
 QuestLogCache.questLog_DO_NOT_MODIFY = cache
-
 
 
 ---@return table? newObjectives, ObjectiveIndex[] changedObjIds @nil == cache miss in both addon and game caches. table {} == no objectives.
@@ -89,36 +89,38 @@ local function GetNewObjectives(questId, oldObjectives)
         local newObj = objectives[objIndex]
         -- Check if objective.text is in game's cache
         if (newObj.text) and (stringByte(newObj.text, 1) ~= 32) then
-            -- Check if objective has changed
-            if oldObj and oldObj.raw_numFulfilled == newObj.numFulfilled and oldObj.raw_text == newObj.text and oldObj.raw_finished == newObj.finished and oldObj.numRequired == newObj.numRequired and oldObj.type == newObj.type then
-                -- Not changed
-                newObjectives[objIndex] = oldObj
-            else
-                -- objective has changed, add it to list of change ones
-                if (not changedObjIds) then
-                    changedObjIds = { objIndex }
+            if (newObj.text ~= "") then -- Some quests have empty objectives, which shouldn't exist in the first place - We skip those
+                -- Check if objective has changed
+                if oldObj and oldObj.raw_numFulfilled == newObj.numFulfilled and oldObj.raw_text == newObj.text and oldObj.raw_finished == newObj.finished and oldObj.numRequired == newObj.numRequired and oldObj.type == newObj.type then
+                    -- Not changed
+                    newObjectives[objIndex] = oldObj
                 else
-                    changedObjIds[#changedObjIds+1] = objIndex
-                end
+                    -- objective has changed, add it to list of change ones
+                    if (not changedObjIds) then
+                        changedObjIds = { objIndex }
+                    else
+                        changedObjIds[#changedObjIds+1] = objIndex
+                    end
 
-                if oldObj and newObj and oldObj.numRequired ~= oldObj.numFulfilled and newObj.numRequired == newObj.numFulfilled then
-                    Sounds.PlayObjectiveComplete()
-                end
+                    if oldObj and newObj and oldObj.numRequired ~= oldObj.numFulfilled and newObj.numRequired == newObj.numFulfilled then
+                        Sounds.PlayObjectiveComplete()
+                    end
 
-                if oldObj and newObj and oldObj.numRequired ~= oldObj.numFulfilled and newObj.numRequired ~= newObj.numFulfilled then
-                    Sounds.PlayObjectiveProgress()
-                end
+                    if oldObj and newObj and oldObj.numRequired ~= oldObj.numFulfilled and newObj.numRequired ~= newObj.numFulfilled then
+                        Sounds.PlayObjectiveProgress()
+                    end
 
-                newObjectives[objIndex] = {
-                    raw_text = newObj.text,
-                    raw_finished = newObj.finished,
-                    raw_numFulfilled = newObj.numFulfilled,
-                    type = newObj.type,
-                    numRequired = newObj.numRequired,
-                    text = QuestieLib.TrimObjectiveText(newObj.text, newObj.type),
-                    finished = newObj.finished, -- gets overwritten with correct value later if quest isComplete
-                    numFulfilled = newObj.numFulfilled, -- gets overwritten with correct value later if quest isComplete
-                }
+                    newObjectives[objIndex] = {
+                        raw_text = newObj.text,
+                        raw_finished = newObj.finished,
+                        raw_numFulfilled = newObj.numFulfilled,
+                        type = newObj.type,
+                        numRequired = newObj.numRequired,
+                        text = QuestieLib.TrimObjectiveText(newObj.text, newObj.type),
+                        finished = newObj.finished, -- gets overwritten with correct value later if quest isComplete
+                        numFulfilled = newObj.numFulfilled, -- gets overwritten with correct value later if quest isComplete
+                    }
+                end
             end
         else -- objective text not in game's cache
             if oldObj then
@@ -196,6 +198,10 @@ function QuestLogCache.CheckForChanges(questIdsToCheck)
                     end
 
                     if changedObjIds then
+                        if (not cache[questId]) then
+                            -- Quest is new to cache
+                            questCount = questCount + 1
+                        end
                         -- Save to cache
                         cache[questId] = {
                             title = title,
@@ -255,7 +261,10 @@ end
 
 function QuestLogCache.RemoveQuest(questId)
     Questie:Debug(Questie.DEBUG_DEVELOP, "[QuestLogCache.RemoveQuest] remove questId:", questId)
-    cache[questId] = nil
+    if cache[questId] then
+        cache[questId] = nil
+        questCount = questCount - 1
+    end
 end
 
 
@@ -317,6 +326,10 @@ function QuestLogCache.GetQuestObjectives(questId)
     return cache[questId].objectives
 end
 
+---@return number @The amount of quests in the quest cache
+function QuestLogCache.GetQuestCount()
+    return questCount
+end
 
 
 ---@param q table @quest
@@ -372,3 +385,5 @@ function QuestLogCache.DebugPrintCacheChanges(cacheMiss, changes)
         end
     end
 end
+
+return QuestLogCache

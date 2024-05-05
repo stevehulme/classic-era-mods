@@ -22,6 +22,7 @@
 -- Raven:RegisterBarGroupFilter(barGroupName, "Buff"|"Debuff"|"Cooldown", spellNameOrID)
 
 local MOD = Raven
+local SHIM = MOD.SHIM
 local L = LibStub("AceLocale-3.0"):GetLocale("Raven")
 local LSPELL = MOD.LocalSpellNames
 local getSpellInfo = GetSpellInfo
@@ -132,9 +133,17 @@ function MOD:InitializeProfile()
 	-- Get profile from database, providing default profile for initialization
 	MOD.db = LibStub("AceDB-3.0"):New("RavenDB", MOD.DefaultProfile)
 	MOD.db.RegisterCallback(MOD, "OnDatabaseShutdown", OnProfileShutDown)
+	MOD:MigrateDB()
 
 	MOD:InitializeSpellIDs() -- restore cached spell ids
 	MOD:InitializeSettings() -- initialize bar group settings with default values
+end
+
+function MOD:MigrateDB()
+	if (MOD.db.profile.version == 0) then
+		MOD.db.profile.hideBlizzDebuffs = MOD.db.profile.hideBlizzBuffs
+		MOD.db.profile.version = 1
+	end
 end
 
 -- Initialize spell id info and restore saved cache from the profile
@@ -421,7 +430,7 @@ function MOD:SetInternalCooldownDefaults()
 	local ict = MOD.DefaultProfile.global.InternalCooldowns
 	for _, cd in pairs(MOD.internalCooldowns) do
 		local name, _, icon = getSpellInfo(cd.id)
-		if name and (name ~= "") and icon and (not ict[name] or not cd.item or IsUsableItem(cd.item)) then
+		if name and (name ~= "") and icon and (not ict[name] or not cd.item or SHIM:IsUsableItem(cd.item)) then
 			local t = { id = cd.id, duration = cd.duration, icon = icon, item = cd.item, class = cd.class }
 			if cd.cancel then
 				t.cancel = {}
@@ -1102,7 +1111,8 @@ MOD.DefaultProfile = {
 	profile = {
 		enabled = true,					-- enable Raven
 		hideBlizz = true,				-- hide Blizzard UI parts
-		hideBlizzBuffs = true,			-- hide Blizzard buff/debuff and temp enchant frames
+		hideBlizzBuffs = true,			-- hide Blizzard buff and temp enchant frames
+		hideBlizzDebuffs = true,		-- hide Blizzard debuff frame
 		hideBlizzMirrors = false,		-- hide Blizzard mirror bars
 		hideBlizzXP = false,			-- hide Blizzard XP and reputation bars
 		hideBlizzAzerite = false,		-- hide Blizzard Azerite bar
@@ -1131,5 +1141,6 @@ MOD.DefaultProfile = {
 		InCombatBar = {},				-- settings for the in-combat bar used to cancel buffs in combat
 		InCombatBuffs = {},				-- list of buffs that can be cancelled in-combat
 		WeaponBuffDurations = {},		-- cache of buff durations used for weapon buffs
+		version = 0,					-- allows step-by-step migrations to support splitting options while preserving backwards compatibility
 	},
 }

@@ -1,5 +1,5 @@
-## Interface: 100205
-## Version: 24.01.31
+## Interface: 100206
+## Version: 24.05.02
 ## IconTexture: Interface\AddOns\TipTac\media\tiptac_logo
 ## Title: TipTac
 ## Author: Aezay (Earthen Ring EU), Frozn45
@@ -11,11 +11,16 @@
 ## X-Category: Tooltip
 ## X-Website: https://www.curseforge.com/wow/addons/tiptac-reborn
 ## X-Curse-Project-ID: 695153
+
+# embeds
 embeds.xml
 
+# core
 ttCore.lua
-ttStyle.lua
-ttBars.lua
-ttAuras.lua
-ttIcons.lua
-ttHyperlink.lua
+
+# modules
+modules\ttAuras.lua
+modules\ttBars.lua
+modules\ttIcons.lua
+modules\ttHyperlink.lua
+modules\ttStyle.lua

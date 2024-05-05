@@ -5,6 +5,7 @@
 -- There are no exported functions at this time other than those called to initialize and update bars.
 
 local MOD = Raven
+local SHIM = MOD.SHIM
 local L = LibStub("AceLocale-3.0"):GetLocale("Raven")
 local LSPELL = MOD.LocalSpellNames
 local media = LibStub("LibSharedMedia-3.0")
@@ -747,7 +748,8 @@ local function Bar_OnUpdate(bar)
 		local slotid = id
 		if slotid == "MainHandSlot" then slotid = 16 end
 		if slotid == "SecondaryHandSlot" then slotid = 17 end
-		if (slotid == 16) or (slotid == 17) then GameTooltip:SetInventoryItem("player", slotid) end
+		if slotid == "RangedSlot" then slotid = 18 end
+		if (slotid == 16) or (slotid == 17) or (slotid == 18) then GameTooltip:SetInventoryItem("player", slotid) end
 	elseif (tt == "spell id") or (tt == "internal") or (tt == "alert") then
 		GameTooltip:SetSpellByID(id)
 	elseif (tt == "item id") then
@@ -1930,7 +1932,7 @@ local function UpdateBarGroupBars(bp, vbp, bg)
 							bar.barLabel = saveLabel -- restore in case of multiple bar copies
 						end
 						if not found and bar.enableReady and aname then -- see if need aura ready bar
-							if (bar.readyNotUsable or MOD:CheckSpellStatus(aname, true, true) or IsUsableItem(aname)) then -- check if really usable
+							if (bar.readyNotUsable or MOD:CheckSpellStatus(aname, true, true) or SHIM:IsUsableItem(aname)) then -- check if really usable
 								if not bar.readyTime then bar.readyTime = 0 end
 								if bar.readyTime == 0 then bar.startReady = nil end
 								if not bar.startReady or ((GetTime() - bar.startReady) < bar.readyTime) then
@@ -1949,12 +1951,12 @@ local function UpdateBarGroupBars(bp, vbp, bg)
 								found = true
 							end
 						end
-						if not found and bar.enableReady and aname and (bar.readyNotUsable or MOD:CheckSpellStatus(aname, true) or IsUsableItem(aname)) then -- see if need cooldown ready bar
+						if not found and bar.enableReady and aname and (bar.readyNotUsable or MOD:CheckSpellStatus(aname, true) or SHIM:IsUsableItem(aname)) then -- see if need cooldown ready bar
 							if not bar.readyTime then bar.readyTime = 0 end
 							if bar.readyTime == 0 then bar.startReady = nil end
 							if not bar.startReady or ((GetTime() - bar.startReady) < bar.readyTime) then
 								if not bar.startReady then bar.startReady = GetTime() end
-								local iname, _, _, _, _, _, _, _, _, icon = GetItemInfo(aname)
+								local iname, _, _, _, _, _, _, _, _, icon = SHIM:GetItemInfo(aname)
 								if not iname then icon = MOD:GetIcon(aname) end
 								local _, charges = GetSpellCharges(aname); if charges and charges <= 1 then charges = nil end -- show max charges on ready bar
 								UpdateBar(bp, vbp, bg, bar, icon, 0, 0, charges, nil, "text", aname, nil, nil, true)
@@ -2114,7 +2116,7 @@ function MOD:UpdateBars()
 
 	-- cache the icon for the player's tabard, if any, to support filtering tabard spells
 	local itemID = GetInventoryItemID("player", INVSLOT_TABARD)
-	if itemID then tabardIcon = GetItemIcon(itemID) else tabardIcon = nil end
+	if itemID then tabardIcon = SHIM:GetItemIconByID(itemID) else tabardIcon = nil end
 
 	table.wipe(frequentBars) -- clear the table of frequent bars, it will be rebuilt during update
 

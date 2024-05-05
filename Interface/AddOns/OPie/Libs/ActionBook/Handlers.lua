@@ -48,12 +48,13 @@ if MODERN_MOUNTS then -- mount: mount ID
 			local MOONKIN_FORM = GetSpellInfo(24858)
 			local bn = newWidgetName("AB:M!")
 			local b = CreateFrame("Button", bn, nil, "SecureActionButtonTemplate")
+			b:SetAttribute("pressAndHoldAction", 1)
 			b:SetAttribute("macrotext", "/cancelform [nocombat]")
 			b:SetScript("PreClick", function()
 				local sf = GetShapeshiftForm()
 				local _, _, _, fsid = GetShapeshiftFormInfo(sf ~= 0 and sf or -1)
 				local n = GetSpellInfo(fsid or -1)
-				if not (InCombatLockdown() or n == MOONKIN_FORM) then
+				if not (InCombatLockdown() or MODERN and n == MOONKIN_FORM) then
 					b:SetAttribute("type", "macro")
 				end
 			end)
@@ -66,11 +67,10 @@ if MODERN_MOUNTS then -- mount: mount ID
 					C_MountJournal.SummonByID(btn)
 				end
 			end)
-			T.TenSABT(b)
 			clickPrefix = SLASH_CLICK1 .. " " .. bn .. " "
 		end
 		summonAction = function(mountID)
-			return "attribute", "type","macro", "macrotext",clickPrefix .. mountID
+			return "attribute", "type","macro", "macrotext",clickPrefix .. mountID .. " 1"
 		end
 	end
 
@@ -83,8 +83,8 @@ if MODERN_MOUNTS then -- mount: mount ID
 	function mountHint(id)
 		local usable = (not (InCombatLockdown() or IsIndoors())) and HasFullControl() and not UnitIsDeadOrGhost("player")
 		local cname, sid, icon, active, usable2 = C_MountJournal.GetMountInfoByID(id)
-		local time, cdStart, cdLength = GetTime(), GetSpellCooldown(sid)
-		return usable and cdStart == 0 and usable2, active and 1 or 0, icon, cname, 0, (cdStart or 0) > 0 and (cdStart+cdLength-time) or 0, cdLength, callMethod.SetMountBySpellID, sid
+		local cdStart, cdLength = GetSpellCooldown(sid)
+		return usable and cdStart == 0 and usable2, active and 1 or 0, icon, cname, 0, (cdStart or 0) > 0 and (cdStart+cdLength-GetTime()) or 0, cdLength, callMethod.SetMountBySpellID, sid
 	end
 	local actionMap = {}
 	local function createMount(id)
@@ -165,13 +165,24 @@ do -- spell: spell ID + mount spell ID
 			function SetSpellByID(self, ...)
 				return SetRankText(self, (...), self:SetSpellByID(...))
 			end
-			SetSpellByExactID = SetSpellByID
+			function SetSpellByExactID(self, sid)
+				return SetRankText(self, sid, self:SetSpellByID(sid, nil, nil, true))
+			end
 		end
 	end
 	local getSpellIDFromName = CI_ERA and function(n)
 		return (select(7, GetSpellInfo(n or "")))
 	end or function(n)
 		return tonumber(((GetSpellLink(n) or ""):match("spell:(%d+)")))
+	end
+	local RUNE_BASESPELL_CACHE, RUNE_SPELLS = {}, {} if CI_ERA then
+		for sid in ("399967 417346 399954 417347 415450 417345 399966 417348 415449"):gmatch("%d+") do
+			RUNE_SPELLS[sid+0] = GetSpellInfo(sid+0)
+		end
+		setmetatable(RUNE_BASESPELL_CACHE, {__index=function(t, k)
+			t[k] = RUNE_SPELLS[FindBaseSpellByID(k)] or false
+			return t[k]
+		end})
 	end
 	local function spellHint(n, _modState, target)
 		if not n then return end
@@ -180,7 +191,7 @@ do -- spell: spell ID + mount spell ID
 		if mjID then return mountHint(mjID) end
 		if not sname then return end
 		local time, msid = GetTime(), spellMap[lowered[n]] or sid
-		local inRange, usable, nomana, hasRange = NormalizeInRange[IsSpellInRange(n, target or "target")], IsUsableSpell(n)
+		local inRange, usable, nomana, hasRange = NormalizeInRange[IsSpellInRange(sid and RUNE_BASESPELL_CACHE[sid] or n, target or "target")], IsUsableSpell(n)
 		inRange, hasRange = inRange ~= 0, inRange ~= nil
 		local cooldown, cdLength, enabled = GetSpellCooldown(n)
 		local cdLeft = (cooldown or 0) > 0 and (enabled ~= 0) and (cooldown + cdLength - time) or 0
@@ -242,10 +253,12 @@ do -- spell: spell ID + mount spell ID
 		local name2, sid2, icon2, rank, name, _, icon, _, _, _, _, icon1 = nil, nil, nil, GetSpellSubtext(id), GetSpellInfo(id)
 		local laxRank = CF_CLASSIC and flags ~= 16 and "lax-rank"
 		local _, castType = RW:IsSpellCastable(id, nil, laxRank)
-		if name and castType ~= "forced-id-cast" then
+		if castType == "rune-ability-spell" then
+			_, icon2 = GetSpellTexture(id)
+		elseif name and castType ~= "forced-id-cast" then
 			local qRank = (MODERN or q == "list-query" or not laxRank) and rank or nil
 			rank, name2, _, icon2, _, _, _, sid2 = GetSpellSubtext(name, rank), GetSpellInfo(name, qRank)
-			if MODERN and sid2 and IsPassiveSpell(sid2) then
+			if MODERN and sid2 and IsPassiveSpell(sid2) or RUNE_SPELLS[id] then
 				icon, name2, icon2 = icon1 or icon, nil, nil
 			end
 		end
@@ -263,6 +276,7 @@ do -- spell: spell ID + mount spell ID
 	end
 	
 	function EV.SPELLS_CHANGED()
+		wipe(RUNE_BASESPELL_CACHE)
 		for k, v in pairs(spellMap) do
 			if v ~= 161691 then
 				spellMap[k] = nil
@@ -272,7 +286,7 @@ do -- spell: spell ID + mount spell ID
 	end
 end
 do -- item: items ID/inventory slot
-	local actionMap, itemIdMap, lastSlot = {}, {}, INVSLOT_LAST_EQUIPPED
+	local actionMap, itemIdMap, LAST_EQUIP_SLOT = {}, {}, INVSLOT_LAST_EQUIPPED
 	local function containerTip(self, bagslot)
 		local slot = bagslot % 100
 		self:SetBagItem((bagslot-slot)/100, slot)
@@ -282,7 +296,7 @@ do -- item: items ID/inventory slot
 	end
 	local function GetItemLocation(iid, name, name2)
 		local name2, cb, cs, n = name2 and lowered[name2]
-		for i=1, lastSlot do
+		for i=1, LAST_EQUIP_SLOT do
 			if GetInventoryItemID("player", i) == iid then
 				n = GetItemInfo(GetInventoryItemLink("player", i))
 				if n == name or n and name2 and lowered[n] == name2 then
@@ -309,23 +323,27 @@ do -- item: items ID/inventory slot
 	end
 	function itemHint(ident, _modState, target, purpose, ibag, islot)
 		local name, link, icon, _, bag, slot, tip, tipArg
-		if type(ident) == "number" and ident <= lastSlot then
+		if type(ident) == "number" and ident <= LAST_EQUIP_SLOT then
 			local invid = GetInventoryItemID("player", ident)
 			if invid == nil then return end
 			bag, slot, name, link = nil, invid, GetItemInfo(GetInventoryItemLink("player", ident) or invid)
-			if name then ident = name end
+			ident = name or ident
 		elseif ident then
 			name, link, _, _, _, _, _, _, _, icon = GetItemInfo(ident)
+		else
+			return
 		end
 		local iid, cdStart, cdLen, enabled, cdLeft = (link and tonumber(link:match("item:([x%x]+)"))) or itemIdMap[ident]
 		if MODERN and iid and PlayerHasToy(iid) and GetItemCount(iid) == 0 then
 			return toyHint(iid, nil, target)
 		elseif iid then
 			cdStart, cdLen, enabled = C_Container.GetItemCooldown(iid)
-			local time = GetTime()
-			cdLeft = (cdStart or 0) > 0 and (enabled ~= 0) and (cdStart + cdLen - time)
+			cdLeft = (cdStart or 0) > 0 and (enabled ~= 0) and (cdStart + cdLen - GetTime())
 		end
-		local inRange, hasRange = NormalizeInRange[(not (MODERN and InCombatLockdown()) or nil) and IsItemInRange(ident, target or "target")]
+		target = target or "target"
+		-- TODO: Drop the 3.4.3 condition after 3.4.3/when the client aligns
+		local canRange = not (COMPAT ~= 30403 and InCombatLockdown() and (UnitIsFriend("player", target) or not UnitExists(target))) or nil
+		local inRange, hasRange = canRange and NormalizeInRange[IsItemInRange(ident, target)]
 		inRange, hasRange = inRange ~= 0, inRange ~= nil
 		if ibag and islot then
 			bag, slot = ibag, islot
@@ -353,8 +371,8 @@ do -- item: items ID/inventory slot
 		if type(flags) == "number" then
 			byName, forceShow, onlyEquipped = flags % 4 >= 2, flags % 2 >= 1, flags % 8 >= 4
 		end
-		local name = id <= lastSlot and id or (byName and GetItemInfo(id) or ("item:" .. id))
-		if not forceShow and onlyEquipped and not ((id > lastSlot and IsEquippedItem(name)) or (id <= lastSlot and GetInventoryItemLink("player", id))) then return end
+		local name = id <= LAST_EQUIP_SLOT and id or (byName and GetItemInfo(id) or ("item:" .. id))
+		if not forceShow and onlyEquipped and not ((id > LAST_EQUIP_SLOT and IsEquippedItem(name)) or (id <= LAST_EQUIP_SLOT and GetInventoryItemLink("player", id))) then return end
 		if not forceShow and GetItemCount(name) == 0 then return end
 		if not actionMap[name] then
 			actionMap[name], itemIdMap[name] = AB:CreateActionSlot(itemHint, name, "attribute", "type","item", "item",name, "checkselfcast",true, "checkfocuscast",true), id
@@ -792,8 +810,7 @@ do -- extrabutton
 		              (at == "spell" and IsSpellOverlayed(aid) and 2 or 0) +
 		              (nomana and 8 or 0) + (inRange and 0 or 16) + (charges and charges > 0 and 64 or 0) + (hasRange and 512 or 0) + (usable and 0 or 1024)
 		if charges and maxCharges and charges < maxCharges and cdLeft == 0 then
-			local time = GetTime()
-			cdLeft, cdLength = chargeStart-time + chargeDuration, chargeDuration
+			cdLeft, cdLength = chargeStart + chargeDuration - GetTime(), chargeDuration
 		end
 		usable = not not (usable and inRange and ((cooldown == nil or cooldown == 0) or (enabled == 0) or (charges > 0)))
 		return usable, state, GetActionTexture(slot), GetActionText(slot) or (at == "spell" and GetSpellInfo(aid)), count <= 1 and charges or count, cdLeft, cdLength, callMethod.SetAction, slot
@@ -1071,7 +1088,8 @@ do -- disenchant: iid
 	local ICON_PREFIX = "|TInterface/Buttons/UI-GroupLoot-DE-Up:0:0|t "
 	local SLASH_SPELL_TARGET_ITEM1 = '/spelltargetitem' do
 		local wn = newWidgetName("AB:I!")
-		local w = T.TenSABT(CreateFrame("Button", wn, nil, "SecureActionButtonTemplate"))
+		local w = CreateFrame("Button", wn, nil, "SecureActionButtonTemplate")
+		w:SetAttribute("pressAndHoldAction", 1)
 		w:Hide()
 		SecureHandlerWrapScript(w, "OnClick", w, [[return nil, 'post']], [[self:SetAttribute("target-item", nil)]])
 		local er = {u="\\117", ["{"]="\\123", ["}"]="\\125"}
@@ -1084,7 +1102,7 @@ do -- disenchant: iid
 				self:SetAttribute("target-item", v)
 				return "%s"
 			end
-		]]):format(escape(SLASH_SPELL_TARGET_ITEM1), escape(SLASH_CLICK1 .. " " .. wn)))
+		]]):format(escape(SLASH_SPELL_TARGET_ITEM1), escape(SLASH_CLICK1 .. " " .. wn .. " 1")))
 		RW:RegisterCommand(SLASH_SPELL_TARGET_ITEM1, true, false, w)
 	end
 	local function disenchantTip(self, iid)
@@ -1098,8 +1116,8 @@ do -- disenchant: iid
 		local name = GetItemInfo(ident)
 		local qual = MODERN and ident and (C_TradeSkillUI.GetItemReagentQualityByItemInfo(ident) or C_TradeSkillUI.GetItemCraftedQualityByItemInfo(ident))
 		qual = qual and qual > 0 and qual < 8 and (qual * 16384) or 0
-		local time, cdStart, cdLength = GetTime(), GetSpellCooldown(DISENCHANT_SID)
-		local cdLeft = (cdStart or 0) > 0 and (cdStart + cdLength - time) or 0
+		local cdStart, cdLength = GetSpellCooldown(DISENCHANT_SID)
+		local cdLeft = (cdStart or 0) > 0 and (cdStart + cdLength - GetTime()) or 0
 		local state = (IsCurrentItem(ident) and 1 or 0) + (usable and 0 or 1024) + qual + 131072
 		local disName = ICON_PREFIX .. (name or ("item:" .. ident))
 		return not not (usable and (cdLength or 0) == 0), state, GetItemIcon(ident), disName, count,
@@ -1142,7 +1160,10 @@ if MODERN then -- /ping
 		if clause then
 			clause = lowered[clause]
 			local ci = INFO[TOKENS[clause] or clause] or INFO[C_Ping.GetContextualPingTypeForUnit(UnitGUID(target ~= "cursor" and target or "mouseover") or nil) == 4 and 2 or 1]
-			return true, true, 262144, ci[2], ci[1], 0, 0, 0
+			local perm = (not IsInRaid() or UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or not C_PartyInfo.GetRestrictPings())
+			local cdInfo, nowMs = C_Ping.GetCooldownInfo(), GetTime()*1000
+			local cd = cdInfo.endTimeMs > nowMs and (cdInfo.endTimeMs-nowMs)/1000 or 0
+			return true, perm and cd == 0 or false, 262144, ci[2], ci[1], 0, cd, cd > 0 and (cdInfo.endTimeMs-cdInfo.startTimeMs)/1000 or 0
 		end
 	end)
 end
@@ -1151,6 +1172,7 @@ do -- uipanel: token
 		local pyName, attrCounter = newWidgetName("AB:PY!"), 500
 		local py = CreateFrame("Button", pyName, nil, "SecureActionButtonTemplate")
 		py:SetAttribute("type", "click")
+		py:SetAttribute("pressAndHoldAction", 1)
 		pyCLICK = CLICK .. pyName .. " "
 		function widgetClickCommand(k, w)
 			if w == nil then return "" end
@@ -1161,7 +1183,7 @@ do -- uipanel: token
 				py:SetAttribute("clickbutton-" .. k, w)
 				tn = pyName .. " " .. k
 			end
-			return CLICK .. tn .. "\n"
+			return CLICK .. tn .. " 1\n"
 		end
 		function widgetAttrCommand(w, ...)
 			local r = ""
@@ -1171,7 +1193,7 @@ do -- uipanel: token
 				py:SetAttribute("attribute-frame" .. bs, w)
 				py:SetAttribute("attribute-name" .. bs, k)
 				py:SetAttribute("attribute-value" .. bs, v)
-				r, attrCounter = r .. CLICK .. pyName .. " at" .. attrCounter .. "\n", attrCounter + 1
+				r, attrCounter = r .. CLICK .. pyName .. " at" .. attrCounter .. " 1\n", attrCounter + 1
 			end
 			return r
 		end
@@ -1210,7 +1232,7 @@ do -- uipanel: token
 		panels.macro.cw = closeButton(nil)
 		panels.csp.cw, panels.options.cw = closeButton(SettingsPanel)
 		panels.cgm.cw = closeButton(GameMenuFrame)
-		panels.options.postmt = pyCLICK .. "csp\n" .. pyCLICK .. "cgm"
+		panels.options.postmt = pyCLICK .. "csp 1\n" .. pyCLICK .. "cgm 1"
 		panels.macro.postmt = widgetClickCommand("cmf", panels.macro.cw)
 		if not MODERN then
 			panels.guild = {title=GUILD, icon="Interface/Icons/INV_Shirt_GuildTabard_01", gw=GuildFrame, ow=FriendsFrameTab3, cw=FriendsFrameCloseButton, req=IsInGuild}
@@ -1259,8 +1281,9 @@ do -- uipanel: token
 		local clickEx = CLICK .. " " .. exName .. " "
 		local ex = CreateFrame("Button", exName, nil, "SecureActionButtonTemplate")
 		ex:SetAttribute("type", "macro")
-		cmdPrefix = clickEx .. "csf\n" .. clickEx
-		cmdDuckPrefix = cmdPrefix .. "csp\n" .. clickEx .. "cgm\n" .. clickEx
+		ex:SetAttribute("pressAndHoldAction", 1)
+		cmdPrefix = clickEx .. "csf 1\n" .. clickEx
+		cmdDuckPrefix = cmdPrefix .. "csp 1\n" .. clickEx .. "cgm 1\n" .. clickEx
 		local function prerun(k)
 			local i, r = panels[k], 0
 			local tw, gw, cw, ow, scs = i.tw, i.gw, i.cw, i.ow, i.skipCloseSound
@@ -1353,7 +1376,7 @@ do -- uipanel: token
 		local r = panelMap[tk]
 		local pi = r == nil and panels[tk]
 		if pi and pi[1] and (pi.req == nil or pi.req()) then
-			local mt = (pi.noduck and cmdPrefix or cmdDuckPrefix) .. tk
+			local mt = (pi.noduck and cmdPrefix or cmdDuckPrefix) .. tk .. " 1"
 			r = AB:CreateActionSlot(panelHint, tk, "attribute", "type","macro", "macrotext",mt)
 			panelMap[tk] = r
 		end

@@ -1,8 +1,8 @@
-## Interface: 100205
+## Interface: 100206
 ## Title: Raven
 ## Notes: Monitors buffs, debuffs and cooldowns and provides timer bars and icons plus helpful notifications
 ## Author: Tomber, Dicebar, Dorana
-## Version: r646
+## Version: r660
 ## DefaultState: enabled
 ## OptionalDependencies: Masque
 ## SavedVariables: RavenDB
@@ -23,6 +23,7 @@ Values.lua
 Bars.lua
 Cancel.lua
 Nest.lua
+Shims.lua
 
 Presets\DeathKnight.lua
 Presets\DemonHunter.lua

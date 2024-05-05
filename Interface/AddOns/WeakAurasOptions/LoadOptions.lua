@@ -1,5 +1,8 @@
 if not WeakAuras.IsLibsOK() then return end
-local AddonName, OptionsPrivate = ...
+---@type string
+local AddonName = ...
+---@class OptionsPrivate
+local OptionsPrivate = select(2, ...)
 
 local L = WeakAuras.L
 
@@ -250,7 +253,7 @@ function OptionsPrivate.ConstructOptions(prototype, data, startorder, triggernum
           width = WeakAuras.normalWidth,
           name = arg.display,
           desc = function()
-            if arg.multiNoSingle then return arg.desc end
+            if arg.multiNoSingle or arg.desc then return arg.desc end
             local v = trigger["use_"..realname];
             if(v == true) then
               return L["Multiselect single tooltip"];
@@ -317,6 +320,7 @@ function OptionsPrivate.ConstructOptions(prototype, data, startorder, triggernum
           order = order,
           hidden = hidden,
         }
+        order = order + 1;
         options["description_title_"..name] = {
           type = "description",
           width = WeakAuras.doubleWidth,
@@ -558,7 +562,7 @@ function OptionsPrivate.ConstructOptions(prototype, data, startorder, triggernum
           order = order + 1;
           options[name..suffix] = {
             type = "input",
-            width = WeakAuras.doubleWidth,
+            width = arg.canBeCaseInsensitive and WeakAuras.normalWidth or WeakAuras.doubleWidth,
             name = arg.display,
             order = order,
             hidden = disabled or hidden,
@@ -576,6 +580,27 @@ function OptionsPrivate.ConstructOptions(prototype, data, startorder, triggernum
             end
           };
           order = order + 1;
+          if arg.canBeCaseInsensitive then
+            options[name.."_caseInsensitive"..suffix] = {
+              type = "toggle",
+              width = WeakAuras.normalWidth,
+              name = L["Case Insensitive"],
+              order = order,
+              hidden = disabled or hidden,
+              get = function() return getValue(trigger, "use_"..realname, realname.."_caseInsensitive", multiEntry, entryNumber) end,
+              set = function(info, v)
+                setValue(trigger, realname.."_caseInsensitive", v, multiEntry, entryNumber)
+                WeakAuras.Add(data);
+                if (reloadOptions) then
+                  WeakAuras.ClearAndUpdateOptions(data.id)
+                end
+                OptionsPrivate.Private.ScanForLoads({[data.id] = true});
+                WeakAuras.UpdateThumbnail(data);
+                OptionsPrivate.SortDisplayButtons(nil, true);
+              end
+            };
+            order = order + 1;
+          end
         elseif(arg.type == "spell" or arg.type == "aura" or arg.type == "item") then
           if entryNumber > 1 then
             options["spacer_"..name..suffix].width = WeakAuras.normalWidth - (arg.showExactOption and 0 or 0.2)
@@ -644,7 +669,7 @@ function OptionsPrivate.ConstructOptions(prototype, data, startorder, triggernum
             end,
             disabled = function()
               local value = getValue(trigger, nil, realname, multiEntry, entryNumber)
-              return not ((arg.type == "aura" and value and spellCache.GetIcon(value)) or (arg.type == "spell" and value and GetSpellInfo(value)) or (arg.type == "item" and value and GetItemIcon(value)))
+              return not ((arg.type == "aura" and value and spellCache.GetIcon(value)) or (arg.type == "spell" and value and GetSpellInfo(value)) or (arg.type == "item" and value and GetItemIcon(value or '')))
             end
           };
           order = order + 1;
@@ -676,6 +701,9 @@ function OptionsPrivate.ConstructOptions(prototype, data, startorder, triggernum
                   return nil;
                 end
               elseif(arg.type == "spell") then
+                if arg.noValidation then
+                  return value and tostring(value)
+                end
                 local useExactSpellId = (arg.showExactOption and getValue(trigger, nil, "use_exact_"..realname, multiEntry, entryNumber))
                 if value and value ~= "" then
                   local spellID = WeakAuras.SafeToNumber(value)
@@ -696,9 +724,6 @@ function OptionsPrivate.ConstructOptions(prototype, data, startorder, triggernum
                       return spellName
                     end
                   end
-                end
-                if arg.noValidation then
-                  return value
                 end
                 if value == nil then
                   return nil

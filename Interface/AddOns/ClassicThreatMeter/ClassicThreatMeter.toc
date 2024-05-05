@@ -1,9 +1,0 @@
-## Interface: 11305
-## Title: ClassicThreatMeter
-## Notes: Deprecated. Please uninstall.
-## X-Curse-Project-ID: 336512
-## Version: 1.10_deprecated
-
-## X-Category: Combat
-
-ClassicThreatMeter.lua

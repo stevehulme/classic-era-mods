@@ -27,7 +27,7 @@ function Questie:OnInitialize()
 end
 
 function Questie:OnEnable()
-    if Questie.IsWotlk then
+    if Questie.IsWotlk or Questie.IsCata then
         -- Called when the addon is enabled
         if (Questie.db.profile.trackerEnabled and not Questie.db.profile.showBlizzardQuestTimer) then
             WatchFrame:Hide()
@@ -36,7 +36,7 @@ function Questie:OnEnable()
 end
 
 function Questie:OnDisable()
-    if Questie.IsWotlk then
+    if Questie.IsWotlk or Questie.IsCata then
         -- Called when the addon is disabled
         WatchFrame:Show()
     end
@@ -159,6 +159,7 @@ Questie.icons = {
     ["complete"] = "Interface\\Addons\\Questie\\Icons\\complete.blp",
     ["incomplete"] = "Interface\\Addons\\Questie\\Icons\\incomplete.blp",
     ["interact"] = "Interface\\Addons\\Questie\\Icons\\interact.blp",
+    ["mount_up"] = "Interface\\Addons\\Questie\\Icons\\mount_up.blp",
     ["glow"] = "Interface\\Addons\\Questie\\Icons\\glow.blp",
     ["repeatable"] = "Interface\\Addons\\Questie\\Icons\\repeatable.blp",
     ["repeatable_complete"] = "Interface\\Addons\\Questie\\Icons\\repeatable_complete.blp",
@@ -208,6 +209,7 @@ Questie.ICON_TYPE_PVPQUEST = 15
 Questie.ICON_TYPE_PVPQUEST_COMPLETE = 16
 Questie.ICON_TYPE_INTERACT = 17
 Questie.ICON_TYPE_SODRUNE = 18
+Questie.ICON_TYPE_MOUNT_UP = 19
 
 -- Load icon pathes from SavedVariables or set the default ones
 function Questie:SetIcons()
@@ -229,6 +231,7 @@ function Questie:SetIcons()
     Questie.usedIcons[Questie.ICON_TYPE_PVPQUEST_COMPLETE] = Questie.db.profile.ICON_PVPQUEST_COMPLETE or Questie.icons["complete"]
     Questie.usedIcons[Questie.ICON_TYPE_INTERACT] = Questie.db.profile.ICON_TYPE_INTERACT or Questie.icons["interact"]
     Questie.usedIcons[Questie.ICON_TYPE_SODRUNE] = Questie.icons["sod_rune"]
+    Questie.usedIcons[Questie.ICON_TYPE_MOUNT_UP] = Questie.icons["mount_up"]
 end
 
 function Questie:GetIconNameFromPath(path)

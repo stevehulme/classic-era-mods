@@ -1,1 +1,0 @@
-C_Timer.After(5, function() print("ClassicThreatMeter is deprecated. Please uninstall this addon.") end)
