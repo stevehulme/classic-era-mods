@@ -262,7 +262,7 @@ function t.settings.changeFuncs:HideTooltips()
     if t.settings.saved.HideTooltips then -- if hiding tooltips, hide tooltip right away
         GameTooltip:Hide()
     else -- if mouse is over the Hide Tooltips button, then show tooltip by runnings its OnEnter
-        local focus = GetMouseFocus()
+        local focus = t.main:GetMouseFocus()
         if focus and focus:GetParent():GetParent()==t.settings.scrollFrame.scrollChild and focus:GetParent().var=="HideTooltips" then
             focus:GetScript("OnEnter")(focus)
         end

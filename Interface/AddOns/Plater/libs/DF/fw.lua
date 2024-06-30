@@ -1,6 +1,6 @@
 
 
-local dversion = 530
+local dversion = 543
 local major, minor = "DetailsFramework-1.0", dversion
 local DF, oldminor = LibStub:NewLibrary(major, minor)
 
@@ -38,6 +38,8 @@ local GetSpellBookItemInfo = GetSpellBookItemInfo or function(...) local si = C_
 local SPELLBOOK_BANK_PLAYER = Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or "player"
 local SPELLBOOK_BANK_PET = Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Pet or "pet"
 local IsPassiveSpell = IsPassiveSpell or C_Spell.IsSpellPassive
+local GetOverrideSpell = C_SpellBook and C_SpellBook.GetOverrideSpell or C_Spell.GetOverrideSpell or GetOverrideSpell
+local HasPetSpells = HasPetSpells or C_SpellBook.HasPetSpells
 
 SMALL_NUMBER = 0.000001
 ALPHA_BLEND_AMOUNT = 0.8400251
@@ -187,6 +189,9 @@ function DF.IsWarWow()
 	return false
 end
 
+function DF.IsTWWWow()
+	return DF.IsWarWow()
+end
 
 ---return true if the player is playing in the WotLK version of wow with the retail api
 ---@return boolean
@@ -198,6 +203,10 @@ function DF.IsNonRetailWowWithRetailAPI()
 	return false
 end
 DF.IsWotLKWowWithRetailAPI = DF.IsNonRetailWowWithRetailAPI -- this is still in use
+
+function DF.ExpansionHasAugEvoker()
+	return DF.IsDragonflightWow() or DF.IsWarWow()
+end
 
 ---for classic wow, get the role using the texture from the talents frame
 local roleBySpecTextureName = {
@@ -259,11 +268,10 @@ function DF:GetRoleByClassicTalentTree()
 	for i = 1, (MAX_TALENT_TABS or 3) do
 		if (i <= numTabs) then
 			--tab information
-			local id, name, description, iconTexture, pointsSpent, fileName
-			if DF.IsCataWow() then
-				id, name, description, iconTexture, pointsSpent, fileName = GetTalentTabInfo(i)
-			else
-				name, iconTexture, pointsSpent, fileName = GetTalentTabInfo(i)
+			local id, name, description, iconTexture, pointsSpent, fileName = GetTalentTabInfo(i)
+			if DF.IsClassicWow() and not fileName then
+				--On pre 1.15.3
+                name, iconTexture, pointsSpent, fileName = id, name, description, iconTexture
 			end
 			if (name) then
 				table.insert(pointsPerSpec, {name, pointsSpent, fileName})
@@ -734,6 +742,17 @@ function DF.table.setfrompath(t, path, value)
 	return false
 end
 
+---return the amount of keys in a table
+---@param t table
+---@return number
+function DF.table.countkeys(t)
+	local count = 0
+	for _ in pairs(t) do
+		count = count + 1
+	end
+	return count
+end
+
 ---find the value inside the table, and it it's not found, add it
 ---@param t table
 ---@param index integer|any
@@ -766,6 +785,25 @@ function DF.table.reverse(t)
 		index = index + 1
 	end
 	return new
+end
+
+---remove a value from an array table
+---@param t table
+---@param value any
+---@return boolean
+function DF.table.remove(t, value)
+	local bRemoved = false
+	local removedAmount = 0
+
+	for i = 1, #t do
+		if (t[i] == value) then
+			table.remove(t, i)
+			bRemoved = true
+			removedAmount = removedAmount + 1
+		end
+	end
+
+	return bRemoved, removedAmount
 end
 
 ---copy the values from table2 to table1 overwriting existing values, ignores __index and __newindex, keys pointing to a UIObject are preserved
@@ -1825,7 +1863,7 @@ function DF:GetAvailableSpells()
             if (raceId) then
                 if (type(raceId) == "table") then
                     if (raceId[playerRaceId]) then
-                        spellId = C_SpellBook.GetOverrideSpell(spellId)
+                        spellId = GetOverrideSpell(spellId)
                         local spellName = GetSpellInfo(spellId)
                         local bIsPassive = IsPassiveSpell(spellId, SPELLBOOK_BANK_PLAYER)
                         if (spellName and not bIsPassive) then
@@ -1835,7 +1873,7 @@ function DF:GetAvailableSpells()
 
                 elseif (type(raceId) == "number") then
                     if (raceId == playerRaceId) then
-                        spellId = C_SpellBook.GetOverrideSpell(spellId)
+                        spellId = GetOverrideSpell(spellId)
                         local spellName = GetSpellInfo(spellId)
                         local bIsPassive = IsPassiveSpell(spellId, SPELLBOOK_BANK_PLAYER)
                         if (spellName and not bIsPassive) then
@@ -1858,7 +1896,7 @@ function DF:GetAvailableSpells()
 			local spellType, spellId = GetSpellBookItemInfo(entryOffset, SPELLBOOK_BANK_PLAYER)
 			if (spellId) then
 				if (spellType == "SPELL") then
-					spellId = C_SpellBook.GetOverrideSpell(spellId)
+					spellId = GetOverrideSpell(spellId)
 					local spellName = GetSpellInfo(spellId)
 					local bIsPassive = IsPassiveSpell(spellId, SPELLBOOK_BANK_PLAYER)
 					if (spellName and not bIsPassive) then
@@ -1879,7 +1917,7 @@ function DF:GetAvailableSpells()
         local spellType, spellId = GetSpellBookItemInfo(entryOffset, "player")
         if (spellId) then
             if (spellType == "SPELL") then
-                spellId = C_SpellBook.GetOverrideSpell(spellId)
+                spellId = GetOverrideSpell(spellId)
                 local spellName = GetSpellInfo(spellId)
                 local bIsPassive = IsPassiveSpell(spellId, "player")
 
@@ -1902,7 +1940,7 @@ function DF:GetAvailableSpells()
         for i = 1, numPetSpells do
             local spellName, _, unmaskedSpellId = GetSpellBookItemName(i, SPELLBOOK_BANK_PET)
             if (unmaskedSpellId) then
-                unmaskedSpellId = C_SpellBook.GetOverrideSpell(unmaskedSpellId)
+                unmaskedSpellId = GetOverrideSpell(unmaskedSpellId)
                 local bIsPassive = IsPassiveSpell(unmaskedSpellId, SPELLBOOK_BANK_PET)
                 if (spellName and not bIsPassive) then
                     completeListOfSpells[unmaskedSpellId] = true
@@ -2038,6 +2076,7 @@ end
 ---@field x number
 ---@field y number
 
+
 DF.AnchorPoints = {
 	"Top Left",
 	"Left",
@@ -2047,16 +2086,122 @@ DF.AnchorPoints = {
 	"Right",
 	"Top Right",
 	"Top",
-	"Center",
-	"Inside Left",
-	"Inside Right",
-	"Inside Top",
-	"Inside Bottom",
-	"Inside Top Left",
-	"Inside Bottom Left",
-	"Inside Bottom Right",
-	"Inside Top Right",
+	"Center", --9
+	"Inside Left", --10
+	"Inside Right", --11
+	"Inside Top", --12
+	"Inside Bottom", --13
+	"Inside Top Left", --14
+	"Inside Bottom Left", --15
+	"Inside Bottom Right", --16
+	"Inside Top Right", --17
 }
+
+DF.AnchorPointsByIndex = {
+	"topleft", --1
+	"left", --2
+	"bottomleft", --3
+	"bottom", --4
+	"bottomright", --5
+	"right", --6
+	"topright", --7
+	"top", --8
+	"center", --9
+}
+
+DF.AnchorPointsToInside = {
+	[9] = 9,
+	[8] = 12,
+	[7] = 17,
+	[6] = 11,
+	[5] = 16,
+	[4] = 13,
+	[3] = 15,
+	[2] = 10,
+	[1] = 14,
+}
+
+DF.InsidePointsToAnchor = {
+	[9] = 9,
+	[12] = 8,
+	[17] = 7,
+	[11] = 6,
+	[16] = 5,
+	[13] = 4,
+	[15] = 3,
+	[10] = 2,
+	[14] = 1,
+}
+
+function DF:ConvertAnchorPointToInside(anchorPoint)
+	return DF.AnchorPointsToInside[anchorPoint] or anchorPoint
+end
+
+local calcPointCoords = function(ninePointsWidget, ninePointsRef, anchorTable, coordIndex, newAnchorSide)
+	--get the location of the topleft corner relative to the bottomleft corner of the screen
+	---@type df_coordinate
+	local widgetPointCoords = ninePointsWidget[coordIndex]
+	--get the topleft coords of the reference widget
+	---@type df_coordinate
+	local refPointCoords = ninePointsRef[coordIndex]
+
+	--calculate the offset of the x and y axis
+	local x = refPointCoords.x - widgetPointCoords.x
+	local y = refPointCoords.y - widgetPointCoords.y
+	anchorTable.x = x
+	anchorTable.y = y
+	anchorTable.side = newAnchorSide
+
+	print("new anchor side", newAnchorSide, "x", x, "y", y)
+end
+
+function DF:ConvertAnchorOffsets(widget, referenceWidget, anchorTable, newAnchorSide)
+	if (anchorTable.side == newAnchorSide) then
+		return anchorTable
+	end
+
+	local ninePoints = DF.Math.GetNinePoints(widget)
+	local refNinePoints = DF.Math.GetNinePoints(referenceWidget)
+
+	--the numeration from 1 to 9 is the index within a ninePoints table
+
+	anchorTable.side = newAnchorSide
+
+	if (newAnchorSide == 14) then --inside topleft
+		anchorTable.x = ninePoints[1].x - refNinePoints[1].x
+		anchorTable.y = ninePoints[1].y - refNinePoints[1].y
+		--print("inside topleft", anchorTable.x, anchorTable.y)
+
+	elseif (newAnchorSide == 15) then --inside bottomleft
+		anchorTable.x = ninePoints[3].x - refNinePoints[3].x
+		anchorTable.y = ninePoints[3].y - refNinePoints[3].y
+
+	elseif (newAnchorSide == 16) then --inside bottomright
+		anchorTable.x = refNinePoints[5].x - ninePoints[5].x
+		anchorTable.y = refNinePoints[5].y - ninePoints[5].y
+
+	elseif (newAnchorSide == 17) then --inside topright
+		anchorTable.x = refNinePoints[7].x - ninePoints[7].x
+		anchorTable.y = refNinePoints[7].y - ninePoints[7].y
+
+	elseif (newAnchorSide == 10) then --inside left
+		calcPointCoords(ninePoints, refNinePoints, anchorTable, 2, newAnchorSide)
+
+	elseif (newAnchorSide == 11) then --inside right
+		calcPointCoords(ninePoints, refNinePoints, anchorTable, 6, newAnchorSide)
+
+	elseif (newAnchorSide == 12) then --inside top
+		calcPointCoords(ninePoints, refNinePoints, anchorTable, 8, newAnchorSide)
+
+	elseif (newAnchorSide == 13) then --inside bottom
+		calcPointCoords(ninePoints, refNinePoints, anchorTable, 4, newAnchorSide)
+
+	elseif (newAnchorSide == 9) then --center
+		calcPointCoords(ninePoints, refNinePoints, anchorTable, 9, newAnchorSide)
+	else
+		--print("not implemented")
+	end
+end
 
 local anchoringFunctions = {
 	function(frame, anchorTo, offSetX, offSetY) --1 TOP LEFT
@@ -2751,6 +2896,7 @@ end
 --DF.font_templates ["OPTIONS_FONT_TEMPLATE"] = {color = "yellow", size = 12, font = "Accidental Presidency"}
 DF.font_templates["ORANGE_FONT_TEMPLATE"] = {color = "orange", size = 10, font = DF:GetBestFontForLanguage()}
 DF.font_templates["OPTIONS_FONT_TEMPLATE"] = {color = "yellow", size = 9.6, font = DF:GetBestFontForLanguage()}
+DF.font_templates["SMALL_SILVER"] = {color = "silver", size = 9, font = DF:GetBestFontForLanguage()}
 
 --dropdowns
 DF.dropdown_templates = DF.dropdown_templates or {}
@@ -4381,6 +4527,7 @@ function DF:GetClassSpecIds(engClass) --naming conventions
 	return DF:GetClassSpecIDs(engClass)
 end
 
+--kinda deprecated
 local getDragonflightTalents = function()
 	if (not ClassTalentFrame) then
 		ClassTalentFrame_LoadUI()
@@ -4415,9 +4562,17 @@ local getDragonflightTalents = function()
 	return exportStream:GetExportString()
 end
 
+local getDragonflightTalentsEasy = function()
+	local activeConfigID = C_ClassTalents.GetActiveConfigID()
+	if (activeConfigID and activeConfigID > 0) then
+		return C_Traits.GenerateImportString(activeConfigID)
+	end
+	return ""
+end
+
 --/dump DetailsFramework:GetDragonlightTalentString()
 function DF:GetDragonlightTalentString()
-	local runOkay, errorText = pcall(getDragonflightTalents)
+	local runOkay, errorText = pcall(getDragonflightTalentsEasy)
 	if (not runOkay) then
 		DF:Msg("error 0x4517", errorText)
 		return ""

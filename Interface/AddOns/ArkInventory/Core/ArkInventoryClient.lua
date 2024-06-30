@@ -1,6 +1,8 @@
 -- blizzzard functions that no longer exist, or have been replaced across clients
 
-ArkInventory.CrossClient = { }
+ArkInventory.CrossClient = {
+	TemplateVersion = 1,
+}
 
 local C_AddOns = _G.C_AddOns
 local C_AzeriteEmpoweredItem = _G.C_AzeriteEmpoweredItem
@@ -15,6 +17,33 @@ local C_Soulbinds = _G.C_Soulbinds
 local C_TradeSkillUI = _G.C_TradeSkillUI
 local C_TransmogCollection = _G.C_TransmogCollection
 
+
+
+function ArkInventory.ClientCheck( id_toc_min, id_toc_max, loud )
+	
+	if type( id_toc_min ) == "boolean" then return id_toc_min end
+	
+	local tmin = id_toc_min or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN
+	if tmin < ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN then
+		tmin = ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[tmin].TOC.MIN or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN
+	end
+	
+	local tmax = id_toc_max or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CURRENT].TOC.MAX
+	if tmax < ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN then
+		tmax = ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[tmax].TOC.MAX or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CURRENT].TOC.MAX
+	end
+	
+	if loud then
+		ArkInventory.Output( ArkInventory.Const.BLIZZARD.TOC, " / ", tmin, " / ", tmax )
+	end
+	
+	if ArkInventory.Const.BLIZZARD.TOC >= tmin and ArkInventory.Const.BLIZZARD.TOC <= tmax then
+		return true
+	end
+	
+	return false
+	
+end
 
 
 function ArkInventory.CrossClient.GetAverageItemLevel( )
@@ -283,7 +312,7 @@ function ArkInventory.CrossClient.GetCurrencyIDFromLink( ... )
 		return C_CurrencyInfo.GetCurrencyIDFromLink( ... )
 	else
 		local osd = ArkInventory.ObjectStringDecode( ... )
-		if osd.class == "reputation" then
+		if osd.class == "currency" then
 			return osd.id
 		end
 	end
@@ -301,7 +330,7 @@ function ArkInventory.CrossClient.GetCurrencyListInfo( ... )
 		
 	elseif GetCurrencyListInfo then
 		
-		r.name, r.isHeader, r.isHeaderExpanded, r.isTypeUnused, r.isShowInBackpack, r.quantity, r.iconFileID, r.maxQuantity, r.canEarnPerWeek, r.quantityEarnedThisWeek, unknown, r.itemID = GetCurrencyListInfo( ... )
+		r.name, r.isHeader, r.isHeaderExpanded, r.isTypeUnused, r.isShowInBackpack, r.quantity, r.iconFileID, r.maxQuantity, r.canEarnPerWeek, r.quantityEarnedThisWeek, r.arg11, r.itemID = GetCurrencyListInfo( ... )
 		r.link = ArkInventory.CrossClient.GetCurrencyListLink( ... )
 		
 	end
@@ -321,8 +350,35 @@ function ArkInventory.CrossClient.GetCurrencyListInfo( ... )
 	
 end
 
+function ArkInventory.CrossClient.GetPlayerAuraBySpellID( ... )
+	
+	if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID then
+		
+		return C_UnitAuras.GetPlayerAuraBySpellID( ... )
+		
+	elseif GetPlayerAuraBySpellID then
+		
+		local r = { }
+		r.name, r.icon, r.charges, r.dispelName, r.duration, r.expirationTime, r.sourceUnit, r.isStealable, r.nameplateShowPersonal, r.spellId, r.canApplyAura, r.isBossAura, r.isFromPlayerOrPlayerPet, r.nameplateShowAll, r.timeMod = GetPlayerAuraBySpellID( ... )
+		return r
+		
+	end
+	
+end
 
-
+function ArkInventory.CrossClient.GetItemCount( ... )
+	
+	if C_Item and C_Item.GetItemCount then
+		
+		return C_Item.GetItemCount( ... )
+		
+	elseif GetItemCount then
+		
+		return GetItemCount( ... )
+		
+	end
+	
+end
 
 function ArkInventory.CrossClient.GetBackpackCurrencyInfo( ... )
 	
@@ -837,24 +893,107 @@ function ArkInventory.CrossClient.GetNumWorldPVPAreas( ... )
 	return 0
 end
 
+function ArkInventory.CrossClient.TimerunningSeasonID( )
+	
+	local r = 0
+	
+	if PlayerGetTimerunningSeasonID then
+		r = PlayerGetTimerunningSeasonID( ) or r
+	end
+	
+	return r
+	
+end
+
+function ArkInventory.CrossClient.KeyRingButtonIDToInvSlotID( ... )
+	if KeyRingButtonIDToInvSlotID then
+		return KeyRingButtonIDToInvSlotID( ... )
+	end
+end
+
+function ArkInventory.CrossClient.C_ScrappingMachineUI_GetScrapSpellID( )
+	if C_ScrappingMachineUI and C_ScrappingMachineUI.GetScrapSpellID then
+		return C_ScrappingMachineUI.GetScrapSpellID( )
+	else
+		return -1
+	end
+end
+
+function ArkInventory.CrossClient.GetSpellInfo( ... )
+	
+	local r = { }
+	
+	if C_Spell and C_Spell.GetSpellInfo then
+		r = C_Spell.GetSpellInfo( ... )
+	elseif GetSpellInfo then
+		r.name, r.rank, r.icon, r.castTime, r.minRange, r.maxRange, r.spellID, r.originalIconID = GetSpellInfo( ... )
+	end
+	
+	return r
+	
+end
+
+function ArkInventory.CrossClient.GetItemInfo( ... )
+	
+	-- r.itemName, r.itemLink, r.itemQuality, r.itemLevel, r.itemMinLevel, r.itemType, r.itemSubType, r.itemStackCount, r.itemEquipLoc, r.itemTexture, r.sellPrice, r.classID, r.subclassID, r.bindType, r.expansionID, r.setID, r.isCraftingReagent
+	
+	if C_Item and C_Item.GetItemInfo then
+		return C_Item.GetItemInfo( ... )
+	elseif GetItemInfo then
+		return GetItemInfo( ... )
+	end
+	
+end
+
+function ArkInventory.CrossClient.GetItemInfoInstant( ... )
+	
+	-- r.itemID, r.itemType, r.itemSubType, r.itemEquipLoc, r.icon, r.classID, r.subClassID
+	
+	if C_Item and C_Item.GetItemInfoInstant then
+		return C_Item.GetItemInfoInstant( ... )
+	elseif GetItemInfoInstant then
+		return GetItemInfoInstant( ... )
+	end
+	
+end
+
+function ArkInventory.CrossClient.GetItemClassInfo( ... )
+	
+	local r = nil
+	
+	if C_Item and C_Item.GetItemClassInfo then
+		r = C_Item.GetItemClassInfo( ... )
+	elseif GetItemClassInfo then
+		r = GetItemClassInfo( ... )
+	end
+	
+	return r
+	
+end
+
+function ArkInventory.CrossClient.GetItemSubClassInfo( ... )
+	
+	local r = nil
+	
+	if C_Item and C_Item.GetItemSubClassInfo then
+		r = C_Item.GetItemSubClassInfo( ... )
+	elseif GetItemSubClassInfo then
+		r = GetItemSubClassInfo( ... )
+	end
+	
+	return r
+	
+end
 
 
 
 
 
 
-
-
-
-
-
-ArkInventory.Const.BLIZZARD.CLIENT.NAME = _G[string.format( "EXPANSION_NAME%s", GetExpansionLevel( ) )]
 local a = string.lower( ArkInventory.CrossClient.GetCVar( "agentuid" ) )
 local p = string.lower( ArkInventory.CrossClient.GetCVar( "portal" ) )
 
-ArkInventory.CrossClient.TemplateVersion = 1
-
-for k,v in pairs( ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION ) do
+for k, v in pairs( ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION ) do
 	--ArkInventory.Output( k, " = ", v )
 	if ArkInventory.Const.BLIZZARD.TOC >= v.TOC.MIN and ArkInventory.Const.BLIZZARD.TOC <= v.TOC.MAX then
 		ArkInventory.Const.BLIZZARD.CLIENT.ID = v.ID
@@ -862,6 +1001,7 @@ for k,v in pairs( ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION ) do
 	end
 end
 ArkInventory.ENUM.EXPANSION.CURRENT = ArkInventory.Const.BLIZZARD.CLIENT.ID
+
 
 if ArkInventory.Const.BLIZZARD.CLIENT.ID <= ArkInventory.ENUM.EXPANSION.WRATH then
 	ArkInventory.CrossClient.TemplateVersion = 2
@@ -880,31 +1020,4 @@ else
 		ArkInventory.Const.BLIZZARD.CLIENT.ID = ArkInventory.Const.BLIZZARD.CLIENT.ID + ArkInventory.Const.BLIZZARD.CLIENT.PTR
 		ArkInventory.Const.BLIZZARD.CLIENT.NAME = string.format( "%s: PTR", ArkInventory.Const.BLIZZARD.CLIENT.NAME )
 	end
-end
-
-
-function ArkInventory.ClientCheck( id_toc_min, id_toc_max, loud )
-	
-	if type( id_toc_min ) == "boolean" then return id_toc_min end
-	
-	local tmin = id_toc_min or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN
-	if tmin < ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN then
-		tmin = ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[tmin].TOC.MIN or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN
-	end
-	
-	local tmax = id_toc_max or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CURRENT].TOC.MAX
-	if tmax < ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CLASSIC].TOC.MIN then
-		tmax = ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[tmax].TOC.MAX or ArkInventory.Const.BLIZZARD.CLIENT.EXPANSION[ArkInventory.ENUM.EXPANSION.CURRENT].TOC.MAX
-	end
-	
-	if loud then
-		ArkInventory.Output( ArkInventory.Const.BLIZZARD.TOC, " / ", tmin, " / ", tmax )
-	end
-	
-	if ArkInventory.Const.BLIZZARD.TOC >= tmin and ArkInventory.Const.BLIZZARD.TOC <= tmax then
-		return true
-	end
-	
-	return false
-	
 end

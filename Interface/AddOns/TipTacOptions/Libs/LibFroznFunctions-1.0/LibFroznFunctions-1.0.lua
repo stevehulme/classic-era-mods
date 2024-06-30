@@ -9,12 +9,12 @@
 
 -- create new library
 local LIB_NAME = "LibFroznFunctions-1.0";
-local LIB_MINOR = 21; -- bump on changes
+local LIB_MINOR = 24; -- bump on changes
 
 if (not LibStub) then
 	error(LIB_NAME .. " requires LibStub.");
 end
--- local ldb = LibStub("LibDataBroker-1.1", true)
+-- local ldb = LibStub:GetLibrary("LibDataBroker-1.1", true)
 -- if not ldb then error(LIB_NAME .. " requires LibDataBroker-1.1.") end
 
 local LibFroznFunctions = LibStub:NewLibrary(LIB_NAME, LIB_MINOR);
@@ -109,7 +109,7 @@ LFF_GEAR_SCORE_ALGORITHM = {
 --         .GameTooltipFadeOutNotBeCalledForWorldFrameUnitTips         = true/false if GameTooltip:FadeOut() will not be called for worldframe unit tips (till wotlkc)
 --         .barMarginAdjustment                                        = bar margin adjustment (till wotlkc)
 --         .realGetSpellLinkAvailable                                  = true/false if the real GetSpellLink() is available (since bc 2.3.0). in classic era this function only returns the spell name instead of a spell link.
---         .relatedExpansionForItemAvailable                           = true/false if GetItemInfo() return the related expansion for an item (parameter expacID) (since Legion 7.1.0)
+--         .relatedExpansionForItemAvailable                           = true/false if C_Item.GetItemInfo() return the related expansion for an item (parameter expacID) (since Legion 7.1.0)
 --         .defaultGearScoreAlgorithm                                  = default GearScore algorithm
 --         .optionsSliderTemplate                                      = options slider template ("OptionsSliderTemplate", since df 10.0.0 and catac 4.4.0 "UISliderTemplateWithLabels")
 --         .dragonriding                                               = true/false if dragonriding is available (since df)
@@ -380,7 +380,7 @@ function LibFroznFunctions:GetItemFromTooltip(tooltip)
 			local tooltipData = tooltip:GetTooltipData();
 			local itemLink = C_ToyBox.GetToyLink(tooltipData.id);
 			if (itemLink) then
-				local name = GetItemInfo(itemLink);
+				local name = C_Item.GetItemInfo(itemLink);
 				return name, itemLink, tooltipData.id;
 			end
 		end
@@ -746,7 +746,7 @@ function LibFroznFunctions:ChainTables(leadingTable, alternateTable)
 			-- check if value exists in alternate table
 			local value = alternateTable[index];
 			
-			if (value) then
+			if (value ~= nil) then
 				return value;
 			end
 			
@@ -995,7 +995,7 @@ end
 --
 -- @param  obj   object
 -- @param  ...   mixins to mixin
--- @return object with mixins excluding already existing objects
+-- @return object with mixins excluding equal objects
 function LibFroznFunctions:MixinDifferingObjects(obj, ...)
 	for i = 1, select("#", ...) do -- see "Mixin.lua"
 		local mixin = select(i, ...);
@@ -1007,6 +1007,35 @@ function LibFroznFunctions:MixinDifferingObjects(obj, ...)
 		end
 	end
 
+	return obj;
+end
+
+-- mixin whole objects
+--
+-- @param  obj   object
+-- @param  ...   mixins to mixin
+-- @return object with mixins removing not existing objects
+function LibFroznFunctions:MixinWholeObjects(obj, ...)
+	local keysProcessed = {};
+	
+	for i = 1, select("#", ...) do -- see "Mixin.lua"
+		local mixin = select(i, ...);
+		
+		for k, v in pairs(mixin) do
+			if (obj[k] ~= v) then
+				obj[k] = v;
+			end
+			
+			keysProcessed[k] = true;
+		end
+	end
+	
+	for k, v in pairs(obj) do
+		if (not keysProcessed[k]) then
+			obj[k] = nil;
+		end
+	end
+	
 	return obj;
 end
 
@@ -1558,16 +1587,36 @@ end
 --                                           Anchoring                                            --
 ----------------------------------------------------------------------------------------------------
 
+-- get anchor point side
+--
+-- @param  anchorPoint  anchor point, e.g. "TOP" or "BOTTOMRIGHT"
+-- @return anchor point side.
+--         returns nil if no valid anchor point is supplied.
+local anchorToAnchorPointSideLookup = {
+	TOP = "TOP",
+	TOPLEFT = "TOP",
+	TOPRIGHT = "TOP",
+	BOTTOM = "BOTTOM",
+	BOTTOMLEFT = "BOTTOM",
+	BOTTOMRIGHT = "BOTTOM",
+	LEFT = "LEFT",
+	RIGHT = "RIGHT"
+};
+
+function LibFroznFunctions:GetAnchorPointSide(anchorPoint)
+	return anchorToAnchorPointSideLookup[anchorPoint];
+end
+
 -- mirror anchor point vertically
 --
 -- @param  anchorPoint  anchor point, e.g. "TOP" or "BOTTOMRIGHT"
 -- @return vertically mirrored anchor point.
 --         returns nil if no valid anchor point is supplied.
 local anchorToVerticallyMirroredAnchorPointLookup = {
-	TOP = "BOTTOM",
+	TOP = "TOP",
 	TOPLEFT = "TOPRIGHT",
 	TOPRIGHT = "TOPLEFT",
-	BOTTOM = "TOP",
+	BOTTOM = "BOTTOM",
 	BOTTOMLEFT = "BOTTOMRIGHT",
 	BOTTOMRIGHT = "BOTTOMLEFT",
 	LEFT = "RIGHT",
@@ -1591,8 +1640,8 @@ local anchorToHorizontallyMirroredAnchorPointLookup = {
 	BOTTOM = "TOP",
 	BOTTOMLEFT = "TOPLEFT",
 	BOTTOMRIGHT = "TOPRIGHT",
-	LEFT = "RIGHT",
-	RIGHT = "LEFT",
+	LEFT = "LEFT",
+	RIGHT = "RIGHT",
 	CENTER = "CENTER"
 };
 
@@ -1605,7 +1654,6 @@ end
 -- @param  anchorPoint  anchor point, e.g. "TOP" or "BOTTOMRIGHT"
 -- @return centered mirrored anchor point.
 --         returns nil if no valid anchor point is supplied.
-
 local anchorToCenteredMirroredAnchorPointLookup = {
 	TOP = "BOTTOM",
 	TOPLEFT = "BOTTOMRIGHT",
@@ -1620,6 +1668,79 @@ local anchorToCenteredMirroredAnchorPointLookup = {
 
 function LibFroznFunctions:MirrorAnchorPointCentered(anchorPoint)
 	return anchorToCenteredMirroredAnchorPointLookup[anchorPoint];
+end
+
+-- get anchor points by anchor point and horizontal/vertical alignment between two frames
+--
+-- @param  anchorPoint  anchor point, e.g. "TOP" or "BOTTOMRIGHT"
+-- @param  hAlign       optional. horizontal alignment, e.g "LEFT", "CENTER" or "RIGHT"
+-- @param  vAlign       optional. vertical alignment, e.g "TOP", "MIDDLE" or "BOTTOM"
+-- @return anchor point for outer frame, anchor point for reference frame. nil, nil if no valid anchor point is supplied.
+function LibFroznFunctions:GetAnchorPointsByAnchorPointAndAlignment(anchorPoint, hAlign, vAlign)
+	local anchorPointForOuterFrame = self:MirrorAnchorPointCentered(anchorPoint);
+	
+	-- invalid anchor point
+	if (not anchorPointForOuterFrame) then
+		return nil, nil;
+	end
+	
+	local anchorPointForReferenceFrame = anchorPoint;
+	
+	if ((anchorPointForOuterFrame == "TOP") or (anchorPointForOuterFrame == "BOTTOM")) and (hAlign) and (hAlign ~= "CENTER") then
+		anchorPointForOuterFrame = anchorPointForOuterFrame .. hAlign;
+		anchorPointForReferenceFrame = self:MirrorAnchorPointHorizontally(anchorPointForOuterFrame);
+	end
+	if ((anchorPointForOuterFrame == "LEFT") or (anchorPointForOuterFrame == "RIGHT")) and (vAlign) and (vAlign ~= "MIDDLE") then
+		anchorPointForOuterFrame = vAlign .. anchorPointForOuterFrame;
+		anchorPointForReferenceFrame = self:MirrorAnchorPointVertically(anchorPointForOuterFrame);
+	end
+	
+	-- invalid anchor point
+	if (not anchorPointForReferenceFrame) then
+		return nil, nil;
+	end
+	
+	return anchorPointForOuterFrame, anchorPointForReferenceFrame;
+end
+
+-- get offsets by anchor point and offsets and grow direction
+--
+-- @param  anchorPoint       anchor point, e.g. "TOP" or "BOTTOMRIGHT"
+-- @param  fixedOuterOffset  optional. fixed outer offset
+-- @param  xOffset           optional. x offset
+-- @param  yOffset           optional. y offset
+-- @param  growDirection     optional. grow direction, e.g. "UP", "RIGHT", "DOWN" or "LEFT"
+-- @param  growOffset        optional. grow offset
+-- @return x offset, y offset (inverted)
+function LibFroznFunctions:GetOffsetsByAnchorPointAndOffsetsAndGrowDirection(anchorPoint, fixedOuterOffset, _xOffset, _yOffset, growDirection, growOffset)
+	local xOffset, yOffset = (_xOffset or 0), (-_yOffset or 0);
+	local anchorPointSide = LibFroznFunctions:GetAnchorPointSide(anchorPoint);
+	
+	if (fixedOuterOffset) then
+		if (anchorPointSide == "TOP") then
+			yOffset = yOffset - fixedOuterOffset;
+		elseif (anchorPointSide == "BOTTOM") then
+			yOffset = yOffset + fixedOuterOffset;
+		elseif (anchorPointSide == "RIGHT") then
+			xOffset = xOffset + fixedOuterOffset;
+		elseif (anchorPointSide == "LEFT") then
+			xOffset = xOffset - fixedOuterOffset;
+		end
+	end
+	
+	if (growDirection) and (growOffset) then
+		if (growDirection == "UP") then
+			yOffset = yOffset + growOffset;
+		elseif (growDirection == "DOWN") then
+			yOffset = yOffset - growOffset;
+		elseif (growDirection == "LEFT") then
+			xOffset = xOffset - growOffset;
+		elseif (growDirection == "RIGHT") then
+			xOffset = xOffset + growOffset;
+		end
+	end
+	
+	return xOffset, yOffset;
 end
 
 -- get offsets for anchor point between two frames
@@ -1857,7 +1978,7 @@ function LibFroznFunctions:IsFrameBackInFrameChain(referenceFrame, framesAndName
 	while (currentFrame) do
 		for _, frameAndNamePattern in ipairs(LibFroznFunctions:ConvertToTable(framesAndNamePatterns)) do
 			if (type(frameAndNamePattern) == "table") then
-				if (currentFrame == patternOrFrame) then
+				if (currentFrame == frameAndNamePattern) then
 					return true;
 				end
 			elseif (type(frameAndNamePattern) == "string") then
@@ -1871,7 +1992,7 @@ function LibFroznFunctions:IsFrameBackInFrameChain(referenceFrame, framesAndName
 			end
 		end
 		
-		if (maxLevel) and (currentLevel == maxLevel) then
+		if (maxLevel) and (currentLevel >= maxLevel) then
 			return false;
 		end
 		
@@ -1886,6 +2007,153 @@ function LibFroznFunctions:IsFrameBackInFrameChain(referenceFrame, framesAndName
 	return false;
 end
 
+-- show popup with text
+--
+-- @param params               parameters
+--          .prompt              prompt to show
+--          .text                text to show
+--          .iconFile            optional. path to an icon (usually in Interface\\) or a FileDataID
+--          .iconTexCoord        optional.  coordinates for cropping the icon. object with four values:
+--            leftTexel            coordinate that identifies the left edge as a fraction of the image's width
+--            rightTexel           coordinate that identifies the right edge as a fraction of the image's width
+--            topTexel             coordinate that identifies the top edge as a fraction of the image's height
+--            bottomTexel          coordinate that identifies the bottom edge as a fraction of the image's height
+--          .acceptButtonText    accept button text
+--          .cancelButtonText    cancel button text
+--          .onShowHandler       optional. handler for OnShow event of popup. parameters: self, data
+--          .onAcceptHandler     optional. handler for OnAccept event (button pressed) of popup. parameters: self, data
+function LibFroznFunctions:ShowPopupWithText(params)
+	-- no params
+	if (not params) then
+		return;
+	end
+	
+	-- create initial popup config
+	local popupName = LIB_NAME .. "-" .. LIB_MINOR .. "_ShowPopupWithText";
+	
+	if (not StaticPopupDialogs[popupName]) then
+		local editBoxOnEscapePressed = StaticPopup_StandardEditBoxOnEscapePressed or function(self, data)
+			-- StaticPopup_StandardEditBoxOnEscapePressed() not available in catac 4.4.0 and classic era 1.15.2
+			local dialog = self:GetParent();
+			local which = dialog.which;
+			
+			if (not which) then
+				return;
+			end
+			
+			local info = StaticPopupDialogs[which];
+			
+			if (not info) or (not info.hideOnEscape) then
+				return;
+			end
+			
+			dialog:Hide();
+		end
+		
+		local function setAndHighlightLockedEditBoxText(self, data)
+			local lockedEditBoxText = data.lockedEditBoxText;
+			
+			if (lockedEditBoxText) and (lockedEditBoxText ~= "") then
+				self:SetText(lockedEditBoxText);
+				self:HighlightText();
+			end
+		end
+		
+		StaticPopupDialogs[popupName] = { -- hopefully no taint, see "StaticPopup.lua"
+			showAlertGear = 1,
+			hasEditBox = 1,
+			editBoxWidth = 400,
+			OnShow = function(self, data)
+				-- fix width for greater edit box width
+				local which = self.which;
+				
+				if (which) then
+					local info = StaticPopupDialogs[which];
+					
+					if (info) and (info.editBoxWidth and info.editBoxWidth > 260) then
+						local width = self:GetWidth() + (info.editBoxWidth - 260);
+						
+						self:SetWidth(width);
+						self.maxWidthSoFar = width;
+					end
+				end
+				
+				-- consider icon, locked edit box text and OnShow handler
+				local editBox = self.editBox;
+				
+				if (data) then
+					local alertIcon = _G[self:GetName() .. "AlertIcon"];
+					
+					if (alertIcon) then
+						alertIcon:SetTexture(data.iconFile);
+						
+						local iconTexCoord = data.iconTexCoord;
+						
+						if (iconTexCoord) then
+							alertIcon:SetTexCoord(unpack(iconTexCoord));
+						else
+							alertIcon:SetTexCoord(0, 1, 0, 1);
+						end
+					end
+					
+					setAndHighlightLockedEditBoxText(editBox, data);
+					
+					if (data.onShowHandler) then
+						data.onShowHandler(self, data);
+					end
+				end
+				
+				-- focus edit box
+				editBox:SetFocus();
+			end,
+			EditBoxOnTextChanged = function(self, data)
+				-- consider locked edit box text
+				if (not data) then
+					return;
+				end
+				
+				setAndHighlightLockedEditBoxText(self, data);
+			end,
+			selectCallbackByIndex = true,
+			EditBoxOnEnterPressed = function(self, data)
+				local dialog = self:GetParent();
+				
+				if (dialog.button1:IsEnabled()) then
+					StaticPopup_OnClick(dialog, 1);
+				end
+			end,
+			EditBoxOnEscapePressed = editBoxOnEscapePressed,
+			OnAccept = function(self, data)
+				if (data.onAcceptHandler) then
+					data.onAcceptHandler(self, data);
+				end
+			end,
+			OnCancel = function(self, data)
+				local editBox = self.editBox;
+				
+				editBoxOnEscapePressed(editBox, data);
+			end,
+			hideOnEscape = 1
+		};
+	end
+	
+	-- set popup config
+	local staticPopupDialog = StaticPopupDialogs[popupName];
+	
+	staticPopupDialog.text = params.prompt;
+	staticPopupDialog.button1 = params.acceptButtonText;
+	staticPopupDialog.button2 = params.cancelButtonText;
+	
+	-- show popup with text
+	StaticPopup_Show(popupName, nil, nil, {
+		lockedEditBoxText = params.text,
+		iconFile = params.iconFile,
+		iconTexCoord = params.iconTexCoord,
+		onShowHandler = params.onShowHandler,
+		onAcceptHandler = params.onAcceptHandler
+	});
+end
+
 ----------------------------------------------------------------------------------------------------
 --                                            Tooltips                                            --
 ----------------------------------------------------------------------------------------------------
@@ -1894,11 +2162,12 @@ end
 --
 -- @param tip  GameTooltip
 function LibFroznFunctions:RecalculateSizeOfGameTooltip(tip)
-	if (type(tip.GetObjectType) ~= "function") or (tip:GetObjectType() ~= "GameTooltip") then
+	if (tip:IsForbidden()) or (type(tip.GetObjectType) ~= "function") or (tip:GetObjectType() ~= "GameTooltip") then
 		return;
 	end
 	
 	tip:SetPadding(tip:GetPadding());
+	tip:GetWidth(); -- possible blizzard bug (tested under df 10.2.7): tooltip is sometimes invisible after SetPadding() is called in OnShow. Calling e.g. GetWidth() after SetPadding() fixes this. reproduced with addon "Total RP 3" where the player's unit tooltip isn't shown any more.
 end
 
 -- get aura description
@@ -3551,7 +3820,7 @@ function LFF_GetTacoTipGearScoreFromItemData(unitID, unitGUID, items)
 		if not (ItemLink) then
 			return 0, 0, 0.1, 0.1, 0.1
 		end
-		local ItemName, ItemLink, ItemRarity, ItemLevel, ItemMinLevel, ItemType, ItemSubType, ItemStackCount, ItemEquipLoc, ItemTexture = GetItemInfo(ItemLink)
+		local ItemName, ItemLink, ItemRarity, ItemLevel, ItemMinLevel, ItemType, ItemSubType, ItemStackCount, ItemEquipLoc, ItemTexture = C_Item.GetItemInfo(ItemLink)
 		if (ItemLink and ItemRarity and ItemLevel and ItemEquipLoc and GS_ItemTypes[ItemEquipLoc]) then
 			local Table
 			local QualityScale = 1
@@ -3660,14 +3929,14 @@ function LFF_GetTacoTipGearScoreFromItemData(unitID, unitGUID, items)
 			end
 
 			if (mainHandLink and offHandLink) then
-				local ItemName, ItemLink, ItemRarity, ItemLevel, ItemMinLevel, ItemType, ItemSubType, ItemStackCount, ItemEquipLoc, ItemTexture = GetItemInfo(mainHandLink)
+				local ItemName, ItemLink, ItemRarity, ItemLevel, ItemMinLevel, ItemType, ItemSubType, ItemStackCount, ItemEquipLoc, ItemTexture = C_Item.GetItemInfo(mainHandLink)
 				if (ItemEquipLoc == "INVTYPE_2HWEAPON") then
 					TitanGrip = 0.5
 				end
 			end
 
 			if (offHandLink) then
-				local ItemName, ItemLink, ItemRarity, ItemLevel, ItemMinLevel, ItemType, ItemSubType, ItemStackCount, ItemEquipLoc, ItemTexture = GetItemInfo(offHandLink)
+				local ItemName, ItemLink, ItemRarity, ItemLevel, ItemMinLevel, ItemType, ItemSubType, ItemStackCount, ItemEquipLoc, ItemTexture = C_Item.GetItemInfo(offHandLink)
 				if (ItemEquipLoc == "INVTYPE_2HWEAPON") then
 					TitanGrip = 0.5
 				end

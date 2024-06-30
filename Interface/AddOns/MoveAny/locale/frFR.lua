@@ -114,9 +114,10 @@ function MoveAny:LangfrFR()
 		["LID_TICKETSTATUSFRAME"] = "Cadre des tickets",
 		["LID_LOSSOFCONTROLFRAME"] = "Cadre de perte de contrôle",
 		["LID_TargetFrameNumericalThreat"] = "Pourcentage de menace",
+		["LID_RESETELEMENT"] = "Reset Element",
 	}
 
-	if D4:GetWoWBuild() ~= "RETAIL" then
+	if MoveAny:GetWoWBuild() ~= "RETAIL" then
 		tab["LID_ACTIONBARS"] = "Barre d'action 1 + 5 + 6"
 		tab["LID_ACTIONBAR1"] = "Barre d'action 1 (Barre principale)"
 		tab["LID_ACTIONBAR2"] = "Barre d'action 2 (2. Page of Barre d'action 1)"

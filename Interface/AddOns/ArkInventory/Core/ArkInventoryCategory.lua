@@ -24,6 +24,9 @@ ArkInventory.Const.Category = {
 		Action = 4,
 	},
 	
+	Headers = { "SYSTEM", "TIMERUNNING", "CONSUMABLE", "TRADEGOODS", "SKILL", "CLASS", "EMPTY", "CUSTOM", "RULE", },
+	
+	
 	Code = {
 		System = { -- do NOT change the indicies - if you have to then see the DatabaseUpgradePostLoad( ) function to remap it
 			[401] = {
@@ -155,6 +158,38 @@ ArkInventory.Const.Category = {
 				id = "SYSTEM_CRAFTING_REAGENT",
 				text = ArkInventory.Localise["CRAFTING_REAGENT"],
 			},
+		},
+		Timerunning = {
+			[463] = {
+				id = "SYSTEM_OPENABLE",
+				text = ArkInventory.Localise["CATEGORY_SYSTEM_OPENABLE"],
+			},
+			[464] = {
+				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				id = "TIMERUNNING_GEM_PRISMATIC",
+				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_PRISMATIC"],
+			},
+			[465] = {
+				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				id = "TIMERUNNING_GEM_TINKER",
+				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_TINKER"],
+			},
+			[466] = {
+				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				id = "TIMERUNNING_GEM_COGWHEEL",
+				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_COGWHEEL"],
+			},
+			[467] = {
+				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				id = "TIMERUNNING_GEM_META",
+				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_META"],
+			},
+			[468] = {
+				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				id = "TIMERUNNING_SCROLL",
+				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_SCROLL"],
+			},
+			
 		},
 		Consumable = {
 			[404] = {
@@ -309,7 +344,11 @@ ArkInventory.Const.Category = {
 				id = "CONSUMABLE_POWER_SHADOWLANDS",
 				text = string.format( "%s - %s", ArkInventory.Localise["COVENANT"], ArkInventory.Localise["OTHER"] ),
 			},
-			
+			[462] = {
+				ClientCheck = ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ),
+				id = "CONSUMABLE_POWER_DRAGONFLIGHT",
+				text = string.format( "%s - %s", ArkInventory.Localise["PROFESSIONS"], ArkInventory.Localise["KNOWLEDGE"] ),
+			},
 		},
 		Trade = {
 			[412] = {
@@ -601,6 +640,8 @@ ArkInventory.Const.Category = {
 	
 }
 
+
+
 function ArkInventory.ItemCategoryGetDefaultActual( i )
 	
 	-- local debuginfo = { ["m"]=gcinfo( ), ["t"]=GetTime( ) }
@@ -684,6 +725,11 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 		return ArkInventory.CategoryGetSystemID( "SYSTEM_REPUTATION" )
 	end
 	
+	-- openable items
+	if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Openable" ) then
+		return ArkInventory.CategoryGetSystemID( "SYSTEM_OPENABLE" )
+	end
+	
 	
 	
 	-- setup tooltip for scanning.  it will be ready as we've already checked
@@ -732,11 +778,11 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 	end
 	
 	
-	-- currencies and power
-	if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.LEGION ) then
+	-- power systems
+	if true then
 		
 		-- legion
-		if info.expansion == ArkInventory.ENUM.EXPANSION.LEGION then
+		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.LEGION ) then
 			
 			-- artifact power (tooltip)
 			if ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_ARTIFACT_POWER"], false, true, false, 0, ArkInventory.Const.Tooltip.Search.Short ) then
@@ -753,13 +799,18 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 		-- bfa used azerite which acted more like a currency you earnt than an item you collected
 		
 		-- shadowlands
-		if info.expansion == ArkInventory.ENUM.EXPANSION.SHADOWLANDS then
+		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.SHADOWLANDS ) then
 			
 			if ArkInventory.CrossClient.IsAnimaItemByID( info.id ) then
 				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SHADOWLANDS_ANIMA" )
 			end
 			
-			-- conduits (tooltip)
+			-- conduits by item id
+			if ArkInventory.CrossClient.IsConduit( info.id ) then
+				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SHADOWLANDS_CONDUIT" )
+			end
+			
+			-- conduits by tooltip
 			if ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_CONDUIT_POTENCY"], false, true, false, 0, ArkInventory.Const.Tooltip.Search.Short ) then
 				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SHADOWLANDS_CONDUIT" )
 			end
@@ -779,11 +830,21 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 			
 		end
 		
-	end
-	
-	-- old power systems (current power system items should have already been categorised)
-	if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Consumable.Power" ) then
-		return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SYSTEM_OLD" )
+		-- dragonflight
+		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) then
+			
+			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Consumable.Power.Dragonflight" ) then
+				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_DRAGONFLIGHT" )
+			end
+			
+		end
+		
+		
+		-- old power systems (current power system items should have already been categorised)
+		if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Consumable.Power" ) then
+			return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SYSTEM_OLD" )
+		end
+		
 	end
 	
 	-- currency items
@@ -845,10 +906,42 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 		end
 	end
 	
-	-- heirlooms
+	-- heirlooms	
 	if info.q == ArkInventory.ENUM.ITEM.QUALITY.HEIRLOOM or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Heirloom" ) then
 		return ArkInventory.CategoryGetSystemID( "SYSTEM_HEIRLOOM" )
 	end
+	
+	
+	-- timerunning
+--	local timeseason = ArkInventory.CrossClient.TimerunningSeasonID( )
+--	if timeseason > 0 then
+		
+--		if timeseason == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA then
+			
+			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Timerunning.Pandaria.Gem.Prismatic" ) then
+				return ArkInventory.CategoryGetSystemID( "TIMERUNNING_GEM_PRISMATIC" )
+			end
+			
+			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Timerunning.Pandaria.Gem.Tinker" ) then
+				return ArkInventory.CategoryGetSystemID( "TIMERUNNING_GEM_TINKER" )
+			end
+			
+			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Timerunning.Pandaria.Gem.Cogwheel" ) then
+				return ArkInventory.CategoryGetSystemID( "TIMERUNNING_GEM_COGWHEEL" )
+			end
+			
+			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Timerunning.Pandaria.Gem.Meta" ) then
+				return ArkInventory.CategoryGetSystemID( "TIMERUNNING_GEM_META" )
+			end
+			
+			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Timerunning.Pandaria.Scroll" ) then
+				return ArkInventory.CategoryGetSystemID( "TIMERUNNING_SCROLL" )
+			end
+			
+--		end
+		
+--	end
+	
 	
 	-- keys
 	if info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.KEY.PARENT or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Key" ) then
@@ -1490,11 +1583,312 @@ function ArkInventory.ItemCategoryGet( i )
 end
 
 
+function ArkInventory.CategoryLocationSet( loc_id, cat_id, bar_id )
+	
+	assert( cat_id ~= nil , "category is nil" )
+	
+	local cat_def = ArkInventory.CategoryGetSystemID( "SYSTEM_DEFAULT" )
+	
+	if ( cat_id ~= cat_def ) or ( bar_id ~= nil ) then
+		local codex = ArkInventory.GetLocationCodex( loc_id )
+		codex.layout.category[cat_id] = bar_id
+	end
+	
+end
+
+function ArkInventory.CategoryLocationGet( loc_id, cat_id )
+	
+	-- return 1: number - which bar a category is located on
+	-- return 2: boolean - is it the default bar
+	
+	local cat_id = cat_id or ArkInventory.CategoryGetSystemID( "SYSTEM_UNKNOWN" )
+	
+	local codex = ArkInventory.GetLocationCodex( loc_id )
+	local bar_id = codex.layout.category[cat_id]
+	--ArkInventory.Output( "loc=[", loc_id, "], cat=[", cat_id, "], bar=[", bar, "]" )
+	
+	local cat_def = ArkInventory.CategoryGetSystemID( "SYSTEM_DEFAULT" )
+	local bar_def = codex.layout.category[cat_def] or 1
+	
+	if not bar_id then
+		-- if this category hasn't been assigned to a bar then return the bar that DEFAULT is using
+		return bar_def, true, cat_def, bar_def
+	else
+		return bar_id, false, cat_def, bar_def
+	end
+	
+end
+
+function ArkInventory.CategoryHiddenCheck( loc_id, cat_id )
+	
+	-- hidden categories have a negative bar number
+	
+	local bar_id = ArkInventory.CategoryLocationGet( loc_id, cat_id )
+	
+	if bar_id < 0 then
+		return true
+	else
+		return false
+	end
+	
+end
+
+function ArkInventory.CategoryHiddenToggle( loc_id, cat_id )
+	ArkInventory.CategoryLocationSet( loc_id, cat_id, 0 - ArkInventory.CategoryLocationGet( loc_id, cat_id ) )
+end
+
+function ArkInventory.CategoryGenerate( )
+	
+	local categories = {
+		["SYSTEM"] = ArkInventory.Const.Category.Code.System, -- CATEGORY_SYSTEM
+		["TIMERUNNING"] = ArkInventory.Const.Category.Code.Timerunning, -- CATEGORY_TIMERUNNING
+		["CONSUMABLE"] = ArkInventory.Const.Category.Code.Consumable, -- CATEGORY_CONSUMABLE
+		["TRADEGOODS"] = ArkInventory.Const.Category.Code.Trade,  -- CATEGORY_TRADEGOODS
+		["SKILL"] = ArkInventory.Const.Category.Code.Skill, -- CATEGORY_SKILL
+		["CLASS"] = ArkInventory.Const.Category.Code.Class, -- CATEGORY_CLASS
+		["EMPTY"] = ArkInventory.Const.Category.Code.Empty, -- CATEGORY_EMPTY
+		
+		["RULE"] = ArkInventory.db.option.category[ArkInventory.Const.Category.Type.Rule].data, -- CATEGORY_RULE
+		["CUSTOM"] = ArkInventory.db.option.category[ArkInventory.Const.Category.Type.Custom].data, -- CATEGORY_CUSTOM
+	}
+	
+	ArkInventory.Table.Wipe( ArkInventory.Global.Category )
+	
+	for tn, d in pairs( categories ) do
+		
+		for k, v in pairs( d ) do
+			
+			if ArkInventory.ClientCheck( v.ClientCheck ) then
+				
+				--ArkInventory.Output( tn, " - ", k, " - ", v )
+				
+				local system, order, sort_order, name, cat_id, cat_type, cat_num
+				
+				if tn == "RULE" then
+					
+					if v.used == "Y" then
+						
+						cat_type = ArkInventory.Const.Category.Type.Rule
+						cat_num = k
+						
+						system = nil
+						name = string.format( "[%04i] %s", k, v.name )
+						order = ( v.order or 99999 ) + ( k / 10000 )
+						sort_order = string.lower( v.name )
+						
+					end
+					
+				elseif tn == "CUSTOM" then
+					
+					if v.used == "Y" then
+						
+						cat_type = ArkInventory.Const.Category.Type.Custom
+						cat_num = k
+						
+						system = nil
+						name = string.format( "[%04i] %s", k, v.name )
+						order = k
+						sort_order = string.lower( v.name )
+					
+					end
+					
+				else
+					
+					cat_type = ArkInventory.Const.Category.Type.System
+					cat_num = k
+					
+					system = string.upper( v.id )
+					
+					name = v.text
+					if type( name ) == "function" then
+						name = name( )
+					end
+					sort_order = string.lower( name )
+					name = string.format( "[%04i] %s", k, name or system )
+					
+				end
+				
+				if name then
+					
+					cat_id = ArkInventory.CategoryIdBuild( cat_type, cat_num )
+					
+					assert( not ArkInventory.Global.Category[cat_id], string.format( "duplicate category: %s [%s] ", tn, cat_id ) )
+					
+					ArkInventory.Global.Category[cat_id] = {
+						["id"] = cat_id,
+						["system"] = system,
+						["shortname"] = v.text,
+						["name"] = name or string.format( "%s %04i %s", tn, k, "<no name>"  ),
+						["fullname"] = string.format( "%s > %s", ArkInventory.Localise[string.format( "CATEGORY_%s", tn )], name ),
+						["order"] = order or 0,
+						["sort_order"] = string.lower( sort_order ) or "!",
+						["type_code"] = tn,
+						["type"] = ArkInventory.Localise[string.format( "CATEGORY_%s", tn )],
+					}
+					
+				end
+				
+			end
+			
+		end
+		
+	end
+	
+end
+
+function ArkInventory.CategoryIdSplit( cat_id )
+	local cat_type, cat_num = string.match( cat_id, "(%d+)!(%d+)" )
+	return tonumber( cat_type ), tonumber( cat_num )
+end
+
+function ArkInventory.CategoryIdBuild( cat_type, cat_num )
+	return string.format( "%i!%i", cat_type, cat_num )
+end
+
+function ArkInventory.CategoryGetNext( v )
+	
+	if not v.next then
+		v.next = v.min
+	else
+		if v.next < v.min then
+			v.next = v.min
+		end
+	end
+	
+	local c = 0
+	
+	while true do
+		
+		v.next = v.next + 1
+		
+		if v.next > v.max then
+			c = c + 1
+			v.next = v.min
+		end
+		
+		if c > 1 then
+			return -1
+		end
+		
+		if not v.data[v.next] then
+			return -2
+		end
+		
+		if v.data[v.next].used == "N" then
+			return v.next, v.data[v.next]
+		end
+		
+	end
+	
+end
+
+function ArkInventory.CategoryBarHasAssigned( loc_id, bar_id, cat_type )
+	
+	if not loc_id or not_bar_id then return end
+	
+	for cat_id, cat in pairs( ArkInventory.Global.Category ) do
+		
+		local cat_bar, def_bar = ArkInventory.CategoryLocationGet( loc_id, cat.id )
+		if math.abs( cat_bar ) == bar_id and not def_bar then
+			
+			if not cat_type or cat_type == cat.type_code then
+				return true
+			end
+			
+		end
+		
+	end
+	
+end
+
+function ArkInventory.CategoryBarGetAssigned( loc_id, bar_id, cat_type )
+	
+	if not loc_id or not_bar_id then return end
+	
+	local c = 0
+	local cat_tbl = { }
+	
+	for cat_id, cat in pairs( ArkInventory.Global.Category ) do
+		
+		local cat_bar, def_bar = ArkInventory.CategoryLocationGet( loc_id, cat.id )
+		if math.abs( cat_bar ) == bar_id and not def_bar then
+			
+			if not cat_type or cat_type == cat.type_code then
+				
+				c = c + 1
+				cat_tbl[cat_id] = true
+				
+			end
+			
+		end
+		
+	end
+	
+	if c == 0 then
+		return
+	else
+		return cat_tbl
+	end
+	
+end
+
+function ArkInventory.CategoryGetSystemID( cat_name )
+	
+	-- internal system category names only, if it doesnt exist you'll get the default instead
+	
+	--ArkInventory.Output( "search=[", cat_name, "]" )
+	
+	local cat_name = string.upper( cat_name )
+	local cat_def
+	
+	for _, v in pairs( ArkInventory.Global.Category ) do
+		
+		--ArkInventory.Output( "checking=[", v.system, "]" )
+		
+		if cat_name == v.system then
+			--ArkInventory.Output( "found=[", cat_name, " = ", v.name, "] = [", v.id, "]" )
+			return v.id
+			
+		elseif v.system == "SYSTEM_DEFAULT" then
+			--ArkInventory.Output( "default found=[", v.name, "] = [", v.id, "]" )
+			cat_def = v.id
+		end
+		
+	end
+	
+	--ArkInventory.Output( "not found=[", cat_name, "] = using default[", cat_def, "]" )
+	return cat_def
+	
+end
+
+
+function ArkInventory.ItemCategorySet( i, cat_id )
+	
+	-- set cat_id to nil to reset back to default
+	
+	local cid, id, codex = ArkInventory.ObjectIDCategory( i )
+	--ArkInventory.Output( cid, " / ", id, " / ", cat_id, " / ", codex.player.data.info.name )
+	codex.catset.ia[id].assign = cat_id
+	
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
 function ArkInventory.CategoryRebuildQueueAdd( i )
 	
 	if not i then return end
 	
-	--ArkInventory.Output2( "adding ", i )
+	--ArkInventory.OutputDebug( "adding ", i )
 	table.insert( CategoryRebuildQueue, i )
 	
 	ArkInventory:SendMessage( "EVENT_ARKINV_CATEGORY_REBUILD_QUEUE_UPDATE_BUCKET", "START" )
@@ -1503,11 +1897,11 @@ end
 
 local function Scan_Threaded( thread_id )
 	
-	--ArkInventory.Output2( "rebuilding ", ArkInventory.Table.Elements( CategoryRebuildQueue ) )
+	--ArkInventory.OutputDebug( "rebuilding ", ArkInventory.Table.Elements( CategoryRebuildQueue ) )
 	
 	for k, i in pairs( CategoryRebuildQueue ) do
 		
-		--ArkInventory.Output2( "rebuilding ", search_id )
+		--ArkInventory.OutputDebug( "rebuilding ", search_id )
 		
 		
 		-- get category here
@@ -1527,20 +1921,11 @@ local function Scan( )
 	
 	local thread_id = ArkInventory.Global.Thread.Format.Category
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		Scan_Threaded( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-	
-	local tf = function ( )
+	local thread_func = function( )
 		Scan_Threaded( thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 

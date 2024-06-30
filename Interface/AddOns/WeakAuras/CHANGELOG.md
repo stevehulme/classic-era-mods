@@ -1,49 +1,24 @@
-# [5.12.9](https://github.com/WeakAuras/WeakAuras2/tree/5.12.9) (2024-04-29)
+# [5.14.1](https://github.com/WeakAuras/WeakAuras2/tree/5.14.1) (2024-06-22)
 
-[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.12.8...5.12.9)
+[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.14.0...5.14.1)
 
 ## Highlights
 
- - Added "Parent Frame" as option to "Glow Frame Type"
-- Cataclysm bug fixes 
+ - Fixes an issue with Cooldowns introduced in the last release 
 
 ## Commits
 
-Boneshock (1):
+InfusOnWoW (2):
 
-- add Location trigger (#4917)
+- Fix Spell Cooldowns override tracking
+- Load Race: Add Earthern to list
 
-InfusOnWoW (8):
+mrbuds (6):
 
-- Update Atlas File List from wago.tools
-- Fix tracking specific charges being affeced by paused evoker spells
-- Weapon Enchant Trigger: Fix trigger stack check and missing condition
-- Add missing order increment
-- Fix AddFakeInformation for TSU auras to not overwrite progressType
-- Shape shift Trigger: Add note for incompatibility with SoD's Gladiator rune
-- Remove dead code
-- Update Atlas File List from wago.tools
-
-Lynn (1):
-
-- Added "Parent Frame" as option to "Glow Frame Type" (#5025)
-
-Stanzilla (4):
-
-- Update WeakAurasModelPaths from wago.tools
-- Update WeakAurasModelPaths from wago.tools
-- Update WeakAurasModelPaths from wago.tools
-- Mark model paths script as executeable
-
-emptyrivers (1):
-
-- only use whisper comms if target is on the actually same server (#5019)
-
-mrbuds (5):
-
-- Cataclysm: add class & spec load option
-- FontString:SetJustifyV error with "CENTER" on cataclysm beta
-- Types (#5013)
-- Cataclysm: remove "Resilience" from "Character Stats" trigger
-- Classic: fix talent not checked on changing talent group
+- Fix "Cooldown Ready (Equipment Slot)" trigger
+- fix tracking of "targettarget" fixes #5176
+- Export debug table: sort the tables
+- Texture Picker: add LSM statusbar textures
+- Glow sub element: support texture & progresstexture
+- Fix min/max progress with old auras
 

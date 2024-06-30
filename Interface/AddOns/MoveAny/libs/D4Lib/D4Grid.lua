@@ -1,3 +1,4 @@
+local _, D4 = ...
 function D4:Grid(n, snap)
     n = n or 0
     snap = snap or 10

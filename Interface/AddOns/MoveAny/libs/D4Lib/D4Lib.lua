@@ -1,5 +1,4 @@
-local _, _ = ...
-D4 = D4 or {}
+local _, D4 = ...
 --[[ Basics ]]
 local buildNr = select(4, GetBuildInfo())
 local buildName = "CLASSIC"
@@ -23,7 +22,7 @@ end
 
 D4.oldWow = D4.oldWow or false
 if C_Timer == nil then
-    print("[D4] ADD C_Timer")
+    D4:MSG("[D4] ADD C_Timer")
     C_Timer = {}
     local f = CreateFrame("Frame")
     f.tab = {}
@@ -48,7 +47,7 @@ if C_Timer == nil then
 end
 
 if GetClassColor == nil then
-    print("[D4] ADD GetClassColor")
+    D4:MSG("[D4] ADD GetClassColor")
     GetClassColor = function(classFilename)
         local color = RAID_CLASS_COLORS[classFilename]
         if color then return color.r, color.g, color.b, color.colorStr end
@@ -78,6 +77,77 @@ local ICON_TAG_LIST_EN = {
     ["red"] = 7,
     ["skull"] = 8,
 }
+
+function D4:GetCVar(name)
+    if C_CVar and C_CVar.GetCVar then return C_CVar.GetCVar(name) end
+    if GetCVar then return GetCVar(name) end
+    D4:MSG("[D4][GetCVar] FAILED")
+
+    return nil
+end
+
+function D4:GetItemInfo(itemID)
+    if itemID == nil then return nil end
+    if C_Item and C_Item.GetItemInfo then return C_Item.GetItemInfo(itemID) end
+    if GetItemInfo then return GetItemInfo(itemID) end
+    D4:MSG("[D4][GetItemInfo] FAILED")
+
+    return nil
+end
+
+function D4:GetSpellInfo(spellID)
+    if spellID == nil then return nil end
+    if GetSpellInfo then return GetSpellInfo(spellID) end
+    if C_Spell and C_Spell.GetSpellInfo then
+        local tab = C_Spell.GetSpellInfo(spellID)
+        if tab then return tab.name, tab.rank, tab.iconID, tab.castTime, tab.minRange, tab.maxRange, tab.spellID end
+
+        return tab
+    end
+
+    D4:MSG("[D4][GetSpellInfo] FAILED")
+
+    return nil
+end
+
+function D4:IsSpellInRange(spellID, spellType, unit)
+    if spellID == nil then return nil end
+    if IsSpellInRange then return IsSpellInRange(spellID, spellType, unit) end
+    if C_Spell and C_Spell.IsSpellInRange then return C_Spell.IsSpellInRange(spellID, spellType, unit) end
+    D4:MSG("[D4][IsSpellInRange] FAILED")
+
+    return nil
+end
+
+function D4:GetMouseFocus()
+    if GetMouseFoci then return GetMouseFoci() end
+    if GetMouseFocus then return GetMouseFocus() end
+    D4:MSG("[D4][GetMouseFocus] FAILED")
+
+    return nil
+end
+
+function D4:LoadAddOn(name)
+    if C_AddOns and C_AddOns.LoadAddOn then return C_AddOns.LoadAddOn(name) end
+    if LoadAddOn then return LoadAddOn(name) end
+    D4:MSG("[D4][LoadAddOn] FAILED")
+
+    return nil
+end
+
+function D4:IsAddOnLoaded(name)
+    if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded(name) end
+    if IsAddOnLoaded then return IsAddOnLoaded(name) end
+    D4:MSG("[D4][IsAddOnLoaded] FAILED")
+
+    return nil
+end
+
+function D4:GetName(frameOrTexture)
+    if frameOrTexture and frameOrTexture.GetName then return frameOrTexture:GetName() end
+
+    return nil
+end
 
 local function FixIconChat(self, event, message, author, ...)
     if ICON_LIST then

@@ -365,7 +365,7 @@ function ArkInventory.LDB.Tracking_Item:Update( )
 		ready = ready and info.ready
 		
 		if codex.player.data.ldb.tracking.item.tracked[k] then
-			local count = GetItemCount( k, true ) or 0
+			local count = ArkInventory.CrossClient.GetItemCount( k, true ) or 0
 			if count > 0 or ( count == 0 and ArkInventory.db.option.tracking.item.showzero ) then
 				hasText = string.format( "%s  |T%s:0|t %s", hasText or "", info.texture or ArkInventory.Const.Texture.Missing, FormatLargeNumber( count ) )
 			end
@@ -404,7 +404,7 @@ function ArkInventory.LDB.Tracking_Item:OnTooltipShow( )
 		
 		local info = ArkInventory.GetObjectInfo( k )
 		
-		local count = GetItemCount( k, true )
+		local count = ArkInventory.CrossClient.GetItemCount( k, true )
 		local checked = codex.player.data.ldb.tracking.item.tracked[k]
 		
 		if checked then
@@ -766,7 +766,7 @@ function ArkInventory.LDB.Mounts.GetUsable( forceAlternative, forceDragonridingA
 		else
 			
 			ArkInventory.OutputDebug( "ignore underwater, force flying (or land if you cant fly here)" )
-			if ArkInventory.Collection.Mount.IsFlyable( ) then
+			if ArkInventory.Collection.Mount.isFlyable( ) then
 				forceAlternative = false
 			end
 		end
@@ -784,7 +784,7 @@ function ArkInventory.LDB.Mounts.GetUsable( forceAlternative, forceDragonridingA
 --				end
 			else
 				ArkInventory.OutputDebug( "ignore surface, force flying (or land if you cant fly here)" )
-				if ArkInventory.Collection.Mount.IsFlyable( ) then
+				if ArkInventory.Collection.Mount.isFlyable( ) then
 					forceAlternative = false
 				end
 			end
@@ -793,7 +793,7 @@ function ArkInventory.LDB.Mounts.GetUsable( forceAlternative, forceDragonridingA
 		
 	end
 	
-	if ArkInventory.Collection.Mount.IsFlyable( ) then
+	if ArkInventory.Collection.Mount.isFlyable( ) then
 		ArkInventory.OutputDebug( "flight check - can fly here" )
 		if not forceAlternative then
 			ArkInventory.OutputDebug( "primary - check flying" )
@@ -1032,7 +1032,7 @@ function ArkInventory.LDB.Mounts:OnTooltipShow( ... )
 							-- just the one selected, there may be ignored but they dont matter
 							for k, v in pairs( selected ) do
 								if v then
-									local name = GetSpellInfo( k )
+									local name = ArkInventory.CrossClient.GetSpellInfo( k ).name
 									self:AddDoubleLine( mode, string.format( "%s: %s", ArkInventory.Localise["SELECTION"], name ), 1, 1, 1, 1, 1, 1 )
 								end
 							end

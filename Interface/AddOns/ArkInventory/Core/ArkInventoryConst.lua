@@ -320,18 +320,6 @@ function ArkInventory.Output( ... )
 	
 end
 
-function ArkInventory.Output2( ... )
-	if ArkInventory.Global.Debug2 then
-		ArkInventory.Output( "|cff17ffc1", ... ) -- fffff99a
-	end
-end
-
-function ArkInventory.OutputThread( ... )
-	if ArkInventory.db.option.thread.debug then
-		ArkInventory.Output( "|cffffff9aTHREAD> ", ... )
-	end
-end
-
 function ArkInventory.OutputDebugConfig( )
 	
 	local obj = _G[ArkInventory.Const.Frame.Debug.Name]
@@ -344,9 +332,7 @@ function ArkInventory.OutputDebugConfig( )
 	
 end
 
-function ArkInventory.OutputDebug( ... )
-	
-	if ArkInventory.db and not ArkInventory.db.option.ui.debug.enable then return end
+function ArkInventory.OutputDebugFrame( ... )
 	
 	local obj = _G[ArkInventory.Const.Frame.Debug.Name]
 	if not obj then
@@ -368,12 +354,30 @@ function ArkInventory.OutputDebug( ... )
 	
 end
 
+function ArkInventory.OutputDebug( ... )
+	if ArkInventory.db and ArkInventory.db.option.ui.debug.enable then
+		ArkInventory.OutputDebugFrame( ... )
+	end
+end
+
+function ArkInventory.OutputThread( ... )
+	if ArkInventory.db and ArkInventory.db.option.thread.debug then
+		if ArkInventory.Global.Thread.Use then
+			ArkInventory.OutputDebugFrame( "THREAD> ", ... )
+		else
+			ArkInventory.OutputDebugFrame( "NON-THREAD> ", ... )
+		end
+	end
+end
+
 function ArkInventory.OutputWarning( ... )
-	ArkInventory.Output( "|cfffa8000WARNING> ", ... )
+	-- localise not used here because they can be before those are loaded
+	ArkInventory.Output( ORANGE_FONT_COLOR_CODE, "WARNING> ", ... )
 end
 
 function ArkInventory.OutputError( ... )
-	ArkInventory.Output( RED_FONT_COLOR_CODE, ERROR_CAPS, "> ", ... )
+	-- localise not used here because they can be before those are loaded
+	ArkInventory.Output( RED_FONT_COLOR_CODE, "ERROR> ", ... )
 end
 
 function ArkInventory.OutputDebugModeSet( value )
@@ -407,6 +411,9 @@ ArkInventory.ENUM = {
 			VENDOR = 1,
 			MAIL = 2,
 			MOVE = 3,
+			USE = 4,
+			DELETE = 5,
+			SCRAP = 6,
 		},
 	},
 	ANCHOR = {
@@ -464,6 +471,7 @@ ArkInventory.ENUM = {
 	},
 	EXPANSION = {
 		--CURRENT = set elsewhere,
+		WARWITHIN = 10,
 		DRAGONFLIGHT = LE_EXPANSION_DRAGONFLIGHT or 9,
 		SHADOWLANDS = LE_EXPANSION_SHADOWLANDS or 8,
 		BFA = LE_EXPANSION_BATTLE_FOR_AZEROTH or 7,
@@ -474,6 +482,12 @@ ArkInventory.ENUM = {
 		WRATH = LE_EXPANSION_WRATH_OF_THE_LICH_KING or 2,
 		TBC = LE_EXPANSION_BURNING_CRUSADE or 1,
 		CLASSIC = LE_EXPANSION_CLASSIC or 0,
+	},
+	TIMERUNNINGSEASON = {  -- id = expansion
+		[1] = LE_EXPANSION_MISTS_OF_PANDARIA or 4,
+	},
+	TIMERUNNINGSEASONID = {
+		PANDARIA = 1,
 	},
 	ITEM = {
 		QUALITY = {
@@ -712,7 +726,7 @@ ArkInventory.Const = { -- constants
 		
 		CLIENT = {
 			ID = nil,
-			NAME = "",
+			NAME = _G[string.format( "EXPANSION_NAME%s", GetExpansionLevel( ) )],
 			EXPANSION = { },
 			PTR = 0.1,
 			BETA = 0.2,
@@ -823,10 +837,6 @@ ArkInventory.Const = { -- constants
 				TYPEID = 6,
 				SUBTYPEID = 7,
 			},
-			GETSPELLINFO = {
-				NAME = 1,
-				TEXTURE = 3,
-			}
 		},
 		
 	},
@@ -1350,8 +1360,6 @@ ArkInventory.Const = { -- constants
 		},
 	},
 	
-	CategoryTypes = { "SYSTEM", "CONSUMABLE", "TRADEGOODS", "SKILL", "CLASS", "EMPTY", "CUSTOM", "RULE", },
-	
 	--Tradeskill = { }, -- created elsewhere (needs localise which isnt available here)
 	
 	Flying = {
@@ -1458,6 +1466,9 @@ ArkInventory.Const = { -- constants
 		Tainted = "Tainted",
 		Popup = "Popup",
 	},
+	
+	DragonRaceItem = 191140,
+	DragonRaceAura = 369968,
 	
 }
 

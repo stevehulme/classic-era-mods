@@ -1374,7 +1374,7 @@ function ArkInventory.Collection.Mount.SetFavorite( id, value )
 end
 
 
-function ArkInventory.Collection.Mount.IsFlyableAdvanced( )
+function ArkInventory.Collection.Mount.isFlyableAdvanced( )
 	
 	local IsFlyable = ArkInventory.CrossClient.IsAdvancedFlyableArea( ) and IsOutdoors( )
 	
@@ -1382,7 +1382,7 @@ function ArkInventory.Collection.Mount.IsFlyableAdvanced( )
 	
 end
 
-function ArkInventory.Collection.Mount.IsFlyableNormal( )
+function ArkInventory.Collection.Mount.isFlyableNormal( )
 	
 	local IsFlyable = IsFlyableArea( ) -- its dynamic based off skill and location but its got some issues.  its usually only wrong about flying zones but it got worse in 7.3.5
 	
@@ -1410,13 +1410,14 @@ function ArkInventory.Collection.Mount.IsFlyableNormal( )
 	
 end
 
-function ArkInventory.Collection.Mount.IsFlyable( )
+function ArkInventory.Collection.Mount.isFlyable( )
 	
-	if IsIndoors( ) or ArkInventory.Collection.Mount.SkillLevel( ) < 225 then
+	
+	if IsIndoors( ) then --or ArkInventory.Collection.Mount.SkillLevel( ) < 225 then
 		return false
 	end
 	
-	local IsFlyable = ArkInventory.Collection.Mount.IsFlyableNormal( ) or ArkInventory.Collection.Mount.IsFlyableAdvanced( )
+	local IsFlyable = ArkInventory.Collection.Mount.isFlyableNormal( ) or ArkInventory.Collection.Mount.isFlyableAdvanced( )
 	
 	--local name, instanceType, difficulty, difficultyName, maxPlayers, playerDifficulty, isDynamicInstance, instanceMapId, instanceGroupSize, lfgID = GetInstanceInfo( )
 	local instancemapid = select( 8, GetInstanceInfo( ) )
@@ -1505,11 +1506,11 @@ function ArkInventory.Collection.Mount.isUsable( id )
 				
 				if md.mta == "a" then
 					if md.isDragonriding then
-						if not ArkInventory.Collection.Mount.IsFlyableAdvanced( ) then
+						if not ArkInventory.Collection.Mount.isFlyableAdvanced( ) then
 							mu = false
 						end
 					else
-						if not ArkInventory.Collection.Mount.IsFlyableNormal( ) then
+						if not ArkInventory.Collection.Mount.isFlyableNormal( ) then
 							mu = false
 						end
 					end
@@ -1629,8 +1630,8 @@ function ArkInventory.Collection.Mount.UpdateUsable( useDragonridingWhenAvailabl
 	
 	local me = ArkInventory.GetPlayerCodex( )
 	
-	ArkInventory.OutputDebug( "Area Flyable (Normal) = ", ArkInventory.Collection.Mount.IsFlyableNormal( ) )
-	ArkInventory.OutputDebug( "Area Flyable (Advanced) = ", ArkInventory.Collection.Mount.IsFlyableAdvanced( ) )
+	ArkInventory.OutputDebug( "Area Flyable (Normal) = ", ArkInventory.Collection.Mount.isFlyableNormal( ) )
+	ArkInventory.OutputDebug( "Area Flyable (Advanced) = ", ArkInventory.Collection.Mount.isFlyableAdvanced( ) )
 	
 	for mta, mt in pairs( ArkInventory.Const.Mount.Types ) do
 		
@@ -1753,7 +1754,7 @@ local function Scan_Threaded( thread_id )
 	local numOwned = 0
 	local YieldCount = 0
 	
-	--ArkInventory.Output2( "Mount: Start Scan @ ", time( ) )
+	--ArkInventory.OutputDebug( "Mount: Start Scan @ ", time( ) )
 	
 	if not collection.isInit then
 		ScanInit( )
@@ -1770,6 +1771,24 @@ local function Scan_Threaded( thread_id )
 	local data_source = C_MountJournal.GetMountIDs( )
 	
 	for _, index in pairs( data_source ) do
+		
+		if MountJournal:IsVisible( ) then
+			ArkInventory.OutputDebug( "MOUNT: ABORTED (MOUNT FRAME WAS OPENED)" )
+			return
+		end
+		
+		if ArkInventory.Global.Mode.Combat then
+			ArkInventory.OutputDebug( "MOUNT: ABORTED (ENTERED COMBAT)" )
+			ArkInventory.Global.ScanAfterCombat[loc_id] = true
+			return
+		end
+		
+		if ArkInventory.Global.Mode.DragonRace then
+			ArkInventory.OutputDebug( "MOUNT: ABORTED (DRAGON RACE)" )
+			ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+			return
+		end
+		
 		
 		numTotal = numTotal + 1
 		YieldCount = YieldCount + 1
@@ -1878,7 +1897,7 @@ local function Scan_Threaded( thread_id )
 	
 	ArkInventory.Collection.Mount.ApplyUserCorrections( )
 	
-	--ArkInventory.Output2( "Mount: End Scan @ ", time( ), " [", collection.numOwned, "] [", collection.numTotal, "] [", update, "]" )
+	--ArkInventory.OutputDebug( "Mount: End Scan @ ", time( ), " [", collection.numOwned, "] [", collection.numTotal, "] [", update, "]" )
 	
 	collection.isReady = true
 	
@@ -1896,33 +1915,23 @@ local function Scan( )
 	
 	local thread_id = string.format( ArkInventory.Global.Thread.Format.Collection, "mount" )
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		Scan_Threaded( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-
-	local tf = function ( )
+	local thread_func = function( )
 		Scan_Threaded( thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 
 
 function ArkInventory:EVENT_ARKINV_COLLECTION_MOUNT_UPDATE_BUCKET( events )
 	
-	--ArkInventory.Output2( "MOUNT BUCKET [", events, "]" )
+	--ArkInventory.OutputDebug( "MOUNT BUCKET [", events, "]" )
 	
 	if not ArkInventory:IsEnabled( ) then return end
 	
-	if ArkInventory.Global.Mode.Combat then
-		-- set to scan when leaving combat
-		ArkInventory.Global.ScanAfterCombat[loc_id] = true
+	if MountJournal:IsVisible( ) then
+		--ArkInventory.Output( "ABORTED (MOUNT JOURNAL IS OPEN)" )
 		return
 	end
 	
@@ -1931,10 +1940,16 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_MOUNT_UPDATE_BUCKET( events )
 		return
 	end
 	
-	if MountJournal:IsVisible( ) then
-		--ArkInventory.Output( "ABORTED (MOUNT JOURNAL IS OPEN)" )
+	if ArkInventory.Global.Mode.Combat then
+		ArkInventory.Global.ScanAfterCombat[loc_id] = true
 		return
 	end
+	
+	if ArkInventory.Global.Mode.DragonRace then
+		ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+		return
+	end
+	
 	
 	if not collection.isScanning then
 		collection.isScanning = true
@@ -1968,45 +1983,10 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_MOUNT_EQUIPMENT_UPDATE( event )
 	ArkInventory.ScanLocation( loc_id )	
 end
 
-
-
-function ArkInventory:EVENT_ARKINV_UNIT_AURA_BUCKET( events )
-	
-	--ArkInventory.Output( "events = [", events, "]" )
-	
-	if not IsMounted( ) then
-		
-		--ArkInventory.Output( "player is dismounted - check for run on dismount" )
-		
-		for loc_id in pairs( ArkInventory.Global.ScanAfterDismount ) do
-			
-			ArkInventory.Global.ScanAfterDismount[loc_id] = nil
-			
-			if loc_id == ArkInventory.Const.Location.Currency then
-				ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE_BUCKET", "DISMOUNTED" )
-			end
-			
-		end
-
-	end
-	
-end
-
-function ArkInventory:EVENT_ARKINV_UNIT_AURA( event, ... )
-	
-	local arg1, arg2, arg3 = ...
-	
-	if arg1 == "player" then
-		--ArkInventory.Output( "event = [", event, "] [", arg1, "] [", arg2, "] [", arg3, "]" ) 
-		ArkInventory:SendMessage( "EVENT_ARKINV_UNIT_AURA_BUCKET", event )
-	end
-	
-end
-
 function ArkInventory:EVENT_ARKINV_PLAYER_CAN_GLIDE_CHANGED( event, ... )
 	
 	--ArkInventory.Output( "event = [", event, "] [", arg1, "] [", arg2, "] [", arg3, "]" ) 
-	ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_MOUNT_UPDATE_BUCKET", event )
+	--ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_MOUNT_UPDATE_BUCKET", event )
 	
 end
 
@@ -2034,8 +2014,8 @@ function ArkInventory.SetMountMacro( )
 				
 				usingtravelform = true
 				
-				local cat_form = GetSpellInfo( 768 )
-				local travel_form = GetSpellInfo( 783 )
+				local cat_form = ArkInventory.CrossClient.GetSpellInfo( 768 ).name
+				local travel_form = ArkInventory.CrossClient.GetSpellInfo( 783 ).name
 				macrotext = macrotext .. "\n/cast [indoors] " .. cat_form .. "; " .. travel_form
 				
 			elseif codex.player.data.info.class == "SHAMAN" then

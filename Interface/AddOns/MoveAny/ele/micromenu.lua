@@ -1,12 +1,12 @@
 local _, MoveAny = ...
 function MoveAny:GetMicroButtonSize()
-	if D4:GetWoWBuild() == "RETAIL" then return 24, 32 end
+	if MoveAny:GetWoWBuild() == "RETAIL" then return 24, 32 end
 
 	return 24, 33
 end
 
 function MoveAny:GetMicroButtonYOffset()
-	if D4:GetWoWBuild() == "RETAIL" then return -3 end
+	if MoveAny:GetWoWBuild() == "RETAIL" then return -3 end
 
 	return -4
 end
@@ -16,13 +16,13 @@ function MoveAny:InitMicroMenu()
 		local MBTNS = MICRO_BUTTONS
 		if MICRO_BUTTONS == nil then
 			MBTNS = {"CharacterMicroButton", "SpellbookMicroButton", "TalentMicroButton", "AchievementMicroButton", "QuestLogMicroButton", "GuildMicroButton", "LFDMicroButton", "CollectionsMicroButton", "EJMicroButton", "StoreMicroButton", "HelpMicroButton", "MainMenuMicroButton"}
-		elseif D4:GetWoWBuild() == "RETAIL" then
-			MBTNS = {"CharacterMicroButton", "SpellbookMicroButton", "TalentMicroButton", "AchievementMicroButton", "QuestLogMicroButton", "GuildMicroButton", "LFDMicroButton", "CollectionsMicroButton", "EJMicroButton", "StoreMicroButton", "HelpMicroButton", "MainMenuMicroButton"}
-		elseif D4:GetWoWBuild() == "CATA" then
+		elseif MoveAny:GetWoWBuild() == "RETAIL" then
+			MBTNS = {"CharacterMicroButton", "ProfessionMicroButton", "PlayerSpellsMicroButton", "SpellbookMicroButton", "TalentMicroButton", "AchievementMicroButton", "QuestLogMicroButton", "GuildMicroButton", "LFDMicroButton", "CollectionsMicroButton", "EJMicroButton", "StoreMicroButton", "HelpMicroButton", "MainMenuMicroButton"}
+		elseif MoveAny:GetWoWBuild() == "CATA" then
 			MBTNS = {"CharacterMicroButton", "SpellbookMicroButton", "TalentMicroButton", "AchievementMicroButton", "QuestLogMicroButton", "GuildMicroButton", "LFDMicroButton", "CollectionsMicroButton", "PVPMicroButton", "LFGMicroButton", "EJMicroButton", "StoreMicroButton", "MainMenuMicroButton", "HelpMicroButton"}
 		end
 
-		if D4:GetWoWBuild() == "CLASSIC" then
+		if MoveAny:GetWoWBuild() == "CLASSIC" then
 			for i, v in pairs(MBTNS) do
 				if v == "LFGMicroButton" then
 					tremove(MBTNS, i)
@@ -47,7 +47,7 @@ function MoveAny:InitMicroMenu()
 		if MicroButtonAndBagsBar then
 			local p1, _, p3, p4, p5 = MicroButtonAndBagsBar:GetPoint()
 			MAMenuBar:SetPoint(p1, MoveAny:GetMainPanel(), p3, p4, p5)
-		elseif D4:GetWoWBuild() ~= "RETAIL" then
+		elseif MoveAny:GetWoWBuild() ~= "RETAIL" then
 			MAMenuBar:SetPoint("BOTTOMRIGHT", MoveAny:GetMainPanel(), "BOTTOMRIGHT", 0, 0)
 		else
 			MAMenuBar:SetPoint("CENTER", MoveAny:GetMainPanel(), "CENTER", 0, 0)
@@ -63,7 +63,7 @@ function MoveAny:InitMicroMenu()
 					end
 
 					local sw2, sh2 = MoveAny:GetMicroButtonSize()
-					if D4:GetWoWBuild() ~= "RETAIL" then
+					if MoveAny:GetWoWBuild() ~= "RETAIL" then
 						mb:SetParent(MAMenuBar)
 						mb.ofx = -2
 						mb.ofy = 22
@@ -73,9 +73,23 @@ function MoveAny:InitMicroMenu()
 						mb:SetSize(sw2, sh2)
 					end
 
+					hooksecurefunc(
+						mb,
+						"SetPoint",
+						function(sel)
+							if MAMenuBar.ma_set_po then return end
+							MAMenuBar.ma_set_po = true
+							if MoveAny.UpdateActionBar then
+								MoveAny:UpdateActionBar(MAMenuBar)
+							end
+
+							MAMenuBar.ma_set_po = false
+						end
+					)
+
 					mb:ClearAllPoints()
 					mb:SetPoint("TOPLEFT", MAMenuBar, "TOPLEFT", 0, 0)
-					if D4:GetWoWBuild() == "RETAIL" then
+					if MoveAny:GetWoWBuild() == "RETAIL" then
 						mb:SetPoint("BOTTOM", MAMenuBar, "BOTTOM", 0, MoveAny:GetMicroButtonYOffset())
 					else
 						mb:SetPoint("BOTTOM", MAMenuBar, "BOTTOM", 0, MoveAny:GetMicroButtonYOffset())
@@ -89,7 +103,18 @@ function MoveAny:InitMicroMenu()
 						end
 					)
 
-					if D4:GetWoWBuild() == "RETAIL" and mb ~= HelpMicroButton and mb ~= MainMenuMicroButton then
+					if MoveAny:GetWoWBuild() == "RETAIL" and mb ~= HelpMicroButton and mb ~= MainMenuMicroButton then
+						hooksecurefunc(
+							mb,
+							"SetScale",
+							function(sel, scale)
+								if sel.ma_set_s then return end
+								sel.ma_set_s = true
+								mb:SetScale(MAMenuBar:GetScale())
+								sel.ma_set_s = false
+							end
+						)
+
 						hooksecurefunc(
 							MAMenuBar,
 							"SetScale",
@@ -109,6 +134,19 @@ function MoveAny:InitMicroMenu()
 						end
 					)
 
+					if MicroMenu then
+						hooksecurefunc(
+							MicroMenu,
+							"SetScaleAdjustment",
+							function(sel)
+								if sel.ma_SetScaleAdjustment then return end
+								sel.ma_SetScaleAdjustment = true
+								MicroMenu:SetScaleAdjustment(1)
+								sel.ma_SetScaleAdjustment = false
+							end
+						)
+					end
+
 					mb:Show()
 					tinsert(MAMenuBar.btns, mb)
 				end
@@ -122,8 +160,8 @@ function MoveAny:InitMicroMenu()
 				1,
 				function()
 					MoveAny:UpdateActionBar(MAMenuBar)
-					if D4:GetWoWBuild() ~= "RETAIL" then
-						function UpdateMicroMenu()
+					if MoveAny:GetWoWBuild() ~= "RETAIL" then
+						function MoveAny:UpdateMicroMenu()
 							local overrideChanged = false
 							local parentChanged = false
 							if OverrideActionBar and (OverrideActionBar:IsShown() ~= OverrideActionBar.isshown or OverrideActionBar.slideOut and OverrideActionBar.slideOut:IsPlaying() ~= OverrideActionBar.isplaying) then
@@ -159,10 +197,10 @@ function MoveAny:InitMicroMenu()
 								MAMenuBar.redots = nil
 							end
 
-							C_Timer.After(0.1, UpdateMicroMenu)
+							C_Timer.After(0.1, MoveAny.UpdateMicroMenu)
 						end
 
-						UpdateMicroMenu()
+						MoveAny:UpdateMicroMenu()
 					end
 				end
 			)

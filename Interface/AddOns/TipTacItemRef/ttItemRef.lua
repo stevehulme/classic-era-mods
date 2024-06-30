@@ -1,4 +1,4 @@
-local AceHook = LibStub("AceHook-3.0");
+local AceHook = LibStub:GetLibrary("AceHook-3.0");
 local format = string.format;
 local unpack = unpack;
 local gtt = GameTooltip;
@@ -139,6 +139,7 @@ local tipsToModify = {
 	"PerksProgramTooltip",
 	--"EncounterJournalTooltip", -- commented out for embedded tooltips, see description in tt:SetPadding()
 	-- 3rd party addon tooltips
+	"ElvUI_SpellBookTooltip",
 	"PlaterNamePlateAuraTooltip"
 };
 
@@ -153,6 +154,7 @@ local addOnsLoaded = {
 	["Blizzard_PetBattleUI"] = false,
 	["Blizzard_PlayerChoice"] = false,
 	["Blizzard_PVPUI"] = false,
+	["ElvUI"] = false,
 	["WorldQuestTracker"] = false
 };
 
@@ -425,7 +427,7 @@ function ttif:OnApplyConfig(_TT_CacheForFrames, _cfg, _TT_ExtendedConfig)
 	
 	local gameFont = GameFontNormal:GetFont();
 	for index, tip in ipairs(tipsToModify) do
-		if (type(tip) == "table") and (tipsToAddIcon[tip:GetName()]) and (tip.ttIcon) then
+		if (type(tip) == "table") and (not tip:IsForbidden()) and (tipsToAddIcon[tip:GetName()]) and (tip.ttIcon) then
 			if (cfg.if_showIcon) then
 				tip.ttIcon:SetSize(cfg.if_iconSize, cfg.if_iconSize);
 				tip.ttCount:SetFont(gameFont, (cfg.if_iconSize / 3), "OUTLINE");
@@ -870,7 +872,7 @@ local function SetQuestItem_Hook(self, _type, index)
 	if (cfg.if_enable) and (not tipDataAdded[self]) then
 		local name, texture, numItems, quality, isUsable, itemID = GetQuestItemInfo(_type, index); -- see QuestInfoRewardItemCodeTemplate_OnEnter() in "QuestInfo.lua"
 		if (itemID) then
-			local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(itemID);
+			local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(itemID);
 			if (itemLink) then
 				local linkType, _itemID = itemLink:match("H?(%a+):(%d+)");
 				if (_itemID) then
@@ -897,7 +899,7 @@ local function SetQuestLogItem_Hook(self, _type, index)
 			numItems = _numItems;
 		end
 		if (itemID) then
-			local itemName, itemLink, itemRarity, _itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(itemID);
+			local itemName, itemLink, itemRarity, _itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(itemID);
 			if (itemLink) then
 				local linkType, __itemID = itemLink:match("H?(%a+):(%d+)");
 				if (__itemID) then
@@ -993,7 +995,7 @@ local function SetLFGDungeonReward_Hook(self, dungeonID, rewardIndex)
 		local name, texture, numItems, isBonusReward, rewardType, rewardID, quality = GetLFGDungeonRewardInfo(dungeonID, rewardIndex); -- see LFGDungeonReadyDialogReward_OnEnter in "LFGFrame.lua"
 		if (rewardID) then
 			if (rewardType == "item") then
-				local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(rewardID);
+				local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(rewardID);
 				if (itemLink) then
 					local linkType, itemID = itemLink:match("H?(%a+):(%d+)");
 					if (itemID) then
@@ -1021,7 +1023,7 @@ local function SetLFGDungeonShortageReward_Hook(self, dungeonID, rewardArg, rewa
 		local name, texture, numItems, isBonusReward, rewardType, rewardID, quality = GetLFGDungeonShortageRewardInfo(dungeonID, rewardArg, rewardIndex); -- see LFGDungeonReadyDialogReward_OnEnter in "LFGFrame.lua"
 		if (rewardID) then
 			if (rewardType == "item") then
-				local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(rewardID);
+				local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(rewardID);
 				if (itemLink) then
 					local linkType, itemID = itemLink:match("H?(%a+):(%d+)");
 					if (itemID) then
@@ -1391,7 +1393,7 @@ local function EITT_SetItemByID_Hook(self, id, count)
 	if (cfg.if_enable) and (not tipDataAdded[targetTooltip]) and (targetTooltip:IsShown()) then
 		local itemID = id;
 		if (itemID) then
-			local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(itemID);
+			local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(itemID);
 			if (itemLink) then
 				local linkType, _itemID = itemLink:match("H?(%a+):(%d+)");
 				if (_itemID) then
@@ -1422,7 +1424,7 @@ local function EITT_SetItemByQuestReward_Hook(self, questLogIndex, questID, rewa
 		local name, texture, numItems, quality, isUsable, itemID = getterFunc(questLogIndex, questID);
 		
 		if (itemID) and (name) and (texture) then
-			local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(itemID);
+			local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(itemID);
 			if (itemLink) then
 				local linkType, itemID = itemLink:match("H?(%a+):(%d+)");
 				if (itemID) then
@@ -1494,7 +1496,7 @@ local function DUODSM_OnEnter_Hook(self)
 		if (self.item) then -- item
 			local itemID = self.item.itemID;
 			if (itemID) then
-				local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(itemID);
+				local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(itemID);
 				if (itemLink) then
 					local linkType, _itemID = itemLink:match("H?(%a+):(%d+)");
 					if (_itemID) then
@@ -2047,13 +2049,17 @@ function ttif:ADDON_LOADED(event, addOnName, containsBindings)
 			end);
 			
 			-- Function to apply necessary hooks to WardrobeCollectionFrame.SetsCollectionFrame
-			hooksecurefunc(WardrobeCollectionFrame.SetsCollectionFrame, "RefreshAppearanceTooltip", WCFSCF_RefreshAppearanceTooltip_Hook); -- for sets (incl. reapply for tabbing through items with same visualID)
-
+			if (WardrobeCollectionFrame.SetsCollectionFrame) then
+				hooksecurefunc(WardrobeCollectionFrame.SetsCollectionFrame, "RefreshAppearanceTooltip", WCFSCF_RefreshAppearanceTooltip_Hook); -- for sets (incl. reapply for tabbing through items with same visualID)
+			end
+			
 			-- Function to apply necessary hooks to WardrobeCollectionFrame.SetsTransmogFrame, see WardrobeSetsTransmogMixin:UpdateSets() in "Blizzard_Collections/Blizzard_Wardrobe.lua"
-			local setsTransmogFrame = WardrobeCollectionFrame.SetsTransmogFrame; -- for sets at transmogrifier
-			for i = 1, setsTransmogFrame.PAGE_SIZE do
-				local model = setsTransmogFrame.Models[i];
-				hooksecurefunc(model, "RefreshTooltip", WCFSTFM_RefreshTooltip_Hook);
+			if (WardrobeCollectionFrame.SetsTransmogFrame) then
+				local setsTransmogFrame = WardrobeCollectionFrame.SetsTransmogFrame; -- for sets at transmogrifier
+				for i = 1, setsTransmogFrame.PAGE_SIZE do
+					local model = setsTransmogFrame.Models[i];
+					hooksecurefunc(model, "RefreshTooltip", WCFSTFM_RefreshTooltip_Hook);
+				end
 			end
 		end
 		
@@ -2166,6 +2172,19 @@ function ttif:ADDON_LOADED(event, addOnName, containsBindings)
 		
 		if (addOnName == MOD_NAME) then
 			addOnsLoaded["Blizzard_PVPUI"] = true;
+		end
+	end
+	-- now ElvUI_SpellBookTooltip exists
+	if (addOnName == "ElvUI") or ((addOnName == MOD_NAME) and (LibFroznFunctions:IsAddOnFinishedLoading("ElvUI")) and (not addOnsLoaded['ElvUI'])) then
+		-- Hook Tips & Apply Settings
+		self:ApplyHooksToTips({
+			"ElvUI_SpellBookTooltip"
+		}, true, true);
+		
+		self:OnApplyConfig();
+		
+		if (addOnName == MOD_NAME) then
+			addOnsLoaded["ElvUI"] = true;
 		end
 	end
 	-- now WorldQuestTrackerAddon exists
@@ -2373,7 +2392,7 @@ function LinkTypeFuncs:item(link, linkType, id)
 		return;
 	end
 	
-	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(link);
+	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(link);
 	if (classID == 5) and (subClassID == 1) then -- keystone
 		local splits = StringSplitIntoTable(":", link);
 		local mapID = splits[17];
@@ -2408,7 +2427,7 @@ function LinkTypeFuncs:item(link, linkType, id)
 	
 	-- Quality Border
 	if (not self.IsEmbedded) and (cfg.if_itemQualityBorder) then
-		local itemQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(itemRarity or 0)));
+		local itemQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(itemRarity or 0)));
 		ttif:SetBackdropBorderColorLocked(self, itemQualityColor:GetRGBA());
 	end
 
@@ -2517,7 +2536,7 @@ function LinkTypeFuncs:keystone(link, linkType, itemID, mapID, keystoneLevel, ..
 		return;
 	end
 	
-	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(itemID);
+	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(itemID);
 	local trueItemLevel = LibItemString:GetTrueItemLevel(link);
 	if (trueItemLevel) then
 		itemLevel = trueItemLevel;
@@ -2539,7 +2558,7 @@ function LinkTypeFuncs:keystone(link, linkType, itemID, mapID, keystoneLevel, ..
 	
 	-- Quality Border
 	if (cfg.if_itemQualityBorder) then
-		local itemQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(itemRarity or 0)));
+		local itemQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(itemRarity or 0)));
 		ttif:SetBackdropBorderColorLocked(self, itemQualityColor:GetRGBA());
 	end
 
@@ -2790,13 +2809,13 @@ function LinkTypeFuncs:mawpower(link, linkType, mawPowerID)
 			local rarityAtlas = C_Spell.GetMawPowerBorderAtlasBySpellID(spellID);
 			if (rarityAtlas) then
 				if (rarityAtlas == "jailerstower-animapowerlist-powerborder-white") then -- see table UiTextureAtlasElement name "jailerstower-animapowerlist-powerborder*"
-					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(1)));
+					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(1)));
 				elseif (rarityAtlas == "jailerstower-animapowerlist-powerborder-green") then
-					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(2)));
+					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(2)));
 				elseif (rarityAtlas == "jailerstower-animapowerlist-powerborder-blue") then
-					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(3)));
+					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(3)));
 				elseif (rarityAtlas == "jailerstower-animapowerlist-powerborder-purple") then
-					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(4)));
+					spellColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(4)));
 				end
 			end
 		end
@@ -2881,7 +2900,7 @@ function LinkTypeFuncs:currency(link, linkType, currencyID, quantity)
   	-- Quality Border
 	if (not self.IsEmbedded) and (cfg.if_currencyQualityBorder) then
 		if (currencyInfo) then
-			local currencyQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(quality)));
+			local currencyQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(quality)));
 			ttif:SetBackdropBorderColorLocked(self, currencyQualityColor:GetRGBA());
 		end
 	end
@@ -3022,7 +3041,7 @@ function LinkTypeFuncs:battlepet(link, linkType, speciesID, level, breedQuality,
 
 	-- Quality Border
 	if (cfg.if_battlePetQualityBorder) and (breedQuality ~= nil) then
-		local battlePetQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(breedQuality or 0)));
+		local battlePetQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(breedQuality or 0)));
 		ttif:SetBackdropBorderColorLocked(self, battlePetQualityColor:GetRGBA());
 	end
 
@@ -3220,7 +3239,7 @@ function LinkTypeFuncs:conduit(link, linkType, conduitID, conduitRank)
   	-- Quality Border
 	if (cfg.if_conduitQualityBorder) then
 		local conduitQuality = C_Soulbinds.GetConduitQuality(conduitID, conduitRank);
-		local conduitQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(conduitQuality or 0)));
+		local conduitQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(conduitQuality or 0)));
 		ttif:SetBackdropBorderColorLocked(self, conduitQualityColor:GetRGBA());
 	end
 end
@@ -3236,7 +3255,7 @@ function LinkTypeFuncs:transmogappearance(link, linkType, sourceID)
 		return;
 	end
 
-	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(_link);
+	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice, classID, subClassID, bindType, expacID, setID, isCraftingReagent = C_Item.GetItemInfo(_link);
 	local trueItemLevel = LibItemString:GetTrueItemLevel(_link);
 	if (trueItemLevel) then
 		itemLevel = trueItemLevel;
@@ -3268,7 +3287,7 @@ function LinkTypeFuncs:transmogappearance(link, linkType, sourceID)
 	
 	-- Quality Border
 	if (cfg.if_transmogAppearanceItemQualityBorder) then
-		local itemQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(itemRarity or 0)));
+		local itemQualityColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(itemRarity or 0)));
 		ttif:SetBackdropBorderColorLocked(self, itemQualityColor:GetRGBA());
 	end
 end
@@ -3364,7 +3383,7 @@ function LinkTypeFuncs:transmogset(link, linkType, setID)
   	-- Quality Border
 	if (cfg.if_transmogSetQualityBorder) then
 		local setQuality = (numTotalSlots > 0 and totalQuality > 0) and Round(totalQuality / numTotalSlots) or Enum.ItemQuality.Common;
-		local setColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(setQuality)));
+		local setColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(setQuality)));
 		ttif:SetBackdropBorderColorLocked(self, setColor:GetRGBA());
 	end
 end
@@ -3397,7 +3416,7 @@ function LinkTypeFuncs:azessence(link, linkType, essenceID, essenceRank)
 	
   	-- Quality Border
 	if (cfg.if_azeriteEssenceQualityBorder) then
-		local essenceColor = LibFroznFunctions:CreateColorFromHexString(select(4, GetItemQualityColor(essenceRank + 1)));
+		local essenceColor = LibFroznFunctions:CreateColorFromHexString(select(4, C_Item.GetItemQualityColor(essenceRank + 1)));
 		ttif:SetBackdropBorderColorLocked(self, essenceColor:GetRGBA());
 	end
 end

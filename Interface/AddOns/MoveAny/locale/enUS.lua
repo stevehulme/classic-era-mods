@@ -47,7 +47,7 @@ function MoveAny:LangenUS()
 		["LID_MAGEARCANECHARGESFRAME"] = "Mage Arcane Charges frame",
 		["LID_ESSENCEPLAYERFRAME"] = "Essence Player Frame (Evoker)",
 		["LID_PALADINPOWERBARFRAME"] = "Paladin Power Bar (Holy Power)",
-		["LID_MAFPSFrame"] = "FPS",
+		["LID_MAFPSFrame"] = "FPS (New FPS-Counter)",
 		["LID_IAPingFrame"] = "Ping",
 		["LID_IACoordsFrame"] = "Coords Frame",
 		["LID_MINIMAP"] = "Mini Map",
@@ -107,7 +107,7 @@ function MoveAny:LangenUS()
 		["LID_MAINMENUEXPBAR"] = "Exp Bar",
 		["LID_REPUTATIONWATCHBAR"] = "Reputation Bar",
 		["LID_UIWIDGETPOWERBAR"] = "Power Bar (Boss Bar, Vigor Bar, Darkmoon faire, ...)",
-		["LID_POWERBAR"] = "Power Bar (Encounters, ...)",
+		["LID_POWERBAR"] = "Power Bar (Boss Encounters, ...)",
 		["LID_COUNT"] = "Count",
 		["LID_ROWS"] = "Rows",
 		["LID_SPACING"] = "Spacing",
@@ -212,9 +212,21 @@ function MoveAny:LangenUS()
 		["LID_SHARDBARFRAME"] = "Warlock Power Frame (Shards)",
 		["LID_OFFSET"] = "Offset",
 		["LID_EclipseBarFrame"] = "Eclipse Bar Frame (Druid)",
+		["LID_REQUIRESFOR"] = "Requires: %s",
+		["LID_REQUIREDFOR"] = "Required for: %s",
+		["LID_RESETELEMENT"] = "Reset Element",
+		["LID_TARGETFRAMEDEBUFF1"] = "Target Frame Debuff 1",
+		["LID_FOCUSFRAMEDEBUFF1"] = "Focus Frame Debuff 1",
+		["LID_TARGETFRAMETOTBUFF1"] = "Target of Target Frame Buff 1",
+		["LID_MINIMAPFLAG"] = "Minimap Flag",
+		["LID_MiniMapInstanceDifficulty"] = "Minimap Flag Instance Difficulty",
+		["LID_MiniMapChallengeMode"] = "Minimap Flag Challenge Mode",
+		["LID_GuildInstanceDifficulty"] = "Minimap Flag Guild-Instance Difficulty",
+		["LID_POWERBARCOUNTERBAR"] = "Powerbar Counterbar",
+		["LID_BUFFTIMER1"] = "BuffTimer 1",
 	}
 
-	if D4:GetWoWBuild() ~= "RETAIL" then
+	if MoveAny:GetWoWBuild() ~= "RETAIL" then
 		tab["LID_ACTIONBARS"] = "Actionbars 1 + 5 + 6"
 		tab["LID_ACTIONBAR1"] = "Actionbars 1 (Main Bar)"
 		tab["LID_ACTIONBAR2"] = "Actionbars 2 (2. Page of Actionbar 1)"

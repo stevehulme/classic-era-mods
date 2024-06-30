@@ -10,7 +10,7 @@ function t.minimap:LoginInit()
     t.minimap:RegisterForClicks("AnyUp")
     t.minimap:RegisterForDrag("LeftButton")
     t.minimap.tooltipTitle = "TinyPad"
-    t.minimap.tooltipBody = "Version "..GetAddOnMetadata("TinyPad","Version")
+    t.minimap.tooltipBody = "Version "..C_AddOns.GetAddOnMetadata("TinyPad","Version")
     t.minimap:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
     t.minimap.icon = t.minimap:CreateTexture(nil,"BACKGROUND")
     t.minimap.icon:SetTexture("Interface\\AddOns\\TinyPad\\media\\buttons")
@@ -21,7 +21,7 @@ function t.minimap:LoginInit()
     t.minimap.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
     t.minimap.border:SetSize(53,53)
     t.minimap.border:SetPoint("TOPLEFT")
-    
+
     t.minimap:SetScript("OnMouseUp",t.minimap.OnMouseUp)
     t.minimap:SetScript("OnMouseDown",t.minimap.OnMouseDown)
     t.minimap:SetScript("OnShow",t.minimap.OnMouseUp)

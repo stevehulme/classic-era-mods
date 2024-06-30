@@ -29,21 +29,21 @@ function ArkInventoryRules.OnInitialize( )
 	-- 3rd party addons that require hooking for item updates
 	
 	-- outfitter: 
-	if IsAddOnLoaded( "Outfitter" ) and Outfitter then
+	if ArkInventory.CrossClient.IsAddOnLoaded( "Outfitter" ) and Outfitter then
 		ArkInventoryRules.HookOutfitter( )
 	end
 	
 	-- itemrack: 
-	if IsAddOnLoaded( "ItemRack" ) and ItemRack then
+	if ArkInventory.CrossClient.IsAddOnLoaded( "ItemRack" ) and ItemRack then
 		ArkInventoryRules.HookItemRack( )
 	end
 	
-	if ( IsAddOnLoaded( "GearQuipper" ) and gearquipper ) or ( IsAddOnLoaded( "GearQuipper-TBC" ) and gearquipper ) then
+	if ( ArkInventory.CrossClient.IsAddOnLoaded( "GearQuipper" ) and gearquipper ) or ( ArkInventory.CrossClient.IsAddOnLoaded( "GearQuipper-TBC" ) and gearquipper ) then
 		ArkInventoryRules.HookGearQuipper( )
 	end
 	
 	-- scrap: http://wow.curse.com/downloads/wow-addons/details/scrap.aspx
-	if IsAddOnLoaded( "Scrap" ) and Scrap then
+	if ArkInventory.CrossClient.IsAddOnLoaded( "Scrap" ) and Scrap then
 		
 		if Scrap.ToggleJunk then
 			
@@ -58,7 +58,7 @@ function ArkInventoryRules.OnInitialize( )
 	end
 	
 	-- selljunk: http://wow.curse.com/downloads/wow-addons/details/sell-junk.aspx
-	if IsAddOnLoaded( "SellJunk" ) and SellJunk then
+	if ArkInventory.CrossClient.IsAddOnLoaded( "SellJunk" ) and SellJunk then
 		
 		if SellJunk.Add and SellJunk.Rem then
 			
@@ -74,7 +74,7 @@ function ArkInventoryRules.OnInitialize( )
 	end
 	
 	-- reagent restocker: http://wow.curse.com/downloads/wow-addons/details/reagent_restocker.aspx
-	if IsAddOnLoaded( "ReagentRestocker" ) and ReagentRestocker then
+	if ArkInventory.CrossClient.IsAddOnLoaded( "ReagentRestocker" ) and ReagentRestocker then
 		
 		if ReagentRestocker.addItemToSellingList and ReagentRestocker.deleteItem then
 			
@@ -349,7 +349,7 @@ function ArkInventoryRules.System.boolean_itemstring( ... )
 		
 		local e = string.sub( string.format( "%s:", ArkInventoryRules.Object.info.osd.h ), 1, string.len( arg ) )
 --		if ArkInventoryRules.Object.bag_id == 2 then
---			ArkInventory.Output2( string.lower( e ), " == ", string.lower( arg ) )
+--			ArkInventory.OutputDebug( string.lower( e ), " == ", string.lower( arg ) )
 --		end
 		if string.lower( e ) == string.lower( arg ) then
 			return true
@@ -946,7 +946,7 @@ end
 
 function ArkInventoryRules.System.boolean_outfit_outfitter( ... )
 	
-	if not ( IsAddOnLoaded( "Outfitter" ) and Outfitter:IsInitialized( ) ) then
+	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "Outfitter" ) and Outfitter:IsInitialized( ) ) then
 		return
 	end
 	
@@ -1001,7 +1001,7 @@ function ArkInventoryRules.System.boolean_outfit_itemrack( ... )
 	
 	-- item rack 3.66
 	
-	if not ( IsAddOnLoaded( "ItemRack" ) ) then
+	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "ItemRack" ) ) then
 		return
 	end
 	
@@ -1060,7 +1060,7 @@ function ArkInventoryRules.System.boolean_outfit_gearquipper( ... )
 	
 	-- gearquipper - Classic 41 / TBC 7
 	
-	if not ( IsAddOnLoaded( "GearQuipper" ) or IsAddOnLoaded( "GearQuipper-TBC" ) ) then
+	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "GearQuipper" ) or ArkInventory.CrossClient.IsAddOnLoaded( "GearQuipper-TBC" ) ) then
 		return
 	end
 	
@@ -1600,7 +1600,8 @@ function ArkInventoryRules.System.boolean_junk( )
 		return false
 	end
 	
-	return ArkInventory.Action.Vendor.Check( ArkInventoryRules.Object, nil, true ) -- FIX ME, pretty sure i need to pass the codex in
+	local blizzard_id = ArkInventory.InternalIdToBlizzardBagId( ArkInventoryRules.Object.loc_id, ArkInventoryRules.Object.bag_id )
+	return ArkInventory.Action.Vendor.Check( blizzard_id, ArkInventoryRules.Object.slot_id, nil, true )
 	
 end
 
@@ -1720,7 +1721,7 @@ function ArkInventoryRules.System.boolean_bonusids( ... )
 	end
 	
 	local bids = ArkInventoryRules.Object.info.osd.bonusids
-	--ArkInventory.Output2( ArkInventoryRules.Object.h, " = ", bids )
+	--ArkInventory.OutputDebug( ArkInventoryRules.Object.h, " = ", bids )
 	if not bids then return false end
 	
 	local fn = "bonus"
@@ -1950,7 +1951,7 @@ function ArkInventoryRules.System.boolean_tsmgroup( ... )
 		return false
 	end
 	
-	if IsAddOnLoaded( "TradeSkillMaster" ) then
+	if ArkInventory.CrossClient.IsAddOnLoaded( "TradeSkillMaster" ) then
 		
 		if TSM_API then
 			return ArkInventoryRules.System.boolean_tsmgroup4( ... )
@@ -2143,7 +2144,7 @@ function ArkInventoryRules.System.boolean_tsm( ... )
 		return false
 	end
 	
-	if IsAddOnLoaded( "TradeSkillMaster" ) then
+	if ArkInventory.CrossClient.IsAddOnLoaded( "TradeSkillMaster" ) then
 		
 		if TSM_API then
 			return ArkInventoryRules.System.boolean_tsm4( ... )
@@ -3174,7 +3175,7 @@ function ArkInventoryRules.SetObject( tbl )
 		end
 		
 		if not ArkInventory.TooltipIsReady( ArkInventoryRules.Tooltip ) then
-			--ArkInventory.Output2( "2 tooltip not ready: ", i.h )
+			--ArkInventory.OutputDebug( "2 tooltip not ready: ", i.h )
 			return nil
 		end
 		

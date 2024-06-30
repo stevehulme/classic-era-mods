@@ -38,28 +38,29 @@ local objectCorrections = {
 	},
 }
 
-local function helper_ResetObjectData( c, id, t, s )
+local function helper_ResetObjectDataTypes( c, id, t, s )
 	objectCorrections[c][id] = objectCorrections[id] or { }
 	objectCorrections[c][id][ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TYPEID] = t
 	objectCorrections[c][id][ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SUBTYPEID] = s
-	objectCorrections[c][id][ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TYPE] = GetItemClassInfo( t )
-	objectCorrections[c][id][ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SUBTYPE] = GetItemSubClassInfo( t, s )
+	objectCorrections[c][id][ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TYPE] = ArkInventory.CrossClient.GetItemClassInfo( t )
+	objectCorrections[c][id][ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SUBTYPE] = ArkInventory.CrossClient.GetItemSubClassInfo( t, s )
 end
 
-local function helper_ResetItemData( id, t, s )
-	helper_ResetObjectData( "item", id, t, s )
+local function helper_ResetItemDataTypes( id, t, s )
+	helper_ResetObjectDataTypes( "item", id, t, s )
 end
 
-helper_ResetItemData( 186515, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Aspiring Aspirant's Regalia
-helper_ResetItemData( 186727, ArkInventory.ENUM.ITEM.TYPE.KEY.PARENT, ArkInventory.ENUM.ITEM.TYPE.KEY.KEY ) -- Seal Breaker Key
-helper_ResetItemData( 199752, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Crimson Valdrakken Clothing
-helper_ResetItemData( 199753, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Black Valdrakken Clothing
-helper_ResetItemData( 199754, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Azure Valdrakken Clothing
-helper_ResetItemData( 199756, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Bronze Valdrakken Clothing
-helper_ResetItemData( 198776, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Renowned Expeditioner's Leather Armor
-helper_ResetItemData( 208831, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Tyr's Titan Key
-helper_ResetItemData( 211383, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.PARENT, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.FOOD_AND_DRINK ) -- Luvkip
-helper_ResetItemData( 224298, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.PARENT, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.OTHER ) -- Dilated Eon Canister
+helper_ResetItemDataTypes( 186515, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Aspiring Aspirant's Regalia
+helper_ResetItemDataTypes( 186727, ArkInventory.ENUM.ITEM.TYPE.KEY.PARENT, ArkInventory.ENUM.ITEM.TYPE.KEY.KEY ) -- Seal Breaker Key
+helper_ResetItemDataTypes( 198776, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Renowned Expeditioner's Leather Armor
+helper_ResetItemDataTypes( 199752, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Crimson Valdrakken Clothing
+helper_ResetItemDataTypes( 199753, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Black Valdrakken Clothing
+helper_ResetItemDataTypes( 199754, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Azure Valdrakken Clothing
+helper_ResetItemDataTypes( 199756, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Bronze Valdrakken Clothing
+helper_ResetItemDataTypes( 208831, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Tyr's Titan Key
+helper_ResetItemDataTypes( 211383, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.PARENT, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.FOOD_AND_DRINK ) -- Luvkip
+helper_ResetItemDataTypes( 211446, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Heritage of the Darkspear
+helper_ResetItemDataTypes( 224298, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.PARENT, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.OTHER ) -- Dilated Eon Canister
 
 
 local function helper_CorrectData( info, tmp )
@@ -148,7 +149,7 @@ local function helper_UpdateObjectInfo( info, thread_id )
 			end
 		end
 		
-		tmp = { GetItemInfo( key ) }
+		tmp = { ArkInventory.CrossClient.GetItemInfo( key ) }
 		--ArkInventory.Output( "ready = ", info.ready, " / ", key )
 		
 		
@@ -160,7 +161,7 @@ local function helper_UpdateObjectInfo( info, thread_id )
 		end
 		
 		if not info.ready then
-			local instant = { GetItemInfoInstant( info.id ) }
+			local instant = { ArkInventory.CrossClient.GetItemInfoInstant( info.id ) }
 			tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TYPE] = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TYPE] or instant[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFOINSTANT.TYPE]
 			tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SUBTYPE] = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SUBTYPE] or instant[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFOINSTANT.SUBTYPE]
 			tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.EQUIP] = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.EQUIP] or instant[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFOINSTANT.EQUIP]
@@ -323,16 +324,16 @@ local function helper_UpdateObjectInfo( info, thread_id )
 		
 		info.ready = true
 		
-		tmp = { GetSpellInfo( info.id ) }
+		tmp = ArkInventory.CrossClient.GetSpellInfo( info.id )
 		
 		helper_CorrectData( info, tmp )
 		
 		info.h = GetSpellLink( info.id ) or info.hs
-		info.name = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.NAME] or info.name
+		info.name = tmp.name or info.name
 		if info.name == ArkInventory.Localise["DATA_NOT_READY"] then
 			info.ready = false
 		end
-		info.texture = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETSPELLINFO.TEXTURE] or ArkInventory.Const.Texture.Missing
+		info.texture = tmp.icon or ArkInventory.Const.Texture.Missing
 		info.q = ArkInventory.ENUM.ITEM.QUALITY.STANDARD
 		
 	elseif info.class == "battlepet" then
@@ -435,20 +436,11 @@ local function helper_Scan( )
 	
 	local thread_id = ArkInventory.Global.Thread.Format.ObjectData
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		helper_Scan_Threaded( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-	
-	local tf = function ( )
+	local thread_func = function( )
 		helper_Scan_Threaded( thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 

@@ -1,4 +1,50 @@
-﻿# 3.10.28 (30-APR-2024)
+﻿# 3.10.33 (07-JUN-2024)
+ - fixed - (cataclysm) issue with warning output
+ - fixed - issue with secure hook code
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1894 - vendor/delete actions now exclude refundable items
+ - fixed - (cataclysm) https://github.com/arkayenro/arkinventory/issues/1893 - issue getting the currency id from its link
+ - added - timerunning categories for gems and scrolls (threads and caches are under system > openable)
+ - changed - added some more safety checks around the action code
+ - added - config > actions > scrap (requires the scrap action to be applied to category).  will only fill up the slots until you run out of items to scrap, you have to click on the scrap button as that is protected
+ - note - see https://github.com/arkayenro/arkinventory/wiki/Actions for information on actions
+ - removed - (cataclysm) keyring location
+ - removed - config > actions > vendor > delete
+ - added - config > actions > delete (only applies to junk items that have no sell price - requires the vendor or delete action to be applied to category)
+ - changed - delete no longer requires you to be at a vendor
+ - changed - currency scans will now only be skipped if youre in an actual dragon race, not just mounted.
+ - changed - all collection scanning will now be skipped during dragonriding races.  it will re-scan once the race is over (if needed).
+ - added - category system > openable
+ - added - category consumable > professions - knowledge (it used to fall back into power systems (old))
+ - added - (timerunning) config > general > actions > use - will automatically use (open) any infinite treasure or bronze caches that you loot (disabled by default)
+ - updated - (timerunning) mailbox auto send has been disabled
+ - updated - category for some items
+
+# 3.10.32 (06-JUN-2024)
+ - no longer available
+
+# 3.10.31 (06-JUN-2024)
+ - no longer available
+
+# 3.10.30 (11-MAY-2024)
+ - fixed - issue with LibDialog (bumped version to 10 - source has not been updated yet)
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1887 - issue with centered bar label text
+ - fixed - (cataclysm) issue with restack not using profession bags (it defaults to the reagent bank which doesnt exist yet)
+ - changed - (retail) toc updated to 100207
+ - updated - callbackhandler library
+ - updated - category for some items
+ - added - config options for stack compression to select whether to compress empty slots, non-stackable items, or stackable items
+
+# 3.10.29 (05-MAY-2024)
+ - fixed - issue with packager not handling cataclysm toc files/values
+ - fixed - issue with pawn based item upgrade icon displaying on non equipable items
+ - fixed - https://github.com/arkayenro/arkinventory/issues/1880 - issue with CONTAINER_SLOTS in most non english languages using a conditional format, as well as being reversed, which breaks the matching and the value capture
+ - changed - (cataclysm) enabled mounts location
+ - changed - (cataclysm) enabled toys location
+ - added - cataclysm toc files 40400
+ - added - ability to disable the text for each bag type in the status bar - config > design > window > style > status > empty slot
+ - added - ability to disable the text for each bag type in the ldb object text - right click > ldb > display
+
+# 3.10.28 (30-APR-2024)
  - fixed - issue with pawn based item upgrade icon not displaying
  - fixed - https://github.com/arkayenro/arkinventory/issues/1879 - code updated to handle tooltips with empty info values
  - fixed - issue with mount selection code where preferring normal flying mounts would fail down to ground mounts in zones where only dragonriding mounts are usable (primalist future) instead of selecting a dragonriding mount.  it should now select the other mount type when the preferred type is not usable in that zone

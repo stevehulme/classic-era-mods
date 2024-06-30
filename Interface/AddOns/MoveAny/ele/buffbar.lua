@@ -47,7 +47,7 @@ function MoveAny:InitBuffBar()
 			MABuffBar:SetPoint("CENTER", MoveAny:GetMainPanel(), "CENTER", 0, 0)
 		end
 
-		if D4:GetWoWBuild() ~= "RETAIL" then
+		if MoveAny:GetWoWBuild() ~= "RETAIL" then
 			if MoveAny:IsEnabled("DEBUFFS", false) then
 				MABuffBar:SetSize(btnsize * 10, btnsize * 3)
 			else
@@ -546,7 +546,7 @@ function MoveAny:InitBuffBar()
 			"OnEvent",
 			function(sel, event, ...)
 				if event == "UNIT_AURA" then
-					unit = ...
+					local unit = ...
 					if unit and unit == "player" then
 						MoveAny:UpdateBuffs()
 					end

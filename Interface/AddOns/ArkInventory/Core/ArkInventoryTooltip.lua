@@ -503,7 +503,7 @@ function ArkInventory.TooltipSet( tooltip, loc_id, bag_id, slot_id, h, i )
 			
 		elseif loc_id == ArkInventory.Const.Location.Keyring then
 			
-			local inv_id = KeyRingButtonIDToInvSlotID( slot_id )
+			local inv_id = ArkInventory.CrossClient.KeyRingButtonIDToInvSlotID( slot_id )
 			if inv_id then
 				tooltipInfo = helper_TooltipSetInventoryItem( tooltip, inv_id )
 			end
@@ -620,10 +620,10 @@ function ArkInventory.TooltipAddCustomReputationToCharacterFrame( frame )
 	--[[
 	ignore for now
 	
-	ArkInventory.Output2( "onenter ", frame )
-	ArkInventory.Output2( "friend=", frame.friendshipID )
-	ArkInventory.Output2( "hasrep=", frame.hasRep )
-	ArkInventory.Output2( "collapsed=", frame.isCollapsed )
+	ArkInventory.OutputDebug( "onenter ", frame )
+	ArkInventory.OutputDebug( "friend=", frame.friendshipID )
+	ArkInventory.OutputDebug( "hasrep=", frame.hasRep )
+	ArkInventory.OutputDebug( "collapsed=", frame.isCollapsed )
 	]]--
 	
 	--[[
@@ -632,7 +632,7 @@ function ArkInventory.TooltipAddCustomReputationToCharacterFrame( frame )
 	if frame.LFGBonusRepButton and frame.LFGBonusRepButton.factionID then
 		
 		local id = frame.LFGBonusRepButton.factionID
-		ArkInventory.Output2( "faction=", id )
+		ArkInventory.OutputDebug( "faction=", id )
 		
 		local frame = _G[frame:GetName( ) .. "ReputationBarRight"]
 		ArkInventory.GameTooltipSetPosition( frame )
@@ -753,7 +753,7 @@ function ArkInventory.TooltipCustomBattlepetBuild( tooltip, h, i )
 --	test = check custom pet tooltip
 --	checked ok = 
 	
-	--ArkInventory.Output2( "TooltipCustomBattlepetBuild: ", h )
+	--ArkInventory.OutputDebug( "TooltipCustomBattlepetBuild: ", h )
 	
 	local pd = false
 	local h = h
@@ -766,7 +766,7 @@ function ArkInventory.TooltipCustomBattlepetBuild( tooltip, h, i )
 	local osd = ArkInventory.ObjectStringDecode( h )
 	if osd.class ~= "battlepet" then return end
 	
-	--ArkInventory.Output2( "[", osd.class, ":", osd.id, ":", osd.level, ":", osd.q, ":", osd.health, ":", osd.power, ":", osd.speed, ":", osd.cn, "]" )
+	--ArkInventory.OutputDebug( "[", osd.class, ":", osd.id, ":", osd.level, ":", osd.q, ":", osd.health, ":", osd.power, ":", osd.speed, ":", osd.cn, "]" )
 	
 	ArkInventory.Collection.Pet.GetSpeciesInfo( osd.id )
 	local sd = ArkInventory.Collection.Pet.GetSpeciesInfo( osd.id )
@@ -786,7 +786,7 @@ function ArkInventory.TooltipCustomBattlepetBuild( tooltip, h, i )
 	local breed = ""
 	
 	if pd then
-		--ArkInventory.Output2( "using pet data ", pd )
+		--ArkInventory.OutputDebug( "using pet data ", pd )
 		level = pd.level or level
 		quality = pd.quality or quality
 		health = pd.health or health
@@ -1018,7 +1018,7 @@ function ArkInventory.HookBattlePetToolTip_Show( ... )
 	if not ArkInventory.db.option.tooltip.show then return end
 	if not ArkInventory.db.option.tooltip.battlepet.enable then return end
 	
---	ArkInventory.Output2( "HookBattlePetToolTip_Show" )
+--	ArkInventory.OutputDebug( "HookBattlePetToolTip_Show" )
 	
 	BattlePetTooltip:Hide( )
 	
@@ -1318,10 +1318,10 @@ local function helper_AcceptableRedText( txt, ignore_known, ignore_level )
 			return false
 		end
 	elseif txt == ArkInventory.Localise["DURABILITY"] then
-		--ArkInventory.Output2( "DURABILITY" )
+		--ArkInventory.OutputDebug( "DURABILITY" )
 		return true
 	elseif string.match( txt, ArkInventory.Localise["WOW_TOOLTIP_DURABLITY"] ) then
-		--ArkInventory.Output2( "WOW_TOOLTIP_DURABLITY" )
+		--ArkInventory.OutputDebug( "WOW_TOOLTIP_DURABLITY" )
 		return true
 	elseif txt == ArkInventory.Localise["ITEM_CANNOT_DISENCHANT"] then
 		return true
@@ -1446,21 +1446,21 @@ local function helper_CheckTooltipForItemOrSpell( tooltip )
 	
 	-- check for an item
 	if not h and tooltip["GetItem"] then
-		--ArkInventory.Output2( "check item" )
+		--ArkInventory.OutputDebug( "check item" )
 		local name, link = tooltip:GetItem( )
 		if link then
 			h = link
-			--ArkInventory.Output2( "ITEM [", string.gsub( h, "\124", "\124\124" ), "]" )
+			--ArkInventory.OutputDebug( "ITEM [", string.gsub( h, "\124", "\124\124" ), "]" )
 		end
 	end
 	
 	-- check for a spell
 	if not h and tooltip["GetSpell"] then
-		--ArkInventory.Output2( "check spell" )
+		--ArkInventory.OutputDebug( "check spell" )
 		local name, rank, id = tooltip:GetSpell( )
 		if id then
 			h = GetSpellLink( id )
-			--ArkInventory.Output2( "SPELL [", string.gsub( h, "\124", "\124\124" ), "]" )
+			--ArkInventory.OutputDebug( "SPELL [", string.gsub( h, "\124", "\124\124" ), "]" )
 		end
 	end
 	
@@ -1643,21 +1643,21 @@ end
 
 
 local function helper_CurrencyRepuationCheck( currencyID )
-	--ArkInventory.Output2( "currencyID=", currencyID )
+	--ArkInventory.OutputDebug( "currencyID=", currencyID )
 	if currencyID then
 		local factionID = C_CurrencyInfo and C_CurrencyInfo.GetFactionGrantedByCurrency and C_CurrencyInfo.GetFactionGrantedByCurrency( currencyID )
-		--ArkInventory.Output2( "factionID=", factionID )
+		--ArkInventory.OutputDebug( "factionID=", factionID )
 		if factionID then
 			-- its actually reputation
 			local obj = ArkInventory.Collection.Reputation.GetByID( factionID )
-			--ArkInventory.Output2( "faction=", obj )
+			--ArkInventory.OutputDebug( "faction=", obj )
 			if obj then
 				return obj.link
 			end
 		else
 			-- its a normal currency
 			local obj = ArkInventory.Collection.Currency.GetByID( currencyID )
-			--ArkInventory.Output2( "currency=", obj )
+			--ArkInventory.OutputDebug( "currency=", obj )
 			if obj then
 				return obj.link
 			end
@@ -1704,7 +1704,7 @@ function ArkInventory.TooltipValidateDataFromSetCraftSpell( tooltip, ... )
 	
 	--local arg1, arg2 = ...
 	
-	ArkInventory.Output2( "TooltipValidateDataFromSetCraftSpell" )
+	ArkInventory.OutputDebug( "TooltipValidateDataFromSetCraftSpell" )
 	
 end
 
@@ -1750,7 +1750,7 @@ function ArkInventory.TooltipValidateDataFromSetHyperlink( tooltip, ... )
 	
 	local arg1 = ...
 	local osd = ArkInventory.ObjectStringDecode( arg1 )
-	--ArkInventory.Output2( osd.class, " / ", osd.h )
+	--ArkInventory.OutputDebug( osd.class, " / ", osd.h )
 	if supportedHyperlinkClass[osd.class] then
 		return arg1
 	end
@@ -1937,11 +1937,11 @@ function ArkInventory.HookOnTooltipSetUnit( tooltip, ... )
 	-- new critter set
 	local name, unit = tooltip:GetUnit( )
 	
-	--ArkInventory.Output2( "unit=", unit )
+	--ArkInventory.OutputDebug( "unit=", unit )
 	
 	if unit and UnitExists( unit ) and UnitIsBattlePet( unit ) then
 		
-		--ArkInventory.Output2( unit, " is a battlebet" )
+		--ArkInventory.OutputDebug( unit, " is a battlebet" )
 		
 		local bpSpeciesID = UnitBattlePetSpeciesID( unit )
 		
@@ -1952,7 +1952,7 @@ function ArkInventory.HookOnTooltipSetUnit( tooltip, ... )
 		end
 		
 		if sd.isTrainer and not sd.colour then
-			--ArkInventory.Output2( "unknown species ", bpSpeciesID, " found and data has been updated." )
+			--ArkInventory.OutputDebug( "unknown species ", bpSpeciesID, " found and data has been updated." )
 			-- found an unlisted battlepet, probably a legendary or a trainer pet
 			-- update species data with some helpful infomation
 			
@@ -2081,7 +2081,7 @@ function ArkInventory.HookTooltipSetGeneric( fn, tooltip, ... )
 --	if type( arg1 ) == "string" then
 --		arg1 = string.gsub( arg1, "\124", "\124\124" )
 --	end
---	ArkInventory.Output2( "G0: ", tooltip:GetName( ), ":", fn, " ( ", arg1, ", ", arg2, ", ", arg3, ", ", arg4, " )" )
+--	ArkInventory.OutputDebug( "G0: ", tooltip:GetName( ), ":", fn, " ( ", arg1, ", ", arg2, ", ", arg3, ", ", arg4, " )" )
 	
 	local h
 	local afn = string.format( "TooltipValidateDataFrom%s", fn )
@@ -2090,7 +2090,7 @@ function ArkInventory.HookTooltipSetGeneric( fn, tooltip, ... )
 		-- use the TooltipGetHyperlink<FunctionName> function i made to get the item hyperlink for this function
 		
 		h = ArkInventory[afn]( tooltip, ... )
-		--ArkInventory.Output2( "MINE [", string.gsub( h, "\124", "\124\124" ), "]" )
+		--ArkInventory.OutputDebug( "MINE [", string.gsub( h, "\124", "\124\124" ), "]" )
 --		if type( h ) ~= "string" and not MissingFunctions[afn] then
 --			MissingFunctions[afn] = true
 --			ArkInventory.OutputWarning("Code Error: ", afn, " did not return a value.  Please let the author know.  The warning for this function will occur once per session." )
@@ -2167,7 +2167,7 @@ function ArkInventory.TooltipMyDataClear( tooltip )
 		else
 			
 			tooltip.ARKTTD = { args = { }, onupdate = { }, info = { } }
-			--ArkInventory.Output2( tooltip:GetName( ), " has been initialised" )
+			--ArkInventory.OutputDebug( tooltip:GetName( ), " has been initialised" )
 			
 		end
 		
@@ -2411,22 +2411,22 @@ function ArkInventory.TooltipAddItemCount( tooltip, h )
 	
 	if checkAbortItemCount( tooltip ) then return end
 	
-	--ArkInventory.Output2( "1 - TooltipAddItemCount" )
+	--ArkInventory.OutputDebug( "1 - TooltipAddItemCount" )
 	
 	local osd = ArkInventory.ObjectStringDecode( h )
 	if not supportedHyperlinkClass[osd.class] then
-		ArkInventory.Output2( "unsupported hyperlink: ", string.gsub( h, "\124", "\124\124" ) )
+		ArkInventory.OutputDebug( "unsupported hyperlink: ", string.gsub( h, "\124", "\124\124" ) )
 		return
 	end
 	
 	local search_id = osd.h_base
-	--ArkInventory.Output2( search_id )
+	--ArkInventory.OutputDebug( search_id )
 	if ArkInventory.db.option.tooltip.itemcount.ignore[search_id] then return end
 	
-	--ArkInventory.Output2( "2 - TooltipAddItemCount - ", osd.class )
+	--ArkInventory.OutputDebug( "2 - TooltipAddItemCount - ", osd.class )
 	
 	search_id = ArkInventory.ObjectIDCount( h )
-	--ArkInventory.Output2( search_id )
+	--ArkInventory.OutputDebug( search_id )
 	
 	ArkInventory.TooltipRebuildQueueAdd( search_id )
 	
@@ -2483,7 +2483,7 @@ function ArkInventory.TooltipAddItemCount( tooltip, h )
 	end
 	
 	tooltip:Show( )
-	--ArkInventory.Output2( "3 - TooltipAddItemCount" )
+	--ArkInventory.OutputDebug( "3 - TooltipAddItemCount" )
 	
 end
 
@@ -2502,11 +2502,11 @@ function ArkInventory.TooltipObjectCountGet( search_id, thread_id )
 	local tc, changed = ArkInventory.ObjectCountGetRaw( search_id, thread_id )
 	
 	if not changed and ArkInventory.Global.Cache.ItemCountTooltip[search_id] then
-		--ArkInventory.Output2( "using cached tooltip count ", search_id )
+		--ArkInventory.OutputDebug( "using cached tooltip count ", search_id )
 		return ArkInventory.Global.Cache.ItemCountTooltip[search_id]
 	end
 	
-	--ArkInventory.Output2( "building tooltip count ", search_id )
+	--ArkInventory.OutputDebug( "building tooltip count ", search_id )
 	
 	if thread_id then
 		ArkInventory.ThreadYield( thread_id )
@@ -2530,7 +2530,7 @@ function ArkInventory.TooltipObjectCountGet( search_id, thread_id )
 	local data = ArkInventory.Global.Cache.ItemCountTooltip[search_id]
 	
 	if tc == nil then
-		--ArkInventory.Output2( "no count data ", search_id )
+		--ArkInventory.OutputDebug( "no count data ", search_id )
 		return data
 	end
 	
@@ -2556,7 +2556,7 @@ function ArkInventory.TooltipObjectCountGet( search_id, thread_id )
 	
 	local pd = { }
 	
-	--ArkInventory.Output2( tc["Arkayenro - Khaz'goroth"] )
+	--ArkInventory.OutputDebug( tc["Arkayenro - Khaz'goroth"] )
 	for pid, rcd in ArkInventory.spairs( tc ) do
 		
 		local ok = false
@@ -2895,7 +2895,7 @@ end
 
 function ArkInventory.TooltipExtractValueSuffixCheck( level, suffix )
 	
-	--ArkInventory.Output2( "check [", level, "] [", suffix, "]" )
+	--ArkInventory.OutputDebug( "check [", level, "] [", suffix, "]" )
 	
 	local level = level or 0
 	if not ( level == 3 or level == 6 or level == 9 or level == 12 ) then
@@ -2921,11 +2921,11 @@ function ArkInventory.TooltipExtractValueSuffixCheck( level, suffix )
 		
 		
 		if string.lower( check ) == string.lower( s ) then
-			--ArkInventory.Output2( "pass [", check, "] [", s, "]" )
+			--ArkInventory.OutputDebug( "pass [", check, "] [", s, "]" )
 			return true
 		end
 		
-		--ArkInventory.Output2( "fail [", check, "] [", s, "]" )
+		--ArkInventory.OutputDebug( "fail [", check, "] [", s, "]" )
 		
 	end
 	
@@ -2942,21 +2942,21 @@ function ArkInventory.TooltipExtractValueArtifactPower( h )
 	
 	amount = ArkInventory.TooltipTextToNumber( amount )
 	
-	--ArkInventory.Output2( h, "[", amount, "] [", suffix, "]" )
+	--ArkInventory.OutputDebug( h, "[", amount, "] [", suffix, "]" )
 	
 	if amount then
 		
 		if ArkInventory.TooltipExtractValueSuffixCheck( 12, suffix ) then
-			--ArkInventory.Output2( "12: ", amount, " ", suffix, "]" )
+			--ArkInventory.OutputDebug( "12: ", amount, " ", suffix, "]" )
 			amount = amount * 1000000000000
 		elseif ArkInventory.TooltipExtractValueSuffixCheck( 9, suffix ) then
-			--ArkInventory.Output2( "9: ", amount, " ", suffix, "]" )
+			--ArkInventory.OutputDebug( "9: ", amount, " ", suffix, "]" )
 			amount = amount * 1000000000
 		elseif ArkInventory.TooltipExtractValueSuffixCheck( 6, suffix ) then
-			--ArkInventory.Output2( "6: ", amount, " ", suffix, "]" )
+			--ArkInventory.OutputDebug( "6: ", amount, " ", suffix, "]" )
 			amount = amount * 1000000
 		elseif ArkInventory.TooltipExtractValueSuffixCheck( 3, suffix ) then
-			--ArkInventory.Output2( "3: ", amount, " ", suffix, "]" )
+			--ArkInventory.OutputDebug( "3: ", amount, " ", suffix, "]" )
 			amount = amount * 1000
 		end
 		
@@ -2995,7 +2995,7 @@ function ArkInventory.TooltipRebuildQueueAdd( search_id )
 	if not ArkInventory.db.option.tooltip.itemcount.enable then return end
 	if not search_id then return end
 	
-	--ArkInventory.Output2( "adding ", search_id )
+	--ArkInventory.OutputDebug( "adding ", search_id )
 	TooltipRebuildQueue[search_id] = true
 	
 	ArkInventory:SendMessage( "EVENT_ARKINV_TOOLTIP_REBUILD_QUEUE_UPDATE_BUCKET", "START" )
@@ -3004,11 +3004,11 @@ end
 
 local function Scan_Threaded( thread_id )
 	
-	--ArkInventory.Output2( "rebuilding ", ArkInventory.Table.Elements( TooltipRebuildQueue ) )
+	--ArkInventory.OutputDebug( "rebuilding ", ArkInventory.Table.Elements( TooltipRebuildQueue ) )
 	
 	for search_id in pairs( TooltipRebuildQueue ) do
 		
-		--ArkInventory.Output2( "rebuilding ", search_id )
+		--ArkInventory.OutputDebug( "rebuilding ", search_id )
 		
 		ArkInventory.TooltipObjectCountGet( search_id, thread_id )
 		ArkInventory.ThreadYield( thread_id )
@@ -3023,20 +3023,11 @@ local function Scan( )
 	
 	local thread_id = ArkInventory.Global.Thread.Format.Tooltip
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		Scan_Threaded( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-	
-	local tf = function ( )
+	local thread_func = function( )
 		Scan_Threaded( thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 

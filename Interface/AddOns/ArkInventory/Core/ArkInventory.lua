@@ -325,7 +325,7 @@ ArkInventory.Const.Slot.Data = {
 		short = ArkInventory.Localise["STATUS_SHORTNAME_BAG"],
 	},
 	[ArkInventory.Const.Slot.Type.Keyring] = {
-		ClientCheck = ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.CATACLYSM ),
+		ClientCheck = ArkInventory.ClientCheck( nil, 40200 ),
 		hide = true,
 		name = ArkInventory.Localise["KEYRING"],
 		short = ArkInventory.Localise["STATUS_SHORTNAME_KEY"],
@@ -445,7 +445,6 @@ ArkInventory.Const.Slot.Data = {
 ArkInventory.Global = { -- globals
 	
 	Enabled = false,
-	--Debug2 = true, -- comment out when done
 	--dataexport = true, -- comment out when done
 	actions_enabled = false,
 	
@@ -463,12 +462,14 @@ ArkInventory.Global = { -- globals
 			Search = "p06-search",
 			LDB = "p07-ldb-%s",
 			Tooltip = "p08-tooltip",
-			JunkSell = "p09-junksell",
-			MailSend = "p09-mailsend",
 			Tradeskill = "p03-tradeskill",
 			Category = "p04-category",
 			ObjectData = "p03-objectdata",
 			CompressedBar = "p05-compressedbar",
+			ActionVendor = "p99-actionvendor",
+			ActionMail = "p99-actionmail",
+			ActionUse = "p99-actionuse",
+			ActionScrap = "p99-actionscrap",
 		},
 	},
 	
@@ -489,11 +490,14 @@ ArkInventory.Global = { -- globals
 		Combat = false,
 		World = false,
 		Database = false,
-		ColourBlind = ArkInventory.CrossClient.GetCVarBool( "colorblindMode" )
+		ColourBlind = ArkInventory.CrossClient.GetCVarBool( "colorblindMode" ),
+		DragonRace = false,
+		Scrap = false,
 	},
 	
 	ScanAfterCombat = { }, -- [loc_id] = true
-	ScanAfterDismount = { }, -- [loc_id] = true
+	AfterCombatActionUse = false,
+	ScanAfterDragonRace = { }, -- [loc_id] = true
 	
 	Tooltip = {
 		Scan = nil,
@@ -546,7 +550,7 @@ ArkInventory.Global = { -- globals
 		
 		[ArkInventory.Const.Location.Keyring] = {
 			id = ArkInventory.Const.Location.Keyring,
-			ClientCheck = ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.CATACLYSM ),
+			ClientCheck = ArkInventory.ClientCheck( nil, 40200 ),
 			isActive = true,
 			Internal = "key",
 			Name = ArkInventory.Localise["KEYRING"],
@@ -1003,22 +1007,6 @@ ArkInventory.Global = { -- globals
 	
 	NewItemResetTime = nil,
 	
-	Action = {
-		Vendor = {
-			addon = nil,
-			process = true,
-			running = false,
-			sold = 0,
-			money = 0,
-		},
-		Mail = {
-			process = false,
-			running = false,
-			status = nil,
-			limit = ATTACHMENTS_MAX_SEND or 12,
-		},
-	},
-	
 	BagsOpenedBy = nil,
 	
 	ItemCrossReference = { },
@@ -1428,6 +1416,11 @@ ArkInventory.Const.DatabaseDefaults.global = {
 								["tooltip"] = true,
 								["bar"] = {
 									["width"] = 10,
+								},
+								["include"] = {
+									["empty"] = true,
+									["single"] = true,
+									["stack"] = true,
 								},
 							},
 						},
@@ -2121,6 +2114,9 @@ ArkInventory.Const.DatabaseDefaults.global = {
 			["EVENT_ARKINV_LDB_PET_UPDATE_BUCKET"] = { default = 1 },
 			["EVENT_ARKINV_LDB_MOUNT_UPDATE_BUCKET"] = { default = 1 },
 			["EVENT_ARKINV_UNIT_AURA_BUCKET"] = { default = 5 },
+			
+			["EVENT_ARKINV_ACTION_USE_BUCKET"] = { default = 1.25 },
+			["EVENT_ARKINV_ACTION_SCRAP_BUCKET"] = { default = 1.25 },
 		},
 		["bugfix"] = {
 			["framelevel"] = {
@@ -2266,9 +2262,10 @@ ArkInventory.Const.DatabaseDefaults.global = {
 				["manual"] = true,
 				["combat"] = false,
 				["limit"] = true,
-				["delete"] = false,
+--				["delete"] = false,
 				["notify"] = true,
-				["raritycutoff"] = ArkInventory.ENUM.ITEM.QUALITY.POOR, -- max quality to sell/destroy
+				["raritycutoff"] = ArkInventory.ENUM.ITEM.QUALITY.POOR, -- max quality to sell
+				["partyloot"] = false,
 				["list"] = true,
 				["test"] = true,
 				["soulbound"] = {
@@ -2283,6 +2280,38 @@ ArkInventory.Const.DatabaseDefaults.global = {
 				["manual"] = true,
 				["notify"] = true,
 				["raritycutoff"] = ArkInventory.ENUM.ITEM.QUALITY.POOR, -- max quality to send
+				["list"] = true,
+				["test"] = true,
+			},
+			["use"] = {
+				["enable"] = false,
+				["auto"] = false,
+				["manual"] = true,
+				["combat"] = false,
+				["list"] = true,
+				["test"] = true,
+				["item"] = {
+					[211279] = true, -- cache of infinite treasure
+					[211932] = true, -- cache of infinite treasure
+					[223907] = false, -- asynchronized prismatic gem (will trigger addon block)
+					[223908] = true, -- minor bronze cache
+					[223909] = true, -- lesser bronze cache
+					[223910] = true, -- bronze cache
+					[223911] = true, -- greater bronze cache
+				},
+			},
+			["delete"] = {
+				["enable"] = false,
+				["raritycutoff"] = ArkInventory.ENUM.ITEM.QUALITY.POOR, -- max quality to delete
+				["partyloot"] = false,
+				["list"] = true,
+				["test"] = true,
+			},
+			["scrap"] = {
+				["enable"] = false,
+				["auto"] = false,
+				["manual"] = true,
+				["raritycutoff"] = ArkInventory.ENUM.ITEM.QUALITY.POOR, -- max quality to scrap
 				["list"] = true,
 				["test"] = true,
 			},
@@ -2459,8 +2488,11 @@ ArkInventory.Const.DatabaseDefaults.global = {
 				["tooltip"] = 25, -- tooltip generation queue
 				["objectdata"] = 25, -- object data retreival queue
 				
+				-- actions
 				["junksell"] = 75, -- this is a minimum duration timer, not a timeout, must be above 50 (will occasionally fail when that low)
 				["mailsend"] = 2500, -- this is not a timer, its the number of retries
+				["useitem"] = 75, -- this is a minimum duration timer, not a timeout
+				["scrap"] = 75, -- this is a minimum duration timer, not a timeout
 			},
 		},
 --		["suffix"] = {
@@ -2705,13 +2737,10 @@ end
 
 function ArkInventory.OnLoad( )
 	
-	-- called via hidden frame in xml
+	-- called via the debug frame onload (its the first frame that gets created)
 	
 	ArkInventory.Const.StartupTime = time( ) - ( debugprofilestop( ) / 1000 )
 	ArkInventory.OutputDebug( "OnLoad - Start" )
-	
-	ArkInventory.Debug.frame = ARKINV_Debug
-	table.insert( UISpecialFrames, ArkInventory.Debug.frame:GetName( ) )
 	
 	ArkInventory.Const.Program.Version = ArkInventory.CrossClient.GetAddOnMetadata( ArkInventory.Const.Program.Name, "Version" )
 	
@@ -2719,10 +2748,10 @@ function ArkInventory.OnLoad( )
 	if not major then
 		ignore, ignore, major = string.find( ArkInventory.Const.Program.Version, "^(%d+)$" )
 		if not major then
-			ArkInventory.OutputError( "code failure: TOC Interface value does not have the correct format 123456 or 123456.78" )
+--			ArkInventory.OutputError( "code failure: TOC Interface value does not have the correct format 123456 or 123456.78" )
 		end
 	end
-	ArkInventory.Global.Version = string.format( "v%s", major )
+	ArkInventory.Global.VersionText = string.format( "v%s", major )
 	
 	-- this needs to be a number
 	ArkInventory.Const.Program.Version = 0 + ArkInventory.Const.Program.Version
@@ -2731,7 +2760,7 @@ function ArkInventory.OnLoad( )
 	
 	local releasetype = ArkInventory.CrossClient.GetAddOnMetadata( ArkInventory.Const.Program.Name, "X-ReleaseType" )
 	if releasetype ~= "" then
-		ArkInventory.Global.Version = string.format( "%s.%s", ArkInventory.Global.Version, releasetype )
+		ArkInventory.Global.VersionText = string.format( "%s.%s", ArkInventory.Global.VersionText, releasetype )
 	end
 	
 	if minor then
@@ -2739,12 +2768,10 @@ function ArkInventory.OnLoad( )
 		if releasetype == "" then
 			ArkInventory.OutputError( "code failure: TOC Interface value appears to be a point release but X-ReleaseType is not set" )
 		end
-		ArkInventory.Global.Version = string.format( "%s.%s", ArkInventory.Global.Version, minor )
+		ArkInventory.Global.VersionText = string.format( "%s.%s", ArkInventory.Global.VersionText, minor )
 	end
 	
-	ArkInventory.Global.Version = string.format( "%s [%s]", ArkInventory.Global.Version, ArkInventory.Const.BLIZZARD.CLIENT.NAME )
-	
-	
+	ArkInventory.Global.Version = string.format( "%s [%s]", ArkInventory.Global.VersionText, ArkInventory.Const.BLIZZARD.CLIENT.NAME )
 	
 	
 	local loc_id = 0
@@ -2775,15 +2802,11 @@ function ArkInventory.OnLoad( )
 	
 	
 	-- keyring
-	if ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.CATACLYSM ) then
-		
-		loc_id = ArkInventory.Const.Location.Keyring
-		bags = ArkInventory.Global.Location[loc_id].Bags
-		
-		bags[#bags + 1] = ArkInventory.ENUM.BAG.INDEX.KEYRING
-		ArkInventory.Global.Location[loc_id].bagCount = #bags
-		
-	end
+	loc_id = ArkInventory.Const.Location.Keyring
+	bags = ArkInventory.Global.Location[loc_id].Bags
+	
+	bags[#bags + 1] = ArkInventory.ENUM.BAG.INDEX.KEYRING
+	ArkInventory.Global.Location[loc_id].bagCount = #bags
 	
 	
 	-- bank
@@ -2796,7 +2819,7 @@ function ArkInventory.OnLoad( )
 	end
 	
 	-- reagent bank
-	if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAENOR ) then
+	if ArkInventory.ClientCheck( ArkInventory.Const.Slot.Data[ArkInventory.Const.Slot.Type.Reagent].ClientCheck ) then
 		local x = ArkInventory.ENUM.BAG.INDEX.REAGENTBANK
 		bags[#bags + 1] = x
 		ArkInventory.Global.BlizzardReagentContainerIDs[x] = true
@@ -2926,6 +2949,7 @@ function ArkInventory.OnInitialize( )
 		end
 	end
 	
+	
 	ArkInventory.Const.BLIZZARD.Events = {
 --		{ "blizzard event name", "arkinventory function name", blizzard_project_id, min_toc, max_toc }
 		
@@ -2958,7 +2982,7 @@ function ArkInventory.OnInitialize( )
 --		{ "BAG_NEW_ITEMS_UPDATED", "" },
 --		{ "BAG_SLOT_FLAGS_UPDATED", "EVENT_ARKINV_BAG_UPDATE" },
 		{ "BAG_UPDATE", "EVENT_ARKINV_BAG_UPDATE" },
---		{ "BAG_UPDATE_DELAYED", "EVENT_ARKINV_BAG_UPDATE_DELAYED" }, -- not overly helpful
+		{ "BAG_UPDATE_DELAYED", "EVENT_ARKINV_BAG_UPDATE_DELAYED" }, -- used for the action open (automatic)
 --		{ "ITEM_LOCKED", "EVENT_ARKINV_ITEM_LOCK_CHANGED" },
 --		{ "ITEM_UNLOCKED", "EVENT_ARKINV_ITEM_LOCK_CHANGED" },
 		{ "ITEM_LOCK_CHANGED", "EVENT_ARKINV_ITEM_LOCK_CHANGED" },
@@ -3006,7 +3030,7 @@ function ArkInventory.OnInitialize( )
 --		{ "MOUNT_JOURNAL_USABILITY_CHANGED", "" },
 		{ "NEW_MOUNT_ADDED", "EVENT_ARKINV_COLLECTION_MOUNT_UPDATE", ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Mount].ClientCheck ) },
 		{ "UNIT_AURA", "EVENT_ARKINV_UNIT_AURA", ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Mount].ClientCheck ) },
-		{ "PLAYER_CAN_GLIDE_CHANGED", "EVENT_ARKINV_PLAYER_CAN_GLIDE_CHANGED", ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Mount].ClientCheck ) },
+--		{ "PLAYER_CAN_GLIDE_CHANGED", "EVENT_ARKINV_PLAYER_CAN_GLIDE_CHANGED", ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Mount].ClientCheck ) },
 		
 		{ "BATTLE_PET_CURSOR_CLEAR", "EVENT_ARKINV_COLLECTION_PET_UPDATE", ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Pet].ClientCheck ) },
 --		{ "CHAT_MSG_PET_BATTLE_COMBAT_LOG", "EVENT_ARKINV_COLLECTION_PET_UPDATE", ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Pet].ClientCheck ) },
@@ -3053,6 +3077,10 @@ function ArkInventory.OnInitialize( )
 		
 		{ "SCRAPPING_MACHINE_SHOW", "EVENT_ARKINV_SCRAP_ENTER", ArkInventory.ENUM.EXPANSION.BFA, ArkInventory.ENUM.EXPANSION.SHADOWLANDS },
 		{ "SCRAPPING_MACHINE_CLOSE", "EVENT_ARKINV_SCRAP_LEAVE", ArkInventory.ENUM.EXPANSION.BFA, ArkInventory.ENUM.EXPANSION.SHADOWLANDS },
+		{ "UPDATE_TRADESKILL_CAST_STOPPED", "EVENT_ARKINV_UPDATE_TRADESKILL_CAST_STOPPED", ArkInventory.ENUM.EXPANSION.BFA },
+		{ "UNIT_SPELLCAST_START", "EVENT_ARKINV_UNIT_SPELLCAST_START", ArkInventory.ENUM.EXPANSION.BFA },
+		{ "UNIT_SPELLCAST_INTERRUPTED", "EVENT_ARKINV_UNIT_SPELLCAST_INTERRUPTED", ArkInventory.ENUM.EXPANSION.BFA },
+		{ "UNIT_SPELLCAST_SUCCEEDED", "EVENT_ARKINV_UNIT_SPELLCAST_SUCCEEDED", ArkInventory.ENUM.EXPANSION.BFA },
 		
 		{ "TRADE_SHOW", "EVENT_ARKINV_TRADE_ENTER", nil, ArkInventory.ENUM.EXPANSION.SHADOWLANDS },
 		{ "TRADE_CLOSED", "EVENT_ARKINV_TRADE_LEAVE", nil, ArkInventory.ENUM.EXPANSION.SHADOWLANDS },
@@ -3096,14 +3124,24 @@ end
 
 function ArkInventory.OnEnable( )
 	
-	ArkInventory.OutputDebug( "OnEnable - Start" )
-	
-	ArkInventory.Output2( "debug2 mode is enabled" )
-	
 	-- Called when the addon is enabled
 	
+	ArkInventory.OutputDebug( "OnEnable - Start" )
 	
-	ArkInventory.Global.Action.Vendor.process, ArkInventory.Global.Action.Vendor.addon = ArkInventory.Action.Vendor.ProcessCheck( )
+	
+	local TimerunningSeasonID = ArkInventory.CrossClient.TimerunningSeasonID( )
+	if TimerunningSeasonID > 0 then
+		local TimerunningExpansion = ArkInventory.ENUM.TIMERUNNINGSEASON[TimerunningSeasonID]
+		if TimerunningExpansion then
+			ArkInventory.Const.BLIZZARD.CLIENT.NAME = string.format( "Timerunner - %s", _G[string.format( "EXPANSION_NAME%s", TimerunningExpansion )] )
+			ArkInventory.Global.Version = string.format( "%s [%s]", ArkInventory.Global.VersionText, ArkInventory.Const.BLIZZARD.CLIENT.NAME )
+		else
+			ArkInventory.OutputError( "TimerunningSeasonID [", TimerunningSeasonID, "] is not configured.  please let the author know." )
+		end
+		
+	end
+	
+	ArkInventory.Action.ConflictCheck( )
 	
 	if ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.PANDARIA ) then
 		-- global options that need to be disabled in clients before pandaria was released (if saved variables was copied from retail)
@@ -3127,7 +3165,7 @@ function ArkInventory.OnEnable( )
 	ArkInventory.OutputDebug( "OnEnable - PlayerInfoSet" )
 	ArkInventory.PlayerInfoSet( )
 	
-	ArkInventory.OutputDebug( "OnEnable - CategoryGenerate" )
+	ArkInventory.OutputDebug( "OnEnable - BlizzardAPIHook" )
 	ArkInventory.BlizzardAPIHook( )
 	
 	ArkInventory.OutputDebug( "OnEnable - DatabaseUpgradePostLoad" )
@@ -3521,292 +3559,7 @@ function ArkInventory.LocationSetValue( l, k, v )
 	end
 end
 
-function ArkInventory.CategoryLocationSet( loc_id, cat_id, bar_id )
-	
-	assert( cat_id ~= nil , "category is nil" )
-	
-	local cat_def = ArkInventory.CategoryGetSystemID( "SYSTEM_DEFAULT" )
-	
-	if ( cat_id ~= cat_def ) or ( bar_id ~= nil ) then
-		local codex = ArkInventory.GetLocationCodex( loc_id )
-		codex.layout.category[cat_id] = bar_id
-	end
-	
-end
-
-function ArkInventory.CategoryLocationGet( loc_id, cat_id )
-	
-	-- return 1: number - which bar a category is located on
-	-- return 2: boolean - is it the default bar
-	
-	local cat_id = cat_id or ArkInventory.CategoryGetSystemID( "SYSTEM_UNKNOWN" )
-	
-	local codex = ArkInventory.GetLocationCodex( loc_id )
-	local bar_id = codex.layout.category[cat_id]
-	--ArkInventory.Output( "loc=[", loc_id, "], cat=[", cat_id, "], bar=[", bar, "]" )
-	
-	local cat_def = ArkInventory.CategoryGetSystemID( "SYSTEM_DEFAULT" )
-	local bar_def = codex.layout.category[cat_def] or 1
-	
-	if not bar_id then
-		-- if this category hasn't been assigned to a bar then return the bar that DEFAULT is using
-		return bar_def, true, cat_def, bar_def
-	else
-		return bar_id, false, cat_def, bar_def
-	end
-	
-end
-
-function ArkInventory.CategoryHiddenCheck( loc_id, cat_id )
-	
-	-- hidden categories have a negative bar number
-	
-	local bar_id = ArkInventory.CategoryLocationGet( loc_id, cat_id )
-	
-	if bar_id < 0 then
-		return true
-	else
-		return false
-	end
-	
-end
-
-function ArkInventory.CategoryHiddenToggle( loc_id, cat_id )
-	ArkInventory.CategoryLocationSet( loc_id, cat_id, 0 - ArkInventory.CategoryLocationGet( loc_id, cat_id ) )
-end
-
-function ArkInventory.CategoryGenerate( )
-	
-	local categories = {
-		["SYSTEM"] = ArkInventory.Const.Category.Code.System, -- CATEGORY_SYSTEM
-		["CONSUMABLE"] = ArkInventory.Const.Category.Code.Consumable, -- CATEGORY_CONSUMABLE
-		["TRADEGOODS"] = ArkInventory.Const.Category.Code.Trade,  -- CATEGORY_TRADEGOODS
-		["SKILL"] = ArkInventory.Const.Category.Code.Skill, -- CATEGORY_SKILL
-		["CLASS"] = ArkInventory.Const.Category.Code.Class, -- CATEGORY_CLASS
-		["EMPTY"] = ArkInventory.Const.Category.Code.Empty, -- CATEGORY_EMPTY
-		["RULE"] = ArkInventory.db.option.category[ArkInventory.Const.Category.Type.Rule].data, -- CATEGORY_RULE
-		["CUSTOM"] = ArkInventory.db.option.category[ArkInventory.Const.Category.Type.Custom].data, -- CATEGORY_CUSTOM
-	}
-	
-	ArkInventory.Table.Wipe( ArkInventory.Global.Category )
-	
-	for tn, d in pairs( categories ) do
-		
-		for k, v in pairs( d ) do
-			
-			if ArkInventory.ClientCheck( v.ClientCheck ) then
-				
-				--ArkInventory.Output( tn, " - ", k, " - ", v )
-				
-				local system, order, sort_order, name, cat_id, cat_type, cat_num
-				
-				if tn == "RULE" then
-					
-					if v.used == "Y" then
-						
-						cat_type = ArkInventory.Const.Category.Type.Rule
-						cat_num = k
-						
-						system = nil
-						name = string.format( "[%04i] %s", k, v.name )
-						order = ( v.order or 99999 ) + ( k / 10000 )
-						sort_order = string.lower( v.name )
-						
-					end
-					
-				elseif tn == "CUSTOM" then
-					
-					if v.used == "Y" then
-						
-						cat_type = ArkInventory.Const.Category.Type.Custom
-						cat_num = k
-						
-						system = nil
-						name = string.format( "[%04i] %s", k, v.name )
-						order = k
-						sort_order = string.lower( v.name )
-					
-					end
-					
-				else
-					
-					cat_type = ArkInventory.Const.Category.Type.System
-					cat_num = k
-					
-					system = string.upper( v.id )
-					
-					name = v.text
-					if type( name ) == "function" then
-						name = name( )
-					end
-					sort_order = string.lower( name )
-					name = string.format( "[%04i] %s", k, name or system )
-					
-				end
-				
-				if name then
-					
-					cat_id = ArkInventory.CategoryIdBuild( cat_type, cat_num )
-					
-					assert( not ArkInventory.Global.Category[cat_id], string.format( "duplicate category: %s [%s] ", tn, cat_id ) )
-					
-					ArkInventory.Global.Category[cat_id] = {
-						["id"] = cat_id,
-						["system"] = system,
-						["shortname"] = v.text,
-						["name"] = name or string.format( "%s %04i %s", tn, k, "<no name>"  ),
-						["fullname"] = string.format( "%s > %s", ArkInventory.Localise[string.format( "CATEGORY_%s", tn )], name ),
-						["order"] = order or 0,
-						["sort_order"] = string.lower( sort_order ) or "!",
-						["type_code"] = tn,
-						["type"] = ArkInventory.Localise[string.format( "CATEGORY_%s", tn )],
-					}
-					
-				end
-				
-			end
-			
-		end
-		
-	end
-	
-end
-
-function ArkInventory.CategoryIdSplit( cat_id )
-	local cat_type, cat_num = string.match( cat_id, "(%d+)!(%d+)" )
-	return tonumber( cat_type ), tonumber( cat_num )
-end
-
-function ArkInventory.CategoryIdBuild( cat_type, cat_num )
-	return string.format( "%i!%i", cat_type, cat_num )
-end
-
-function ArkInventory.CategoryGetNext( v )
-	
-	if not v.next then
-		v.next = v.min
-	else
-		if v.next < v.min then
-			v.next = v.min
-		end
-	end
-	
-	local c = 0
-	
-	while true do
-		
-		v.next = v.next + 1
-		
-		if v.next > v.max then
-			c = c + 1
-			v.next = v.min
-		end
-		
-		if c > 1 then
-			return -1
-		end
-		
-		if not v.data[v.next] then
-			return -2
-		end
-		
-		if v.data[v.next].used == "N" then
-			return v.next, v.data[v.next]
-		end
-		
-	end
-	
-end
-
-function ArkInventory.CategoryBarHasAssigned( loc_id, bar_id, cat_type )
-	
-	if not loc_id or not_bar_id then return end
-	
-	for cat_id, cat in pairs( ArkInventory.Global.Category ) do
-		
-		local cat_bar, def_bar = ArkInventory.CategoryLocationGet( loc_id, cat.id )
-		if math.abs( cat_bar ) == bar_id and not def_bar then
-			
-			if not cat_type or cat_type == cat.type_code then
-				return true
-			end
-			
-		end
-		
-	end
-	
-end
-
-function ArkInventory.CategoryBarGetAssigned( loc_id, bar_id, cat_type )
-	
-	if not loc_id or not_bar_id then return end
-	
-	local c = 0
-	local cat_tbl = { }
-	
-	for cat_id, cat in pairs( ArkInventory.Global.Category ) do
-		
-		local cat_bar, def_bar = ArkInventory.CategoryLocationGet( loc_id, cat.id )
-		if math.abs( cat_bar ) == bar_id and not def_bar then
-			
-			if not cat_type or cat_type == cat.type_code then
-				
-				c = c + 1
-				cat_tbl[cat_id] = true
-				
-			end
-			
-		end
-		
-	end
-	
-	if c == 0 then
-		return
-	else
-		return cat_tbl
-	end
-	
-end
-
-function ArkInventory.CategoryGetSystemID( cat_name )
-	
-	-- internal system category names only, if it doesnt exist you'll get the default instead
-	
-	--ArkInventory.Output( "search=[", cat_name, "]" )
-	
-	local cat_name = string.upper( cat_name )
-	local cat_def
-	
-	for _, v in pairs( ArkInventory.Global.Category ) do
-		
-		--ArkInventory.Output( "checking=[", v.system, "]" )
-		
-		if cat_name == v.system then
-			--ArkInventory.Output( "found=[", cat_name, " = ", v.name, "] = [", v.id, "]" )
-			return v.id
-			
-		elseif v.system == "SYSTEM_DEFAULT" then
-			--ArkInventory.Output( "default found=[", v.name, "] = [", v.id, "]" )
-			cat_def = v.id
-		end
-		
-	end
-	
-	--ArkInventory.Output( "not found=[", cat_name, "] = using default[", cat_def, "]" )
-	return cat_def
-	
-end
-
-
-function ArkInventory.ItemCategorySet( i, cat_id )
-	
-	-- set cat_id to nil to reset back to default
-	
-	local cid, id, codex = ArkInventory.ObjectIDCategory( i )
-	--ArkInventory.Output( cid, " / ", id, " / ", cat_id, " / ", codex.player.data.info.name )
-	codex.catset.ia[id].assign = cat_id
-	
-end
+-- old category functions were here
 
 function ArkInventory.ReverseName( n )
 	
@@ -4461,12 +4214,12 @@ function ArkInventory.Frame_Main_Draw( frame )
 	local loc_id = frame.ARK_Data.loc_id
 	local thread_id = string.format( ArkInventory.Global.Thread.Format.Window, loc_id )
 	
-	local thread_function = function( )
+	local thread_func = function( )
 		local tz = debugprofilestop( )
-		ArkInventory.OutputDebug( "draw location ", loc_id, " started" )
+--		ArkInventory.OutputDebug( "draw location ", loc_id, " started" )
 		ArkInventory.Frame_Main_Draw_Threaded( frame )
 		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputDebug( "draw location ", loc_id, " complete ", string.format( "%s took %0.0fms", thread_id, tz ) )
+--		ArkInventory.OutputDebug( "draw location ", loc_id, " complete ", string.format( "%s took %0.0fms", thread_id, tz ) )
 		ArkInventory.Global.Location[loc_id].preloadwindow = nil
 	end
 	
@@ -4475,8 +4228,6 @@ function ArkInventory.Frame_Main_Draw( frame )
 		if ArkInventory.ThreadRunning( thread_id ) then
 			
 			-- already in progress, find highest drawstate and start again
-			--error( "check here" )
-			
 			
 			if ArkInventory.Global.Thread.WindowState[loc_id] > ArkInventory.Const.Window.Draw.Init then
 				-- only replace non init threads
@@ -4484,7 +4235,7 @@ function ArkInventory.Frame_Main_Draw( frame )
 					-- drawstate is same or higher to current thread, so replace thread with a new one
 					ArkInventory.OutputDebug( "draw restarting [", loc_id, "] existing thread, old=", ArkInventory.Global.Thread.WindowState[loc_id], ", new=", ArkInventory.Global.Location[loc_id].drawState )
 					ArkInventory.Global.Thread.WindowState[loc_id] = ArkInventory.Global.Location[loc_id].drawState
-					ArkInventory.ThreadStart( thread_id, thread_function )
+					ArkInventory.ThreadStart( thread_id, thread_func )
 				end
 			else
 				ArkInventory.OutputDebug( "draw ignored [", loc_id, "] existing init thread" )
@@ -4494,15 +4245,13 @@ function ArkInventory.Frame_Main_Draw( frame )
 			-- nothing in progress so just kick it off
 			ArkInventory.OutputDebug( "draw starting [", loc_id, "] new thread, state=", ArkInventory.Global.Location[loc_id].drawState )
 			ArkInventory.Global.Thread.WindowState[loc_id] = ArkInventory.Global.Location[loc_id].drawState
-			ArkInventory.ThreadStart( thread_id, thread_function )
+			ArkInventory.ThreadStart( thread_id, thread_func )
 		end
 		
 	else
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		thread_function( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
+		
+		ArkInventory.ThreadStart( thread_id, thread_func )
+		
 	end
 	
 end
@@ -5172,7 +4921,7 @@ function ArkInventory.Frame_Main_OnMouseUp( frame )
 	ArkInventory.Frame_Main_Level( frame )
 	
 	ArkInventory.Lib.Dewdrop:Close( )
-	--ArkInventory.Output2( "mouse up" )
+	--ArkInventory.OutputDebug( "mouse up" )
 	
 end
 
@@ -5462,6 +5211,25 @@ function ArkInventory.Frame_Container_CalculateBars( frame )
 							
 							if ArkInventory.Global.Location[loc_id].canCompress then
 								
+								local ok = true
+								local info = ArkInventory.GetObjectInfo( i.h, i )
+								
+								if info.osd.class == "empty" then
+									if not codex.style.slot.stack.compress.include.empty then
+										ok = false
+									end
+								else
+									if info.stacksize == 1 then
+										if not codex.style.slot.stack.compress.include.single then
+											ok = false
+										end
+									else
+										if not codex.style.slot.stack.compress.include.stack then
+											ok = false
+										end
+									end
+								end
+								
 								stack_id = ArkInventory.ObjectIDStack( bar_id, i )
 								
 								if not codex.workpad.compress[stack_id] then
@@ -5476,7 +5244,7 @@ function ArkInventory.Frame_Container_CalculateBars( frame )
 								table.insert( codex.workpad.compress[stack_id].item, { ["bag"] = bag_id, ["slot"] = slot_id } )
 								
 								local count = codex.workpad.compress[stack_id].count
-								if count > 1 then
+								if ok and count > 1 then
 									
 									if count == 2 then
 										
@@ -6598,7 +6366,7 @@ function ArkInventory.Frame_Bar_Label( frame )
 				if align == ArkInventory.ENUM.ANCHOR.RIGHT then
 					obj:SetJustifyH( "RIGHT" )
 				elseif align == ArkInventory.ENUM.ANCHOR.CENTER then
-					obj:SetJustifyH( "MIDDLE" )
+					obj:SetJustifyH( "CENTER" )
 				else
 					obj:SetJustifyH( "LEFT" )
 				end
@@ -7229,7 +6997,7 @@ function ArkInventory.Frame_Bar_Edit_OnReceiveDrag( frame )
 		if state == 1 then
 			ArkInventory.Frame_Bar_Move( loc_id, ArkInventory.Global.Options.OnDragSourceBar, bar_id )
 			ArkInventory.Frame_Main_Generate( nil, ArkInventory.Const.Window.Draw.Recalculate )
-			--ArkInventory.Output2( "dropped bar ", bar_id, " here" )
+			--ArkInventory.OutputDebug( "dropped bar ", bar_id, " here" )
 		elseif state == 2 then
 			--ArkInventory.OutputWarning( string.format( ArkInventory.Localise["MENU_MOVE_FAIL_SAME"], ArkInventory.Localise["MENU_BAR"] ) )
 		elseif state == 3 then
@@ -7879,8 +7647,8 @@ function ArkInventory.Frame_Item_Update_StatusIconJunk( frame, codex )
 			
 			if codex.style.slot.junkicon.show then
 				
-				local isJunk, vendorPrice = ArkInventory.Action.Vendor.Check( i, codex, true )
-				--isJunk = true
+				local blizzard_id = ArkInventory.InternalIdToBlizzardBagId( loc_id, i.bag_id )
+				local isJunk = ArkInventory.Action.Vendor.Check( blizzard_id, i.slot_id, codex, true )
 				
 				if isJunk then
 					
@@ -8141,7 +7909,7 @@ function ArkInventory.ItemTransmogState( h, sb, loc_id, rule_primary, rule_secon
 				local sourceMe = { } -- sources i can collect
 				local sourceOther = { } -- sources i cannot collect
 				
-				local itemInfo = { GetItemInfoInstant( h ) }
+				local itemInfo = { ArkInventory.CrossClient.GetItemInfoInstant( h ) }
 				local itemSubType = itemInfo[7] or -2
 				local invType = itemInfo[4] or -2
 				
@@ -8159,7 +7927,7 @@ function ArkInventory.ItemTransmogState( h, sb, loc_id, rule_primary, rule_secon
 							
 						else
 							
-							local itemInfo = { GetItemInfoInstant( info.itemID ) }
+							local itemInfo = { ArkInventory.CrossClient.GetItemInfoInstant( info.itemID ) }
 							
 							if itemSubType == itemInfo[7] then
 								-- only add sources that match the sub type of the item
@@ -9129,7 +8897,7 @@ function ArkInventory.Frame_Item_UpdateTooltip( frame )
 			
 			-- adapted from Interface\FrameXML\ContainerFrame.lua - ContainerFrameItemButton_OnEnter
 			
-			local inv_id = KeyRingButtonIDToInvSlotID( slot_id )
+			local inv_id = ArkInventory.CrossClient.KeyRingButtonIDToInvSlotID( slot_id )
 			GameTooltip:SetInventoryItem( "player", inv_id )
 			CursorUpdate( frame )
 			
@@ -9259,51 +9027,60 @@ function ArkInventory.Frame_Item_PreClick( frame, button, down )
 	if InCombatLockdown( ) then return end
 	
 	if not ArkInventory.Global.Mode.Edit then
+		
 		if frame.ARK_Data.loc_id == ArkInventory.Const.Location.Bag then
+			
 			if button == "RightButton" and not IsModifiedClick( ) then
+				
+				--ArkInventory.Output( "PreClick: start" )
+				
 				local i = ArkInventory.Frame_Item_GetDB( frame )
 				if i.h then
+					
 					-- these only work when there is an item, it is in the backpack, and its an unmodified right click
 					
-					if ArkInventory.Global.Mode.Bank then
+					local info = ArkInventory.GetObjectInfo( i.h, i )
+					
+					if ArkInventory.Global.Mode.Bank and info.craft then
 						
-						-- reagent bank is unlocked and has a free slot
+						-- at the bank, and its a crafting item
 						if ArkInventory.CrossClient.IsReagentBankUnlocked( ) and ArkInventory.CrossClient.GetContainerNumFreeSlots( ArkInventory.ENUM.BAG.INDEX.REAGENTBANK ) > 0 then
 							
-							-- its a crafting reagent
-							local info = ArkInventory.GetObjectInfo( i.h )
-							if info.craft then
-								--ArkInventory.Output( "PreClick: sending item to reagent bank instead" )
-								return ArkInventory.CrossClient.UseContainerItem( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id, nil, true )
-							end
+							-- reagent bank is unlocked and has a free slot
+							
+							--ArkInventory.Output( "PreClick: sending item to reagent bank instead" )
+							return ArkInventory.CrossClient.UseContainerItem( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id, nil, true )
 							
 						end
 						
 					end
 					
 					
-					local itemInfo = ArkInventory.CrossClient.GetContainerItemInfo( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id )
-					
-					if ArkInventory.Global.Mode.Merchant and itemInfo.hasNoValue and ArkInventory.db.option.action.vendor.delete and itemInfo.quality <= ArkInventory.db.option.action.vendor.raritycutoff then
+					if ArkInventory.Action.Delete.Check( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id ) then
 						
-						--ArkInventory.Output( "good to delete" )
+						--ArkInventory.Output( "PreClick: deleting item ", i.h )
 						
-						-- at a merchant, item has no value, delete is enabled, quality is below cutoff
-						
-						local codex = ArkInventory.GetLocationCodex( i.loc_id )
-						local cat_id = ArkInventory.ItemCategoryGet( i )
-						local cat_type, cat_num = ArkInventory.CategoryIdSplit( cat_id )
-						local catset = codex.catset.ca[cat_type][cat_num]
-						
-						if catset.action.t == ArkInventory.ENUM.ACTION.TYPE.VENDOR then
-							if catset.action.w == ArkInventory.ENUM.ACTION.WHEN.MANUAL or catset.action.w == ArkInventory.ENUM.ACTION.WHEN.AUTO then
-								--ArkInventory.Output( "PreClick: deleting item" )
-								ArkInventory.CrossClient.PickupContainerItem( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id )
-								DeleteCursorItem( )
-							end
+						if not ArkInventory.db.option.action.delete.test then
+							ArkInventory.CrossClient.PickupContainerItem( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id )
+							DeleteCursorItem( )
 						end
 						
+						local test = ""
+						if ArkInventory.db.option.action.delete.test then
+							test = string.format( "(%s)", ArkInventory.Localise["CONFIG_ACTION_TESTING"] )
+						end
+						
+						if ArkInventory.db.option.action.delete.list then
+							local itemInfo = ArkInventory.CrossClient.GetContainerItemInfo( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id )
+							--ArkInventory.Output( "itemInfo = ", itemInfo )
+							ArkInventory.Output( string.format( ArkInventory.Localise["CONFIG_ACTION_DELETE_LIST"], test, i.h, itemInfo.stackCount ) )
+						end
+						
+						return
+						
 					end
+					
+					--ArkInventory.Output( "PreClick: ignored item ", i.h )
 					
 				end
 			end
@@ -9365,7 +9142,6 @@ function ArkInventory.Frame_Item_OnMouseUp( frame, button )
 	
 	if loc_id == ArkInventory.Const.Location.Keyring then
 		return ContainerFrameItemButton_OnClick( frame, button )
-		--return ArkInventory.CrossClient.UseContainerItem( frame.ARK_Data.blizzard_id, frame.ARK_Data.slot_id, nil, true )
 	end
 	
 	
@@ -9639,7 +9415,7 @@ function ArkInventory.Frame_Item_OnReceiveDrag( frame )
 				if state == 1 then
 					ArkInventory.Frame_Bar_Move( loc_id, ArkInventory.Global.Options.OnDragSourceBar, bar_id )
 					ArkInventory.Frame_Main_Generate( nil, ArkInventory.Const.Window.Draw.Recalculate )
-					--ArkInventory.Output2( "dropped bar ", bar_id, " here" )
+					--ArkInventory.OutputDebug( "dropped bar ", bar_id, " here" )
 				elseif state == 2 then
 					--ArkInventory.OutputWarning( string.format( ArkInventory.Localise["MENU_MOVE_FAIL_SAME"], ArkInventory.Localise["MENU_BAR"] ) )
 				elseif state == 3 then
@@ -9661,7 +9437,7 @@ function ArkInventory.Frame_Item_OnReceiveDrag( frame )
 						local di = ArkInventory.Frame_Item_GetDB( ArkInventory.Global.Options.OnDragSourceFrame )
 						ArkInventory.ItemCategorySet( di, cat_id )
 						ArkInventory.Frame_Main_Generate( nil, ArkInventory.Const.Window.Draw.Recalculate )
-						--ArkInventory.Output2( "assigned ", cat_id, " to ", di.h )
+						--ArkInventory.OutputDebug( "assigned ", cat_id, " to ", di.h )
 					else
 						--ArkInventory.OutputWarning( "category assignment aborted, destination is not a custom category" )
 					end
@@ -9676,7 +9452,7 @@ function ArkInventory.Frame_Item_OnReceiveDrag( frame )
 				if state == 1 then
 					ArkInventory.CategoryLocationSet( loc_id, ArkInventory.Global.Options.OnDragSourceCategory, bar_id )
 					ArkInventory.Frame_Main_Generate( nil, ArkInventory.Const.Window.Draw.Recalculate )
-					--ArkInventory.Output2( "dropped category ", ArkInventory.Global.Options.OnDragSourceCategory, " here" )
+					--ArkInventory.OutputDebug( "dropped category ", ArkInventory.Global.Options.OnDragSourceCategory, " here" )
 				elseif state == 2 then
 					--ArkInventory.OutputWarning( string.format( ArkInventory.Localise["MENU_MOVE_FAIL_SAME"], ArkInventory.Localise["CATEGORY"] ) )
 				elseif state == 3 then
@@ -10198,7 +9974,7 @@ function ArkInventory.Frame_Bar_Popup_Draw( frame )
 	local loc_id = frame.ARK_Data.loc_id
 	local thread_id = ArkInventory.Global.Thread.Format.CompressedBar
 	
-	local thread_function = function( )
+	local thread_func = function( )
 		local tz = debugprofilestop( )
 		ArkInventory.OutputDebug( "draw compressed bar started" )
 		ArkInventory.Frame_Bar_Popup_Draw_Threaded( frame, thread_id )
@@ -10206,24 +9982,7 @@ function ArkInventory.Frame_Bar_Popup_Draw( frame )
 		ArkInventory.OutputDebug( "draw compressed bar complete ", string.format( "%s took %0.0fms", thread_id, tz ) )
 	end
 	
-	if ArkInventory.Global.Thread.Use then
-		
-		if ArkInventory.ThreadRunning( thread_id ) then
-			
-			ArkInventory.ThreadStart( thread_id, thread_function )
-			
-		else
-			-- nothing in progress so just kick it off
-			ArkInventory.ThreadStart( thread_id, thread_function )
-		end
-		
-	else
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		thread_function( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-	end
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 
@@ -11782,33 +11541,38 @@ function ArkInventory.MySecureHook(...)
 	
 	if not ArkInventory:IsHooked(...) then
 		
-		local arg1, arg2, arg3 = ...
-		local obj
+		local arg1, arg2, arg3, arg4 = ...
 		
-		if type( arg1 ) == "string" then
-			obj = _G[arg1]
-		end
+		assert( not arg4, "code issue: arg4 for MySecureHook exists, check you used '.' and not  ':'" )
+		assert( arg1, "code issue: arg1 for MySecureHook is missing" )
+		assert( type( arg1 ) == "string", "code issue: arg1 for MySecureHook is [" .. type( arg1 ) .. "], should be [string]" )
+		assert( arg2, "code issue: arg2 for MySecureHook is missing" )
 		
-		if obj then
-			
+		local obj = _G[arg1]
+		if not obj then
+			ArkInventory.OutputDebug( "could not secure hook ", arg1, " as it does not exist" )
+		else
 			if type( arg2 ) == "string" then
 				
-				if obj[arg2] then
+				if not obj[arg2] then
+					ArkInventory.OutputDebug( "could not secure hook ", arg1, ":", arg2, " as it does not exist" )
+				else
+					assert( arg3, "code issue: arg3 for MySecureHook is missing" )
+					assert( type( arg3 ) == "function", "code issue: arg3 for MySecureHook is [" .. type( arg3 ) .. "], should be [function]" )
+					
 					ArkInventory.OutputDebug( "secure hooking ", arg1, ":", arg2 )
 					ArkInventory:SecureHook( obj, arg2, arg3 )
-				else
-					ArkInventory.OutputDebug( "could not secure hook ", arg1, ":", arg2, " as it does not exist" )
 				end
 				
-			else
+			elseif type( arg2 ) == "function" then
 				
+				assert( not arg3, "code issue: arg2 for MySecureHook is [function], should be [string] (as arg3 exists)" )
 				ArkInventory.OutputDebug( "secure hooking ", arg1 )
 				ArkInventory:SecureHook( arg1, arg2 )
 				
+			else
+				assert( false, "code issue: arg2 for MySecureHook is [" .. type( arg2 ) .. "], should be [string] or [function]" )
 			end
-			
-		else
-			ArkInventory.OutputDebug( "could not secure hook ", arg1, " as it does not exist" )
 		end
 		
 	end
@@ -11817,7 +11581,7 @@ end
 
 function ArkInventory.HookOpenBackpack( self, ... )
 
---	ArkInventory.Output2( "HookOpenBackpack( )" )
+--	ArkInventory.OutputDebug( "HookOpenBackpack( )" )
 	
 	local loc_id = ArkInventory.Const.Location.Bag
 	
@@ -11834,7 +11598,7 @@ end
 
 function ArkInventory.HookToggleBackpack( self, ... )
 
---	ArkInventory.Output2( "HookToggleBackpack( )" )
+--	ArkInventory.OutputDebug( "HookToggleBackpack( )" )
 	
 	local loc_id = ArkInventory.Const.Location.Bag
 	
@@ -11879,7 +11643,7 @@ function ArkInventory.HookCloseBag( self, ... )
 	
 	local blizzard_id = ...
 	
---	ArkInventory.Output2( "HookCloseBag( ", blizzard_id, " )" )
+--	ArkInventory.OutputDebug( "HookCloseBag( ", blizzard_id, " )" )
 	
 	return ArkInventory.hooks.CloseBag( ... )
 	
@@ -11889,7 +11653,7 @@ function ArkInventory.HookToggleBag( self, ... )
 	
 	local blizzard_id = ...
 	
---	ArkInventory.Output2( "HookToggleBag( ", blizzard_id, " )" )
+--	ArkInventory.OutputDebug( "HookToggleBag( ", blizzard_id, " )" )
 	
 	if blizzard_id then
 		
@@ -11934,7 +11698,7 @@ function ArkInventory.HookOpenAllBags( self, ... )
 				-- theres no way to work that out though so sometimes youre screwed no matter what and it will just spit out errors
 				if MerchantBuyBackItemItemButton and MerchantBuyBackItemItemButton:IsVisible( ) then
 					if GetMerchantNumItems( ) > 0 then
-						ArkInventory.Action.Vendor.Sell( )
+						ArkInventory.Action.Vendor.Run( )
 					end
 				end
 				
@@ -11952,7 +11716,7 @@ function ArkInventory.HookOpenAllBags( self, ... )
 			
 			if GetMerchantNumItems( ) > 0 then
 				--ArkInventory.Output( "auto sell starting" )
-				ArkInventory.Action.Vendor.Sell( )
+				ArkInventory.Action.Vendor.Run( )
 			end
 			
 			if ArkInventory.isLocationControlled( ArkInventory.Const.Location.Bag ) then
@@ -12071,7 +11835,7 @@ function ArkInventory.HookOpenAllBags( self, ... )
 	
 	local loc_id = ArkInventory.Const.Location.Bag
 	if not ArkInventory.isLocationControlled( loc_id ) then
---		ArkInventory.Output2( "HookOpenAllBags - closing all bags" )
+--		ArkInventory.OutputDebug( "HookOpenAllBags - closing all bags" )
 		CloseAllBags( )
 	end
 	
@@ -12081,7 +11845,7 @@ function ArkInventory.HookOpenAllBags( self, ... )
 		if not ArkInventory.isLocationControlled( loc_id ) then
 			for x = ArkInventory.Const.BLIZZARD.GLOBAL.CONTAINER.NUM_BAGS + 1, ArkInventory.Const.BLIZZARD.GLOBAL.CONTAINER.NUM_BAGS + ArkInventory.Const.BLIZZARD.GLOBAL.BANK.NUM_BAGS do
 				if ArkInventory.CrossClient.GetContainerNumSlots( x ) > 0 then
-					--ArkInventory.Output2( "HookOpenAllBags - closing bag ", x )
+					--ArkInventory.OutputDebug( "HookOpenAllBags - closing bag ", x )
 					CloseBag( x )
 				end
 			end
@@ -12090,7 +11854,7 @@ function ArkInventory.HookOpenAllBags( self, ... )
 	end
 	
 	local loc_id = ArkInventory.Const.Location.Bag
---	ArkInventory.Output2( "HookOpenAllBags - opening all bags by ", whoname )
+--	ArkInventory.OutputDebug( "HookOpenAllBags - opening all bags by ", whoname )
 	ArkInventory.Global.BagsOpenedBy = whoname
 	ArkInventory.hooks.OpenAllBags( who )
 	
@@ -12101,7 +11865,7 @@ function ArkInventory.HookOpenAllBags( self, ... )
 		if not ArkInventory.isLocationControlled( loc_id ) then
 			for x = ArkInventory.Const.BLIZZARD.GLOBAL.CONTAINER.NUM_BAGS + 1, ArkInventory.Const.BLIZZARD.GLOBAL.CONTAINER.NUM_BAGS + ArkInventory.Const.BLIZZARD.GLOBAL.BANK.NUM_BAGS do
 				if ArkInventory.CrossClient.GetContainerNumSlots( x ) > 0 then
---					ArkInventory.Output2( "HookOpenAllBags - opening bag ", x )
+--					ArkInventory.OutputDebug( "HookOpenAllBags - opening bag ", x )
 					ArkInventory.hooks.OpenBag( x )
 				end
 			end
@@ -12115,7 +11879,7 @@ end
 
 function ArkInventory.HookCloseAllBags( self, ... )
 	
---	ArkInventory.Output2( "HookCloseAllBags( )" )
+--	ArkInventory.OutputDebug( "HookCloseAllBags( )" )
 	
 	local who = ...
 	local whoname = who
@@ -12123,7 +11887,7 @@ function ArkInventory.HookCloseAllBags( self, ... )
 		whoname = who:GetName( )
 	end
 	
---	ArkInventory.Output2( "closed by ", whoname )
+--	ArkInventory.OutputDebug( "closed by ", whoname )
 	
 	return ArkInventory.hooks.CloseAllBags( ... )
 	
@@ -12281,7 +12045,9 @@ function ArkInventory.HookPlayerInteractionProcess( index, state, event, ... )
 		
 		if state == ArkInventory.Const.BLIZZARD.GLOBAL.FRAME.SHOW then
 			
-			if index == Enum.PlayerInteractionType.Banker then
+			if index == Enum.PlayerInteractionType.None then
+				-- do nothing
+			elseif index == Enum.PlayerInteractionType.Banker then
 				ArkInventory:EVENT_ARKINV_BANK_ENTER( e )
 				if ArkInventory.isLocationControlled( ArkInventory.Const.Location.Bank ) then return end
 			elseif index == Enum.PlayerInteractionType.GuildBanker then
@@ -12320,7 +12086,9 @@ function ArkInventory.HookPlayerInteractionProcess( index, state, event, ... )
 			
 		elseif state == ArkInventory.Const.BLIZZARD.GLOBAL.FRAME.HIDE then
 			
-			if index == Enum.PlayerInteractionType.Banker then
+			if index == Enum.PlayerInteractionType.None then
+				-- do nothing
+			elseif index == Enum.PlayerInteractionType.Banker then
 				ArkInventory:EVENT_ARKINV_BANK_LEAVE( e )
 				if ArkInventory.isLocationControlled( ArkInventory.Const.Location.Bank ) then return end
 			elseif index == Enum.PlayerInteractionType.GuildBanker then
@@ -12400,14 +12168,14 @@ function ArkInventory.HookVoidStorageHide( self, ... )
 end
 
 function ArkInventory.HookVoidStorageEvent( self, event )
---	ArkInventory.Output2( "void storage event ", event )
+--	ArkInventory.OutputDebug( "void storage event ", event )
 end
 
 function ArkInventory.HookFloatingBattlePet_Show( ... )
 	
 	-- speciesID, level, breedQuality, maxHealth, power, speed, customName, bPetID
 	
-	--ArkInventory.Output2( "0 - HookFloatingBattlePet_Show" )
+	--ArkInventory.OutputDebug( "0 - HookFloatingBattlePet_Show" )
 	
 	if not ArkInventory:IsEnabled( ) then return end
 	
@@ -12457,33 +12225,42 @@ end
 
 function ArkInventory.BlizzardAPIHook( disable, reload )
 	
+	ArkInventory.OutputDebug( "BlizzardAPIHook - Start [", not not disable, "] [", not not reload, "]" )
+	
 	-- required blizzard internal addons - load them here as they expect to be loaded after the user has logged in, they usually have issues if you try to load them too early
+	
 	
 	if ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.CLASSIC ) then
 		ArkInventory.LoadAddOn( "Blizzard_EngravingUI" )
 	end
 	
+	
 	if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.CATACLYSM ) then
 		ArkInventory.LoadAddOn( "Blizzard_Collections" )
 	end
 	
+	
+--[[
 	if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.PANDARIA ) then
 		
-		--ArkInventory.LoadAddOn( "Blizzard_ScrappingMachineUI" )
+		ArkInventory.LoadAddOn( "Blizzard_ScrappingMachineUI" )
 		
-		
---		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) then
---			ArkInventory.LoadAddOn( "Blizzard_Professions" )
---		else
---			ArkInventory.LoadAddOn( "Blizzard_TradeSkillUI" )
---		end
+		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) then
+			ArkInventory.LoadAddOn( "Blizzard_Professions" )
+		else
+			ArkInventory.LoadAddOn( "Blizzard_TradeSkillUI" )
+		end
 		
 	end
+]]--
+	
 	--ArkInventory.LoadAddOn( "Blizzard_AuctionHouseUI" )
+	
 	
 	if ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].ClientCheck ) then
 		ArkInventory.LoadAddOn( "Blizzard_GuildBankUI" )
 	end
+	
 	
 	if ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Void].ClientCheck ) then
 		ArkInventory.LoadAddOn( "Blizzard_VoidStorageUI" )
@@ -12528,7 +12305,6 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		
 	end
 	
-	
 	if not disable and not reload then
 		
 		-- backpack functions
@@ -12537,14 +12313,14 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		
 		BackpackTokenFrame:SetWidth(500) -- allows GetMaxTokensWatched to return 10
 		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) then
-			ArkInventory:SecureHook( "TokenFrame_SetTokenWatched", ArkInventory.EVENT_ARKINV_BACKPACK_TOKEN_UPDATE )
+			ArkInventory.MySecureHook( "TokenFrame_SetTokenWatched", ArkInventory.EVENT_ARKINV_BACKPACK_TOKEN_UPDATE )
 		elseif ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.TBC ) then
-			ArkInventory:SecureHook( "BackpackTokenFrame_Update", ArkInventory.EVENT_ARKINV_BACKPACK_TOKEN_UPDATE )
+			ArkInventory.MySecureHook( "BackpackTokenFrame_Update", ArkInventory.EVENT_ARKINV_BACKPACK_TOKEN_UPDATE )
 		end
 		
 		
 --		part of testing the professions addon being loaded up front
---		ArkInventory:SecureHook( ScrollBoxListLinearViewMixin, "CalculateDataIndices", ArkInventory.CalculateDataIndices )
+--		ArkInventory.MySecureHook( ScrollBoxListLinearViewMixin, "CalculateDataIndices", ArkInventory.CalculateDataIndices )
 		
 		
 		-- bag functions
@@ -12561,6 +12337,7 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		if EngravingFrame then
 			ArkInventory.MySecureHook( "EngravingFrame_OnHide", ArkInventory.HookEngravingFrameHide )
 		end
+		
 		
 		-- bank functions (now opens via the ui panels in all versions)
 		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.CLASSIC ) then
@@ -12607,6 +12384,7 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 			end
 		end
 		
+		
 		for _, obj in pairs( ArkInventory.Global.Tooltip.WOW ) do
 			if obj then
 				
@@ -12615,14 +12393,7 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 				for func, proj in pairs( ArkInventory.Const.BLIZZARD.TooltipFunctions ) do
 					if true or proj then -- fix this once the table is sorted out
 						local myfunc = "HookTooltip"..func
-						if obj[func] then
-							if ArkInventory[myfunc] then
-								ArkInventory:SecureHook( obj, func, ArkInventory[myfunc] )
-								--ArkInventory.Output( obj:GetName( ), ":", func, " secure hooked" )
-							end
-						else
-							--ArkInventory.OutputWarning( "code issue - ", obj:GetName( ), " [", myfunc, "] was not found!" )
-						end
+						ArkInventory.MySecureHook( obj:GetName( ), func, ArkInventory[myfunc] )
 					end
 				end
 				
@@ -12729,7 +12500,8 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		end
 		
 	end
-
+	
+	
 	-- tooltips
 	if disable or not ArkInventory.db.option.tooltip.show then
 		for _, obj in pairs( ArkInventory.Global.Tooltip.WOW ) do
@@ -12750,6 +12522,7 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 		end
 	end
 	
+	
 	-- battlepet tooltips
 	if C_PetJournal then
 		if disable or not ArkInventory.db.option.tooltip.battlepet.enable then
@@ -12758,6 +12531,8 @@ function ArkInventory.BlizzardAPIHook( disable, reload )
 			FloatingBattlePetTooltip:Hide( )
 		end
 	end
+	
+	ArkInventory.OutputDebug( "BlizzardAPIHook - End" )
 	
 end
 
@@ -12835,7 +12610,7 @@ function ArkInventory.CreateColour( r, g, b, a, f )
 	
 	if type( r ) == "string" then
 		
-		--ArkInventory.Output2( string.gsub( c, "\124", "\124\124" ) )
+		--ArkInventory.OutputDebug( string.gsub( c, "\124", "\124\124" ) )
 		f = g
 		a, r, g, b = string.match( c, "^|c(%x%x)([%x%s]%x)(%x%x)(%x%x)" )
 		if not a then
@@ -12848,7 +12623,7 @@ function ArkInventory.CreateColour( r, g, b, a, f )
 		
 		if f and ( not a or not r or not g or not b ) then return end
 		
-		--ArkInventory.Output2( r, "-", g, "-", b, "+", a )
+		--ArkInventory.OutputDebug( r, "-", g, "-", b, "+", a )
 		-- the trading parts colour has a space instead of a zero in the 3rd position for some reason
 		-- at some point i need to work out if its from the alpha or the red value, im guessing red at the moment as they are a fairly bright light blue, almost heirloom
 		
@@ -12869,7 +12644,7 @@ function ArkInventory.CreateColour( r, g, b, a, f )
 		return ("%.2x%.2x%.2x%.2x"):format( a, r, g, b )
 	end
 	
-	--ArkInventory.Output2( c:WrapTextInColorCode( "this should be coloured text" ) )
+	--ArkInventory.OutputDebug( c:WrapTextInColorCode( "this should be coloured text" ) )
 	
 	return c
 	
@@ -13133,7 +12908,7 @@ end
 
 function ArkInventory.LocationMonitorChanged( loc_id )
 	
-	--ArkInventory.Output2( "LocationMonitorChanged( ", loc_id, " )" )
+	--ArkInventory.OutputDebug( "LocationMonitorChanged( ", loc_id, " )" )
 	
 	ArkInventory.ObjectCacheCountClear( nil, nil, loc_id )
 	
@@ -13340,9 +13115,8 @@ end
 
 function ArkInventory.ThreadRunning( thread_id )
 	
-	if not ArkInventory.Global.Thread.Use then
-		return false
-	end
+	if not thread_id then return end
+	if not ArkInventory.Global.Thread.Use then return end
 	
 	local data = ArkInventory.Global.Thread.data[thread_id]
 	if data and data.thread and type( data.thread ) == "thread" and coroutine.status( data.thread ) ~= "dead" then
@@ -13355,35 +13129,51 @@ end
 
 function ArkInventory.ThreadStart( thread_id, thread_func )
 	
-	local threads = ArkInventory.Global.Thread.data
-	
-	if threads[thread_id] then
+	if ArkInventory.Global.Thread.Use and thread_id then
 		
-		ArkInventory.OutputThread( string.format( "%s restarting", thread_id ) )
+		local threads = ArkInventory.Global.Thread.data
+		
+		if threads[thread_id] then
+			
+			ArkInventory.OutputThread( thread_id, " restarting" )
+			
+		else
+			
+			local tz = debugprofilestop( )
+			
+			ArkInventory.OutputThread( thread_id, " starting" )
+			threads[thread_id] = {
+				timer = nil, -- if the thread needs to wait before running again then this needs to be set
+				duration = 0, -- how long the thread actually ran for
+			}
+			
+			
+			if thread_id == ArkInventory.Global.Thread.Format.ActionVendor then
+				threads[thread_id].timer = ArkInventory.db.option.thread.timeout.junksell
+			elseif thread_id == ArkInventory.Global.Thread.Format.ActionUse then
+				threads[thread_id].timer = ArkInventory.db.option.thread.timeout.useitem
+			elseif thread_id == ArkInventory.Global.Thread.Format.ActionScrap then
+				threads[thread_id].timer = ArkInventory.db.option.thread.timeout.actionscrap
+			elseif thread_id == ArkInventory.Global.Thread.Format.Tradeskill then
+				--threads[thread_id].timer = ArkInventory.db.option.thread.timeout.tradeskill
+			end
+			
+		end
+		
+		threads[thread_id].resumed = debugprofilestop( )
+		threads[thread_id].thread = coroutine.create( thread_func )
+		
+		ARKINV_ThreadTimer:Show( )
 		
 	else
 		
 		local tz = debugprofilestop( )
-		
-		ArkInventory.OutputThread( string.format( "%s starting", thread_id ) )
-		threads[thread_id] = {
-			timer = nil, -- if the thread needs to wait before running again then this needs to be set
-			duration = 0, -- how long the thread actually ran for
-		}
-		
-		
-		if thread_id == ArkInventory.Global.Thread.Format.JunkSell then
-			threads[thread_id].timer = ArkInventory.db.option.thread.timeout.junksell
-		elseif thread_id == ArkInventory.Global.Thread.Format.Tradeskill then
-			--threads[thread_id].timer = ArkInventory.db.option.thread.timeout.tradeskill
-		end
+		ArkInventory.OutputThread( thread_id, " starting" )
+		thread_func( )
+		tz = debugprofilestop( ) - tz
+		ArkInventory.OutputThread( thread_id, string.format( " took %0.0fms", tz ) )
 		
 	end
-	
-	threads[thread_id].resumed = debugprofilestop( )
-	threads[thread_id].thread = coroutine.create( thread_func )
-	
-	ARKINV_ThreadTimer:Show( )
 	
 end
 
@@ -13485,8 +13275,8 @@ end
 
 function ArkInventory.ThreadYield( thread_id )
 	
+	if not thread_id then return end
 	if not ArkInventory.Global.Thread.Use then return end
-	
 	
 	local threads = ArkInventory.Global.Thread.data
 	
@@ -13513,11 +13303,19 @@ function ArkInventory.ThreadYield( thread_id )
 		
 		timeout = 1
 		
-	elseif thread_id == ArkInventory.Global.Thread.Format.JunkSell then
+	elseif thread_id == ArkInventory.Global.Thread.Format.ActionVendor then
 		
 		thread_id = ArkInventory.Global.Thread.Format.Force
 		
-	elseif thread_id == ArkInventory.Global.Thread.Format.MailSend then
+	elseif thread_id == ArkInventory.Global.Thread.Format.ActionMail then
+		
+		thread_id = ArkInventory.Global.Thread.Format.Force
+		
+	elseif thread_id == ArkInventory.Global.Thread.Format.ActionUse then
+		
+		thread_id = ArkInventory.Global.Thread.Format.Force
+		
+	elseif thread_id == ArkInventory.Global.Thread.Format.ActionScrap then
 		
 		thread_id = ArkInventory.Global.Thread.Format.Force
 		
@@ -13708,6 +13506,74 @@ function ArkInventory.LocationOverrideSet( loc_id, value )
 	ArkInventory.BlizzardAPIHook( false, true )
 	
 end
+
+function ArkInventory:EVENT_ARKINV_DRAGONRACE_ENTER( ... )
+	
+	--ArkInventory.Output( "dragon race started" )
+	
+end
+
+function ArkInventory:EVENT_ARKINV_DRAGONRACE_LEAVE( ... )
+	
+	--ArkInventory.Output( "dragon race ended" )
+	
+	for loc_id in pairs( ArkInventory.Global.ScanAfterDragonRace ) do
+		
+		ArkInventory.Global.ScanAfterDragonRace[loc_id] = nil
+		
+		if loc_id == ArkInventory.Const.Location.Pet then
+			ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_PET_UPDATE_BUCKET", "DRAGONRACE_ENDED" )
+		elseif loc_id == ArkInventory.Const.Location.Mount then
+			ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_MOUNT_UPDATE_BUCKET", "DRAGONRACE_ENDED" )
+		elseif loc_id == ArkInventory.Const.Location.Toybox then
+			ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_TOYBOX_UPDATE_BUCKET", "DRAGONRACE_ENDED" )
+		elseif loc_id == ArkInventory.Const.Location.Heirloom then
+			ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_HEIRLOOM_UPDATE_BUCKET", "DRAGONRACE_ENDED" )
+		elseif loc_id == ArkInventory.Const.Location.Currency then
+			ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE_BUCKET", "DRAGONRACE_ENDED" )
+		elseif loc_id == ArkInventory.Const.Location.Reputation then
+			ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_REPUTATION_UPDATE_BUCKET", "DRAGONRACE_ENDED" )
+		end
+		
+	end
+	
+end
+
+function ArkInventory.DragonRaceCheck( )
+	--ArkInventory.Output( "race check" )
+	if not ArkInventory.Global.Mode.DragonRace then
+		-- was not previously racing, am i in a race now?
+		if ArkInventory.CrossClient.GetItemCount( ArkInventory.Const.DragonRaceItem ) == 1 then
+			ArkInventory.Global.Mode.DragonRace = true
+			ArkInventory.EVENT_ARKINV_DRAGONRACE_ENTER( )
+		end
+	else
+		-- was previously in a race, has it ended?
+		if ArkInventory.CrossClient.GetItemCount( ArkInventory.Const.DragonRaceItem ) == 0 then
+			ArkInventory.Global.Mode.DragonRace = false
+			ArkInventory.EVENT_ARKINV_DRAGONRACE_LEAVE( )
+		end
+	end
+end
+
+function ArkInventory:EVENT_ARKINV_UNIT_AURA_BUCKET( events )
+	
+end
+
+function ArkInventory:EVENT_ARKINV_UNIT_AURA( event, ... )
+	
+	local arg1, arg2, arg3 = ...
+	
+	if arg1 == "player" then
+		--ArkInventory.Output( "event = [", event, "] [", arg1, "] [", arg2, "] [", arg3, "]" )
+		--ArkInventory:SendMessage( "EVENT_ARKINV_UNIT_AURA_BUCKET", event )
+		ArkInventory.DragonRaceCheck( )
+	end
+	
+end
+
+
+
 
 
 

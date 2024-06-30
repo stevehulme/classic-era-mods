@@ -29,7 +29,7 @@ local TT_Unknown = UNKNOWN; -- "Unknown"
 local TT_UnknownObject = UNKNOWNOBJECT; -- "Unknown"
 local TT_Targeting = BINDING_HEADER_TARGETING;	-- "Targeting"
 local TT_TargetedBy = LibFroznFunctions:GetGlobalString("TIPTAC_TARGETED_BY") or "Targeted by"; -- "Targeted by"
-local TT_MythicPlusDungeonScore = CHALLENGE_COMPLETE_DUNGEON_SCORE; -- "Mythic+ Rating"
+local TT_MythicPlusDungeonScore = CHALLENGE_COMPLETE_DUNGEON_SCORE; -- "Mythic+ Rating: %s"
 local TT_Mount = LibFroznFunctions:GetGlobalString("RENOWN_REWARD_MOUNT_NAME_FORMAT") or "Mount: %s"; -- "Mount: %s"
 local TT_ReactionIcon = {
 	[LFF_UNIT_REACTION_INDEX.hostile] = "unit_reaction_hostile",             -- Hostile
@@ -282,7 +282,7 @@ function ttStyle:HighlightTipTacDeveloper(tip, currentDisplayParams, unitRecord,
 			overlayTextureTopBottomTexel = 0.4375,
 			
 			overlayAtlasTopScale = 0.75,
-			overlayAtlasTopYOffset = 1 - (TT_ExtendedConfig.tipBackdrop.insets.top + TT_ExtendedConfig.tipPaddingForGameTooltip.offset),
+			overlayAtlasTopYOffset = 1 - ((cfg.enableBackdrop and TT_ExtendedConfig.tipBackdrop.insets.top or 0) + TT_ExtendedConfig.tipPaddingForGameTooltip.offset),
 			
 			-- overlayAtlasBottom = "AzeriteTooltip-Bottom", -- available in DF, but not available in WotLKC
 			overlayTextureBottom = "Interface\\AddOns\\" .. MOD_NAME .. "\\media\\AzeriteTooltip",
@@ -293,13 +293,13 @@ function ttStyle:HighlightTipTacDeveloper(tip, currentDisplayParams, unitRecord,
 			overlayTextureBottomTopTexel = 0.453125,
 			overlayTextureBottomBottomTexel = 0.539062,
 			
-			overlayAtlasBottomYOffset = 2 + (TT_ExtendedConfig.tipBackdrop.insets.bottom + TT_ExtendedConfig.tipPaddingForGameTooltip.offset)
+			overlayAtlasBottomYOffset = 2 + ((cfg.enableBackdrop and TT_ExtendedConfig.tipBackdrop.insets.bottom or 0) + TT_ExtendedConfig.tipPaddingForGameTooltip.offset)
 		};
 		
 		if (tip.TopOverlay) then
 			local isTopOverlayShown = tip.TopOverlay:IsShown();
 		
-			if (style) and (style.overlayTextureTop) then -- part from SharedTooltip_SetBackdropStyle() only for top overlay
+			if (style) and (style.overlayTextureTop) and (not isTopOverlayShown) then -- part from SharedTooltip_SetBackdropStyle() only for top overlay
 				-- tip.TopOverlay:SetAtlas(style.overlayAtlasTop, true); -- available in DF, but not available in WotLKC
 				tip.TopOverlay:SetTexture(style.overlayTextureTop);
 				tip.TopOverlay:SetSize(style.overlayTextureTopWidth, style.overlayTextureTopHeight);
@@ -308,13 +308,15 @@ function ttStyle:HighlightTipTacDeveloper(tip, currentDisplayParams, unitRecord,
 				tip.TopOverlay:SetScale(style.overlayAtlasTopScale or 1.0);
 				tip.TopOverlay:SetPoint("CENTER", tip, "TOP", style.overlayAtlasTopXOffset or 0, style.overlayAtlasTopYOffset or 0);
 				tip.TopOverlay:Show();
+				
+				currentDisplayParams.isSetTopOverlayToHighlightTipTacDeveloper = true;
 			end
 		end
 		
 		if (tip.BottomOverlay) then
 			local isBottomOverlayShown = tip.BottomOverlay:IsShown();
 			
-			if (style) and (style.overlayTextureBottom) then -- part from SharedTooltip_SetBackdropStyle() only for bottom overlay
+			if (style) and (style.overlayTextureBottom) and (not isBottomOverlayShown) then -- part from SharedTooltip_SetBackdropStyle() only for bottom overlay
 				-- tip.BottomOverlay:SetAtlas(style.overlayAtlasBottom, true); -- available in DF, but not available in WotLKC
 				tip.BottomOverlay:SetTexture(style.overlayTextureBottom);
 				tip.BottomOverlay:SetSize(style.overlayTextureBottomWidth, style.overlayTextureBottomHeight);
@@ -323,6 +325,8 @@ function ttStyle:HighlightTipTacDeveloper(tip, currentDisplayParams, unitRecord,
 				tip.BottomOverlay:SetScale(style.overlayAtlasBottomScale or 1.0);
 				tip.BottomOverlay:SetPoint("CENTER", tip, "BOTTOM", style.overlayAtlasBottomXOffset or 0, style.overlayAtlasBottomYOffset or 0);
 				tip.BottomOverlay:Show();
+				
+				currentDisplayParams.isSetBottomOverlayToHighlightTipTacDeveloper = true;
 			end
 		end
 	end
@@ -549,18 +553,35 @@ function ttStyle:ModifyUnitTooltip(tip, currentDisplayParams, unitRecord, first)
 		if (ratingSummary) then
 			local mythicPlusDungeonScore = ratingSummary.currentSeasonScore;
 			local mythicPlusBestRunLevel;
-			for _, ratingMapSummary in ipairs(ratingSummary.runs or {}) do
-				if (ratingMapSummary.finishedSuccess) and ((not mythicPlusBestRunLevel) or (mythicPlusBestRunLevel < ratingMapSummary.bestRunLevel)) then
-					mythicPlusBestRunLevel = ratingMapSummary.bestRunLevel;
+			if (ratingSummary.runs) then
+				for _, ratingMapSummary in ipairs(ratingSummary.runs or {}) do
+					if (ratingMapSummary.finishedSuccess) and ((not mythicPlusBestRunLevel) or (mythicPlusBestRunLevel < ratingMapSummary.bestRunLevel)) then
+						mythicPlusBestRunLevel = ratingMapSummary.bestRunLevel;
+					end
 				end
 			end
-			if (mythicPlusDungeonScore > 0) then
-				local mythicPlusDungeonScoreColor = (C_ChallengeMode.GetDungeonScoreRarityColor(mythicPlusDungeonScore) or TT_COLOR.text.default);
+			
+			local mythicPlusText = LibFroznFunctions:CreatePushArray();
+			if (cfg.mythicPlusDungeonScoreFormat == "highestSuccessfullRun") then
+				if (mythicPlusBestRunLevel) then
+					mythicPlusText:Push(TT_COLOR.text.default:WrapTextInColorCode("+" .. mythicPlusBestRunLevel));
+				end
+			else
+				if (mythicPlusDungeonScore > 0) then
+					local mythicPlusDungeonScoreColor = (C_ChallengeMode.GetDungeonScoreRarityColor(mythicPlusDungeonScore) or TT_COLOR.text.default);
+					mythicPlusText:Push(mythicPlusDungeonScoreColor:WrapTextInColorCode(mythicPlusDungeonScore));
+				end
+			end
+			if (mythicPlusText:GetCount() > 0) then
 				if (lineInfo:GetCount() > 0) then
 					lineInfo:Push("\n");
 				end
 				lineInfo:Push("|cffffd100");
-				lineInfo:Push(TT_MythicPlusDungeonScore:format(mythicPlusDungeonScoreColor:WrapTextInColorCode(mythicPlusDungeonScore) .. (mythicPlusBestRunLevel and " |cffffff99(+" .. mythicPlusBestRunLevel .. ")|r" or "")));
+				lineInfo:Push(TT_MythicPlusDungeonScore:format(mythicPlusText:Concat()));
+				
+				if (cfg.mythicPlusDungeonScoreFormat == "both") and (mythicPlusBestRunLevel) then
+					lineInfo:Push(" |cffffff99(+" .. mythicPlusBestRunLevel .. ")|r");
+				end
 			end
 		end
 	end
@@ -741,12 +762,19 @@ function ttStyle:OnTipSetCurrentDisplayParams(TT_CacheForFrames, tip, currentDis
 	currentDisplayParams.tipLineTargetedByIndex = nil;
 	currentDisplayParams.petLineLevelIndex = nil;
 	currentDisplayParams.mergeLevelLineWithGuildName = nil;
+	currentDisplayParams.isSetTopOverlayToHighlightTipTacDeveloper = nil;
+	currentDisplayParams.isSetBottomOverlayToHighlightTipTacDeveloper = nil;
 end
 
-function ttStyle:OnTipStyle(TT_CacheForFrames, tip, currentDisplayParams, first)
-	local unitRecord = currentDisplayParams.unitRecord;
+function ttStyle:OnUnitTipStyle(TT_CacheForFrames, tip, currentDisplayParams, first)
+	-- check if modification of unit tip content is enabled
+	if (not cfg.showUnitTip) then
+		return;
+	end
 	
 	-- some things only need to be done once initially when the tip is first displayed
+	local unitRecord = currentDisplayParams.unitRecord;
+	
 	if (first) then
 		-- find pet, battle pet or NPC title
 		if (unitRecord.isPet) or (unitRecord.isBattlePet) or (unitRecord.isNPC) then
@@ -770,4 +798,18 @@ function ttStyle:OnTipResetCurrentDisplayParams(TT_CacheForFrames, tip, currentD
 	currentDisplayParams.tipLineTargetedByIndex = nil;
 	currentDisplayParams.petLineLevelIndex = nil;
 	currentDisplayParams.mergeLevelLineWithGuildName = nil;
+end
+
+function ttStyle:OnTipPostResetCurrentDisplayParams(TT_CacheForFrames, tip, currentDisplayParams)
+	-- hide tip's top/bottom overlay currently highlighting TipTac developer
+	if (currentDisplayParams.isSetTopOverlayToHighlightTipTacDeveloper) and (tip.TopOverlay) then
+		tip.TopOverlay:Hide();
+	end
+	if (currentDisplayParams.isSetBottomOverlayToHighlightTipTacDeveloper) and (tip.BottomOverlay) then
+		tip.BottomOverlay:Hide();
+	end
+	
+	-- reset current display params for unit appearance
+	currentDisplayParams.isSetTopOverlayToHighlightTipTacDeveloper = nil;
+	currentDisplayParams.isSetBottomOverlayToHighlightTipTacDeveloper = nil;
 end

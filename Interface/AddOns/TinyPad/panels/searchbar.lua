@@ -22,7 +22,7 @@ function t.searchbar:Init()
     t.searchbar.searchBox:SetScript("OnEditFocusLost",t.searchbar.SearchOnEditFocusLost)
     t.searchbar.searchBox:SetScript("OnEnterPressed",t.searchbar.SearchButtonOnClick) -- hitting enter in searchbox will /click the find button
     t.searchbar.searchBox:SetTextInsets(7,70,1,1)
-    
+
     t.searchbar.searchBox.count = t.searchbar.searchBox:CreateFontString(nil,"ARTWORK")
     t.searchbar.searchBox.count:SetFont("Fonts\\ARIALN.ttf",10,"OUTLINE")
     t.searchbar.searchBox.count:SetPoint("RIGHT",-20,0)
@@ -68,7 +68,7 @@ function t.searchbar:SearchOnTextChanged()
         local count = t.pages:FindCount(t.searchbar.searchBox:GetText())
         t.searchbar.searchBox.count:SetText(format(t.constants.SEARCH_COUNT_FORMAT,count))
         -- if mouse is over the "Find"/searchButton, then update its tooltip with new count
-        if GetMouseFocus()==t.searchbar.searchButton then
+        if t.main:GetMouseFocus()==t.searchbar.searchButton then
             t.searchbar.searchButton:GetScript("OnEnter")(t.searchbar.searchButton)
         end
     end
@@ -77,7 +77,7 @@ end
 -- clicking elsewhere will lose focus from the editbox; hide searchbar if it hasn't gotten focus back or a button is being clicked
 function t.searchbar:SearchOnEditFocusLost()
     C_Timer.After(t.constants.EDIT_FOCUS_TIMER,function()
-        local clickingSearchButton = GetMouseFocus()==t.searchbar.searchButton -- special case for potentially disabled search button
+        local clickingSearchButton = t.main:GetMouseFocus()==t.searchbar.searchButton -- special case for potentially disabled search button
         if not t.searchbar.searchBox:HasFocus() and t.searchbar:IsVisible() and not t.buttons.isButtonBeingClicked and not clickingSearchButton and not t.main.isSizing and not t.main.isMoving then
             t.layout:Hide("searchbar")
         elseif clickingSearchButton or t.main.isSizing or t.main.isMoving then -- clickingSearchButton is true if mouse is over a disabled searchButton too

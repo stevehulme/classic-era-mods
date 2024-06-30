@@ -100,7 +100,9 @@ L["CATEGORY_CONSUMABLE_DRINK"] = TUTORIAL_TITLE12 or true
 
 
 -- ldb
-L["LDB_MOUNTS_TYPE_A"] = BATTLE_PET_NAME_3 or true
+L["LDB_MOUNTS_TYPE_L"] = MOUNT_JOURNAL_FILTER_GROUND or true
+L["LDB_MOUNTS_TYPE_U"] = MOUNT_JOURNAL_FILTER_AQUATIC or true
+L["LDB_MOUNTS_TYPE_A"] = MOUNT_JOURNAL_FILTER_FLYING or true
 L["LDB_MOUNTS_FLYING_DISMOUNT"] = AUTO_DISMOUNT_FLYING_TEXT or true
 L["LDB_MOUNTS_FAIL_NOT_ALLOWED"] = SPELL_FAILED_NO_MOUNTS_ALLOWED or true
 L["LDB_MOUNTS_FAIL_PACIFIED"] = SPELL_FAILED_PACIFIED or true
@@ -187,6 +189,7 @@ L["ENGRAVE"] = ENGRAVE or true
 L["EQUIP"] = EQUIPSET_EQUIP or true
 L["EQUIP_COLON"] = ITEM_SPELL_TRIGGER_ONEQUIP or true
 L["EQUIPMENT"] = BAG_FILTER_EQUIPMENT or WORLD_QUEST_REWARD_FILTERS_EQUIPMENT or true
+L["ERROR"] = ERROR_CAPS or true
 L["EXPANSION"] = EXPANSION_FILTER_TEXT or true
 L["FACTION_INACTIVE"] = FACTION_INACTIVE or true
 L["FILTER"] = FILTER or true
@@ -255,7 +258,6 @@ L["OBLITERUM_FORGE"] = OBLITERUM_FORGE_TITLE
 L["OFFLINE"] = PLAYER_OFFLINE or true
 L["OKAY"] = OKAY or true
 L["ONLINE"] = FRIENDS_LIST_ONLINE or true
-L["OPEN"] = OPEN or true
 L["OPTION_TOOLTIP_REVERSE_NEW_LOOT"] = OPTION_TOOLTIP_REVERSE_NEW_LOOT or true
 L["OPTIONS"] = GAMEOPTIONS_MENU or true
 L["OTHER"] = OTHER or true
@@ -263,6 +265,7 @@ L["PET"] = PET or true
 L["PETS"] = PETS or true
 L["POWER"] = POWER_TYPE_POWER or true
 L["PREVIOUS_RANK_UNKNOWN"] = TOOLTIP_SUPERCEDING_SPELL_NOT_KNOWN or true
+L["PROFESSIONS"] = TRADE_SKILLS or true
 L["PROFESSION_TOOL"] = INVTYPE_PROFESSION_TOOL or true
 L["QUALITY"] = QUALITY or true
 L["QUEST"] = BATTLE_PET_SOURCE_2 or true
@@ -281,6 +284,7 @@ L["REVERSE_NEW_LOOT_TEXT"] = REVERSE_NEW_LOOT_TEXT or true
 L["RULES"] = BRAWL_TOOLTIP_RULES or true
 L["SAVE"] = SAVE or true
 L["SANCTUM_SPECIAL_AREA_NIGHTFAE"] = GARDENWEALD_STATUS_HEADER or true
+L["SCRAP"] = SCRAP_BUTTON or true
 L["SEARCH"] = SEARCH or true
 L["SEARCH_LOADING"] = SEARCH_LOADING_TEXT or true
 L["SECONDARY_SKILLS"] = SECONDARY_SKILLS or true
@@ -317,6 +321,7 @@ L["UNKNOWN"] = UNKNOWN or true
 L["UNLEARNED"] = TRADE_SKILLS_UNLEARNED_TAB or true
 L["UNTRACK"] = UNTRACK_QUEST_ABBREV or true
 L["UNUSED"] = UNUSED or true
+L["USE"] = USE or true
 L["UPGRADE"] = UPGRADE or true
 L["VAULT"] = GUILD_BANK or true
 L["VENDOR"] = BATTLE_PET_SOURCE_3 or true
@@ -369,7 +374,7 @@ L["PET_CANNOT_BATTLE"] = string.gsub( BATTLE_PET_CANNOT_BATTLE, "\n", " " )
 L["MINUTES"] = string.match( D_MINUTES, ":(.-);$" ) or true
 L["SECONDS"] = string.match( D_SECONDS, ":(.-);$" ) or true
 
-L["SPELL_DRUID_TRAVEL_FORM"] = ( GetSpellInfo( 783 ) ) or true
+L["SPELL_DRUID_TRAVEL_FORM"] = ( ArkInventory.CrossClient.GetSpellInfo( 783 ).name ) or true
 
 L["UNKNOWN_OBJECT"] = "Unknown Object [%s]"
 
@@ -571,9 +576,9 @@ for _, v in ipairs( itemClassTable ) do
 			local text = nil
 			
 			if i1 and i2 then
-				text = GetItemSubClassInfo( i1, i2 )
+				text = ArkInventory.CrossClient.GetItemSubClassInfo( i1, i2 )
 			elseif i1 then
-				text = GetItemClassInfo( i1 )
+				text = ArkInventory.CrossClient.GetItemClassInfo( i1 )
 			end
 			
 			if text then
@@ -698,3 +703,6 @@ L["WOW_SKILL_TAILORING"] = true
 L["WOW_ITEM_SOULSHARD"] = true
 L["WOW_ITEM_PROJECTILE_ARROW"] = true
 L["WOW_ITEM_PROJECTILE_BULLET"] = true
+
+L["DEBUG_SCAN_ABORT_NOT_CONTROLLED"] = "scan aborted - blizzard bag [%1$s] is not controlled by %2$s"
+L["DEBUG_SCAN_ABORT_WRONG_CLIENT"] = "scan aborted - %1$s [%2$s.%3$s]/[%4$s] is not enabled for this client"

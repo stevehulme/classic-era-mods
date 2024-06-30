@@ -58,10 +58,10 @@ tinsert(eventQuests, {"Lunar Festival", 8724}) -- Morningdew the Elder
 tinsert(eventQuests, {"Lunar Festival", 8725}) -- Riversong the Elder
 tinsert(eventQuests, {"Lunar Festival", 8726}) -- Brightspear the Elder
 tinsert(eventQuests, {"Lunar Festival", 8727}) -- Farwhisper the Elder
-tinsert(eventQuests, {"Lunar Festival", 8862, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Elune's Candle
-tinsert(eventQuests, {"Lunar Festival", 8863, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Festival Dumplings
-tinsert(eventQuests, {"Lunar Festival", 8864, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Festive Lunar Dresses
-tinsert(eventQuests, {"Lunar Festival", 8865, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Festive Lunar Pant Suits
+tinsert(eventQuests, {"Lunar Festival", 8862, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Elune's Candle
+tinsert(eventQuests, {"Lunar Festival", 8863, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Festival Dumplings
+tinsert(eventQuests, {"Lunar Festival", 8864, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Festive Lunar Dresses
+tinsert(eventQuests, {"Lunar Festival", 8865, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Festive Lunar Pant Suits
 tinsert(eventQuests, {"Lunar Festival", 8866}) -- Bronzebeard the Elder
 tinsert(eventQuests, {"Lunar Festival", 8867}) -- Lunar Fireworks
 tinsert(eventQuests, {"Lunar Festival", 8868}) -- Elune's Blessing
@@ -71,13 +71,13 @@ tinsert(eventQuests, {"Lunar Festival", 8872}) -- The Lunar Festival
 tinsert(eventQuests, {"Lunar Festival", 8873}) -- The Lunar Festival
 tinsert(eventQuests, {"Lunar Festival", 8874}) -- The Lunar Festival
 tinsert(eventQuests, {"Lunar Festival", 8875}) -- The Lunar Festival
-tinsert(eventQuests, {"Lunar Festival", 8876, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Small Rockets
-tinsert(eventQuests, {"Lunar Festival", 8877, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Firework Launcher
-tinsert(eventQuests, {"Lunar Festival", 8878, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Festive Recipes
-tinsert(eventQuests, {"Lunar Festival", 8879, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Large Rockets
-tinsert(eventQuests, {"Lunar Festival", 8880, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Cluster Rockets
-tinsert(eventQuests, {"Lunar Festival", 8881, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Large Cluster Rockets
-tinsert(eventQuests, {"Lunar Festival", 8882, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Cluster Launcher
+tinsert(eventQuests, {"Lunar Festival", 8876, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Small Rockets
+tinsert(eventQuests, {"Lunar Festival", 8877, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Firework Launcher
+tinsert(eventQuests, {"Lunar Festival", 8878, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Festive Recipes
+tinsert(eventQuests, {"Lunar Festival", 8879, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Large Rockets
+tinsert(eventQuests, {"Lunar Festival", 8880, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Cluster Rockets
+tinsert(eventQuests, {"Lunar Festival", 8881, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Large Cluster Rockets
+tinsert(eventQuests, {"Lunar Festival", 8882, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Cluster Launcher
 tinsert(eventQuests, {"Lunar Festival", 8883}) -- Valadar Starsong
 -- Northrend Elders
 tinsert(eventQuests, {"Lunar Festival", 13012}) -- Sardis the Elder
@@ -116,11 +116,11 @@ tinsert(eventQuests, {"Love is in the Air", 8903}) -- Dangerous Love
 tinsert(eventQuests, {"Love is in the Air", 8904}) -- Dangerous Love
 tinsert(eventQuests, {"Love is in the Air", 8979}) -- Fenstad's Hunch
 tinsert(eventQuests, {"Love is in the Air", 8980}) -- Zinge's Assessment
-tinsert(eventQuests, {"Love is in the Air", 8981, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Gift Giving
+tinsert(eventQuests, {"Love is in the Air", 8981, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Gift Giving
 tinsert(eventQuests, {"Love is in the Air", 8982}) -- Tracing the Source
 tinsert(eventQuests, {"Love is in the Air", 8983}) -- Tracing the Source
 tinsert(eventQuests, {"Love is in the Air", 8984}) -- The Source Revealed
-tinsert(eventQuests, {"Love is in the Air", 8993, nil, nil, QuestieCorrections.CLASSIC_ONLY}) -- Gift Giving
+tinsert(eventQuests, {"Love is in the Air", 8993, nil, nil, QuestieCorrections.CLASSIC_HIDE}) -- Gift Giving
 tinsert(eventQuests, {"Love is in the Air", 9024}) -- Aristan's Hunch
 tinsert(eventQuests, {"Love is in the Air", 9025}) -- Morgan's Discovery
 tinsert(eventQuests, {"Love is in the Air", 9026}) -- Tracing the Source
@@ -206,39 +206,39 @@ tinsert(eventQuests, {"Winter Veil", 8861, "31/12", "1/1"}) -- New Year Celebrat
 tinsert(eventQuests, {"Darkmoon Faire", 7902}) -- Vibrant Plumes
 tinsert(eventQuests, {"Darkmoon Faire", 7903}) -- Evil Bat Eyes
 tinsert(eventQuests, {"Darkmoon Faire", 8222}) -- Glowing Scorpid Blood
-tinsert(eventQuests, {"Darkmoon Faire", 7901, nil, nil, QuestieCorrections.HIDE_SOD}) -- Soft Bushy Tails
-tinsert(eventQuests, {"Darkmoon Faire", 7899, nil, nil, QuestieCorrections.HIDE_SOD}) -- Small Furry Paws
+tinsert(eventQuests, {"Darkmoon Faire", 7901, nil, nil, QuestieCorrections.SOD_HIDE}) -- Soft Bushy Tails
+tinsert(eventQuests, {"Darkmoon Faire", 7899, nil, nil, QuestieCorrections.SOD_HIDE}) -- Small Furry Paws
 tinsert(eventQuests, {"Darkmoon Faire", 7940}) -- 1200 Tickets - Orb of the Darkmoon
-tinsert(eventQuests, {"Darkmoon Faire", 7900, nil, nil, QuestieCorrections.HIDE_SOD}) -- Torn Bear Pelts
+tinsert(eventQuests, {"Darkmoon Faire", 7900, nil, nil, QuestieCorrections.SOD_HIDE}) -- Torn Bear Pelts
 tinsert(eventQuests, {"Darkmoon Faire", 7907}) -- Darkmoon Beast Deck
 tinsert(eventQuests, {"Darkmoon Faire", 7927}) -- Darkmoon Portals Deck
 tinsert(eventQuests, {"Darkmoon Faire", 7929}) -- Darkmoon Elementals Deck
 tinsert(eventQuests, {"Darkmoon Faire", 7928}) -- Darkmoon Warlords Deck
-tinsert(eventQuests, {"Darkmoon Faire", 7946, nil, nil, QuestieCorrections.HIDE_SOD}) -- Spawn of Jubjub
+tinsert(eventQuests, {"Darkmoon Faire", 7946, nil, nil, QuestieCorrections.SOD_HIDE}) -- Spawn of Jubjub
 tinsert(eventQuests, {"Darkmoon Faire", 8223}) -- More Glowing Scorpid Blood
 tinsert(eventQuests, {"Darkmoon Faire", 7934}) -- 50 Tickets - Darkmoon Storage Box
 tinsert(eventQuests, {"Darkmoon Faire", 7981}) -- 1200 Tickets - Amulet of the Darkmoon
 tinsert(eventQuests, {"Darkmoon Faire", 7943}) -- More Bat Eyes
-tinsert(eventQuests, {"Darkmoon Faire", 7894, nil, nil, QuestieCorrections.HIDE_SOD}) -- Copper Modulator
+tinsert(eventQuests, {"Darkmoon Faire", 7894, nil, nil, QuestieCorrections.SOD_HIDE}) -- Copper Modulator
 tinsert(eventQuests, {"Darkmoon Faire", 7933}) -- 40 Tickets - Greater Darkmoon Prize
 tinsert(eventQuests, {"Darkmoon Faire", 7898}) -- Thorium Widget
 tinsert(eventQuests, {"Darkmoon Faire", 7885}) -- Armor Kits
 tinsert(eventQuests, {"Darkmoon Faire", 7942}) -- More Thorium Widgets
-tinsert(eventQuests, {"Darkmoon Faire", 7883, nil, nil, QuestieCorrections.HIDE_SOD}) -- The World's Largest Gnome!
+tinsert(eventQuests, {"Darkmoon Faire", 7883, nil, nil, QuestieCorrections.SOD_HIDE}) -- The World's Largest Gnome!
 tinsert(eventQuests, {"Darkmoon Faire", 7892}) -- Big Black Mace
 tinsert(eventQuests, {"Darkmoon Faire", 7937}) -- Your Fortune Awaits You...
 tinsert(eventQuests, {"Darkmoon Faire", 7939}) -- More Dense Grinding Stones
 tinsert(eventQuests, {"Darkmoon Faire", 7893}) -- Rituals of Strength
-tinsert(eventQuests, {"Darkmoon Faire", 7891, nil, nil, QuestieCorrections.HIDE_SOD}) -- Green Iron Bracers
-tinsert(eventQuests, {"Darkmoon Faire", 7896, nil, nil, QuestieCorrections.HIDE_SOD}) -- Green Fireworks
+tinsert(eventQuests, {"Darkmoon Faire", 7891, nil, nil, QuestieCorrections.SOD_HIDE}) -- Green Iron Bracers
+tinsert(eventQuests, {"Darkmoon Faire", 7896, nil, nil, QuestieCorrections.SOD_HIDE}) -- Green Fireworks
 tinsert(eventQuests, {"Darkmoon Faire", 7884}) -- Crocolisk Boy and the Bearded Murloc
-tinsert(eventQuests, {"Darkmoon Faire", 7882, nil, nil, QuestieCorrections.HIDE_SOD}) -- Carnival Jerkins
+tinsert(eventQuests, {"Darkmoon Faire", 7882, nil, nil, QuestieCorrections.SOD_HIDE}) -- Carnival Jerkins
 tinsert(eventQuests, {"Darkmoon Faire", 7897}) -- Mechanical Repair Kits
-tinsert(eventQuests, {"Darkmoon Faire", 7895, nil, nil, QuestieCorrections.HIDE_SOD}) -- Whirring Bronze Gizmo
+tinsert(eventQuests, {"Darkmoon Faire", 7895, nil, nil, QuestieCorrections.SOD_HIDE}) -- Whirring Bronze Gizmo
 tinsert(eventQuests, {"Darkmoon Faire", 7941}) -- More Armor Kits
-tinsert(eventQuests, {"Darkmoon Faire", 7881, nil, nil, QuestieCorrections.HIDE_SOD}) -- Carnival Boots
-tinsert(eventQuests, {"Darkmoon Faire", 7890, nil, nil, QuestieCorrections.HIDE_SOD}) -- Heavy Grinding Stone
-tinsert(eventQuests, {"Darkmoon Faire", 7889, nil, nil, QuestieCorrections.HIDE_SOD}) -- Coarse Weightstone
+tinsert(eventQuests, {"Darkmoon Faire", 7881, nil, nil, QuestieCorrections.SOD_HIDE}) -- Carnival Boots
+tinsert(eventQuests, {"Darkmoon Faire", 7890, nil, nil, QuestieCorrections.SOD_HIDE}) -- Heavy Grinding Stone
+tinsert(eventQuests, {"Darkmoon Faire", 7889, nil, nil, QuestieCorrections.SOD_HIDE}) -- Coarse Weightstone
 tinsert(eventQuests, {"Darkmoon Faire", 7945}) -- Your Fortune Awaits You...
 tinsert(eventQuests, {"Darkmoon Faire", 7935}) -- 10 Tickets - Last Month's Mutton
 tinsert(eventQuests, {"Darkmoon Faire", 7938}) -- Your Fortune Awaits You...
@@ -247,6 +247,8 @@ tinsert(eventQuests, {"Darkmoon Faire", 7932}) -- 12 Tickets - Lesser Darkmoon P
 tinsert(eventQuests, {"Darkmoon Faire", 7930}) -- 5 Tickets - Darkmoon Flower
 tinsert(eventQuests, {"Darkmoon Faire", 7931}) -- 5 Tickets - Minor Darkmoon Prize
 tinsert(eventQuests, {"Darkmoon Faire", 7936}) -- 50 Tickets - Last Year's Mutton
+tinsert(eventQuests, {"Darkmoon Faire", 7905}) -- The Darkmoon Faire
+tinsert(eventQuests, {"Darkmoon Faire", 7926}) -- The Darkmoon Faire
 -- New SoD quests
 tinsert(eventQuests, {"Darkmoon Faire", 79588}) -- Small Furry Paws
 tinsert(eventQuests, {"Darkmoon Faire", 79589}) -- Torn Bear Pelts
@@ -290,8 +292,8 @@ tinsert(eventQuests, {"Hallow's End", 11450}) -- Fire Training
 tinsert(eventQuests, {"Hallow's End", 11356}) -- Costumed Orphan Matron
 tinsert(eventQuests, {"Hallow's End", 11357}) -- Masked Orphan Matron
 tinsert(eventQuests, {"Hallow's End", 11131}) -- Stop the Fires!
-tinsert(eventQuests, {"Hallow's End", 11135, nil, nil, QuestieCorrections.TBC_ONLY}) -- The Headless Horseman
-tinsert(eventQuests, {"Hallow's End", 11220, nil, nil, QuestieCorrections.TBC_ONLY}) -- The Headless Horseman
+tinsert(eventQuests, {"Hallow's End", 11135, nil, nil, QuestieCorrections.TBC_HIDE}) -- The Headless Horseman
+tinsert(eventQuests, {"Hallow's End", 11220, nil, nil, QuestieCorrections.TBC_HIDE}) -- The Headless Horseman
 tinsert(eventQuests, {"Hallow's End", 11219}) -- Stop the Fires!
 tinsert(eventQuests, {"Hallow's End", 11361}) -- Fire Training
 tinsert(eventQuests, {"Hallow's End", 11360}) -- Fire Brigade Practice
@@ -382,8 +384,8 @@ tinsert(eventQuests, {"Hallow's End", 12407}) -- Candy Bucket
 tinsert(eventQuests, {"Hallow's End", 12408}) -- Candy Bucket
 tinsert(eventQuests, {"Hallow's End", 12409}) -- Candy Bucket
 --tinsert(eventQuests, {"Hallow's End", 12410}) -- Candy Bucket -- doesn't exist
-tinsert(eventQuests, {"Hallow's End", 11392, nil, nil, QuestieCorrections.TBC_ONLY}) -- Call the Headless Horseman
-tinsert(eventQuests, {"Hallow's End", 11401, nil, nil, QuestieCorrections.TBC_ONLY}) -- Call the Headless Horseman
+tinsert(eventQuests, {"Hallow's End", 11392, nil, nil, QuestieCorrections.TBC_HIDE}) -- Call the Headless Horseman
+tinsert(eventQuests, {"Hallow's End", 11401, nil, nil, QuestieCorrections.TBC_HIDE}) -- Call the Headless Horseman
 tinsert(eventQuests, {"Hallow's End", 11403}) -- Free at Last!
 tinsert(eventQuests, {"Hallow's End", 11242}) -- Free at Last!
 --tinsert(eventQuests, {"Hallow's End", 11404}) -- Call the Headless Horseman
@@ -451,8 +453,8 @@ tinsert(eventQuests, {"Midsummer", 11581}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11583}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11584}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11657}) -- Torch Catching
-tinsert(eventQuests, {"Midsummer", 11691}) -- Summon Ahune
-tinsert(eventQuests, {"Midsummer", 11696}) -- Ahune is Here!
+tinsert(eventQuests, {"Midsummer", 11691, nil, nil, QuestieCorrections.CATA_HIDE}) -- Summon Ahune
+tinsert(eventQuests, {"Midsummer", 11696, nil, nil, QuestieCorrections.CATA_HIDE}) -- Ahune is Here!
 tinsert(eventQuests, {"Midsummer", 11731}) -- Torch Tossing
 tinsert(eventQuests, {"Midsummer", 11732}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11734}) -- Desecrate this Fire!
@@ -469,7 +471,7 @@ tinsert(eventQuests, {"Midsummer", 11744}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11745}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11746}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11747}) -- Desecrate this Fire!
-tinsert(eventQuests, {"Midsummer", 11748}) -- Desecrate this Fire!
+tinsert(eventQuests, {"Midsummer", 11748, nil, nil, QuestieCorrections.CATA_HIDE}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11749}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11750}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11751}) -- Desecrate this Fire!
@@ -506,7 +508,7 @@ tinsert(eventQuests, {"Midsummer", 11781}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11782}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11783}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11784}) -- Desecrate this Fire!
-tinsert(eventQuests, {"Midsummer", 11785}) -- Desecrate this Fire!
+tinsert(eventQuests, {"Midsummer", 11785, nil, nil, QuestieCorrections.CATA_HIDE}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11786}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11787}) -- Desecrate this Fire!
 tinsert(eventQuests, {"Midsummer", 11799}) -- Desecrate this Fire!
@@ -529,7 +531,7 @@ tinsert(eventQuests, {"Midsummer", 11815}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11816}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11817}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11818}) -- Honor the Flame
-tinsert(eventQuests, {"Midsummer", 11819}) -- Honor the Flame
+tinsert(eventQuests, {"Midsummer", 11819, nil, nil, QuestieCorrections.CATA_HIDE}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11820}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11821}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11822}) -- Honor the Flame
@@ -571,7 +573,7 @@ tinsert(eventQuests, {"Midsummer", 11857}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11858}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11859}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11860}) -- Honor the Flame
-tinsert(eventQuests, {"Midsummer", 11861}) -- Honor the Flame
+tinsert(eventQuests, {"Midsummer", 11861, nil, nil, QuestieCorrections.CATA_HIDE}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11862}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11863}) -- Honor the Flame
 tinsert(eventQuests, {"Midsummer", 11882}) -- Playing with Fire
@@ -592,8 +594,8 @@ tinsert(eventQuests, {"Midsummer", 11948}) -- Striking Back (level 43)
 tinsert(eventQuests, {"Midsummer", 11952}) -- Striking Back (level 51)
 tinsert(eventQuests, {"Midsummer", 11953}) -- Striking Back (level 60)
 tinsert(eventQuests, {"Midsummer", 11954}) -- Striking Back (level 67)
-tinsert(eventQuests, {"Midsummer", 11955}) -- Ahune, the Frost Lord
-tinsert(eventQuests, {"Midsummer", 11972}) -- Shards of Ahune
+tinsert(eventQuests, {"Midsummer", 11955, nil, nil, QuestieCorrections.CATA_HIDE}) -- Ahune, the Frost Lord
+tinsert(eventQuests, {"Midsummer", 11972, nil, nil, QuestieCorrections.CATA_HIDE}) -- Shards of Ahune
 tinsert(eventQuests, {"Midsummer", 11964}) -- Incense for the Summer Scorchlings
 tinsert(eventQuests, {"Midsummer", 11966}) -- Incense for the Festival Scorchlings
 tinsert(eventQuests, {"Midsummer", 11970}) -- The Master of Summer Lore
@@ -838,8 +840,8 @@ tinsert(eventQuests, {"Lunar Festival", 29742}) -- Menkhaf the Elder
 
 tinsert(eventQuests, {"Love is in the Air", 28935}) -- Crushing the Crown
 
-tinsert(eventQuests, {"Children's Week", 28879}) -- Back To The Orphanage
-tinsert(eventQuests, {"Children's Week", 28880}) -- Back To The Orphanage
+--tinsert(eventQuests, {"Children's Week", 28879}) -- Back To The Orphanage -- not available yet in children's week 2024
+--tinsert(eventQuests, {"Children's Week", 28880}) -- Back To The Orphanage -- not available yet in children's week 2024
 tinsert(eventQuests, {"Children's Week", 29093}) -- Cruisin' the Chasm
 tinsert(eventQuests, {"Children's Week", 29106}) -- The Biggest Diamond Ever!
 tinsert(eventQuests, {"Children's Week", 29107}) -- Malfurion Has Returned!

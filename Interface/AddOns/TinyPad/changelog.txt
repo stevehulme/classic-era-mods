@@ -1,3 +1,10 @@
+v3.2.0, 06/09/2024
+- Updated to support The War Within beta
+- Note: 'Load out of date AddOns' (in topright of the game's addon dialog) must be enabled for this version of the addon to load in the beta.
+
+v3.1.6, 05/07/2024
+- toc update for 10.2.7 patch
+
 v3.1.15, 04/30/2024
 - toc update for 1.15.2 and 4.4 patch
 

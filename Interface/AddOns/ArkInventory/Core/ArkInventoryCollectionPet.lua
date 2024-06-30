@@ -1679,7 +1679,7 @@ local function LinkTrainerSpecies( speciesID )
 	
 	
 	if not collection.isTrainerDataLoaded then
-		--ArkInventory.Output2( "linking saved trainer species data into cache" )
+		--ArkInventory.OutputDebug( "linking saved trainer species data into cache" )
 		collection.trainer = ArkInventory.db.cache.trainerspecies
 		local c = 0
 		for k, v in pairs( collection.trainer ) do
@@ -1688,7 +1688,7 @@ local function LinkTrainerSpecies( speciesID )
 				species[k] = v
 			end
 		end
-		--ArkInventory.Output2( c, " trainer species entries were linked" )
+		--ArkInventory.OutputDebug( c, " trainer species entries were linked" )
 		collection.isTrainerDataLoaded = true
 	end
 	
@@ -1700,7 +1700,7 @@ local function LinkTrainerSpecies( speciesID )
 	-- add the trainer data back
 	trainer[speciesID].td = td or { }
 	
-	--ArkInventory.Output2( "linked species ", speciesID, " to trainer species" )
+	--ArkInventory.OutputDebug( "linked species ", speciesID, " to trainer species" )
 	
 end
 
@@ -1803,10 +1803,25 @@ local function Scan_Threaded( thread_id )
 	for index = 1, C_PetJournal.GetNumPets( ) do
 		
 		if PetJournal:IsVisible( ) then
-			--ArkInventory.Output( "ABORTED (PET JOURNAL WAS OPENED)" )
+			ArkInventory.OutputDebug( "PET: ABORTED (PET JOURNAL WAS OPENED)" )
 			FilterActionRestore( )
 			return
 		end
+		
+		if ArkInventory.Global.Mode.Combat then
+			ArkInventory.OutputDebug( "PET: ABORTED (ENTERED COMBAT)" )
+			ArkInventory.Global.ScanAfterCombat[loc_id] = true
+			FilterActionRestore( )
+			return
+		end
+		
+		if ArkInventory.Global.Mode.DragonRace then
+			ArkInventory.OutputDebug( "PET: ABORTED (DRAGON RACE)" )
+			ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+			FilterActionRestore( )
+			return
+		end
+		
 		
 		numTotal = numTotal + 1
 		YieldCount = YieldCount + 1
@@ -1843,7 +1858,7 @@ local function Scan_Threaded( thread_id )
 			
 			
 			if not canBattle then
-				--ArkInventory.Output2( petName, " / ", health, " / ", maxHealth )
+				--ArkInventory.OutputDebug( petName, " / ", health, " / ", maxHealth )
 			end
 			
 			numOwned = numOwned + 1
@@ -1955,7 +1970,7 @@ local function Scan_Threaded( thread_id )
 	
 	if not collection.isReady then
 		collection.isReady = true
-		--ArkInventory.Output2( "pet data is now ready" )
+		--ArkInventory.OutputDebug( "pet data is now ready" )
 	end
 	
 	ArkInventory.Collection.Pet.ImportCrossRefTable( )
@@ -1971,20 +1986,11 @@ local function Scan( )
 	
 	local thread_id = string.format( ArkInventory.Global.Thread.Format.Collection, "pet" )
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		Scan_Threaded( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-	
-	local tf = function ( )
+	local thread_func = function( )
 		Scan_Threaded( thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 
@@ -1995,12 +2001,6 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_PET_UPDATE_BUCKET( events )
 	
 	if not ArkInventory:IsEnabled( ) then return end
 	
-	if ArkInventory.Global.Mode.Combat then
-		-- set to scan when leaving combat
-		ArkInventory.Global.ScanAfterCombat[loc_id] = true
-		return
-	end
-	
 	if not ArkInventory.isLocationMonitored( loc_id ) then
 		--ArkInventory.Output( "IGNORED (PETS NOT MONITORED)" )
 		return
@@ -2010,6 +2010,17 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_PET_UPDATE_BUCKET( events )
 		--ArkInventory.Output( "IGNORED (PET JOURNAL IS OPEN)" )
 		return
 	end
+	
+	if ArkInventory.Global.Mode.Combat then
+		ArkInventory.Global.ScanAfterCombat[loc_id] = true
+		return
+	end
+	
+	if ArkInventory.Global.Mode.DragonRace then
+		ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+		return
+	end
+	
 	
 	if not collection.isScanning then
 		collection.isScanning = true
@@ -2123,7 +2134,7 @@ function ArkInventory:EVENT_ARKINV_BATTLEPET_OPENING_DONE( event, ... )
 			
 			if C_PetBattles.IsWildBattle( ) then
 				
-				--ArkInventory.Output2( "wild battle" )
+				--ArkInventory.OutputDebug( "wild battle" )
 				
 				if sd.isTrainer then
 					-- elite/legendary, dont add anything
@@ -2199,7 +2210,7 @@ function ArkInventory:EVENT_ARKINV_BATTLEPET_OPENING_DONE( event, ... )
 			--ArkInventory.Output( YELLOW_FONT_COLOR_CODE, ArkInventory.Localise["BATTLEPET"], " #", i, ": ", h, " ", YELLOW_FONT_COLOR_CODE, info )
 			
 		end
-		--ArkInventory.Output2( { speciesID, level, quality, maxHealth, power, speed, "", name } )
+		--ArkInventory.OutputDebug( { speciesID, level, quality, maxHealth, power, speed, "", name } )
 		
 		if ArkInventory.db.option.message.battlepet.opponent then
 			local h = string.format( "%s|Hbattlepet:%s:%s:%s:%s:%s:%s:%s|h[%s]|h|r", select( 5, ArkInventory.GetItemQualityColor( quality ) ), speciesID, level, quality, maxHealth, power, speed, "", name )

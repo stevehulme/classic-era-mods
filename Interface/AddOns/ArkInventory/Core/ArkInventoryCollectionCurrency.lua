@@ -47,7 +47,7 @@ function ArkInventory.Collection.Currency.ImportCrossRefTable( )
 			key1 = ArkInventory.ObjectIDCount( string.format( "item:%s", item ) )
 			key2 = ArkInventory.ObjectIDCount( string.format( "currency:%s", cid ) )
 			
-			--ArkInventory.Output2( key1, " / ", key2 )
+			--ArkInventory.OutputDebug( key1, " / ", key2 )
 			
 			if not ArkInventory.Global.ItemCrossReference[key1] then
 				ArkInventory.Global.ItemCrossReference[key1] = { }
@@ -180,7 +180,7 @@ function ArkInventory.Collection.Currency.ListSetActive( index, state, bulk )
 	local entry = ArkInventory.Collection.Currency.GetByIndex( index )
 	if entry then
 		
-		--ArkInventory.Output2( index, " / ", state, " / ", entry.active )
+		--ArkInventory.OutputDebug( index, " / ", state, " / ", entry.active )
 		
 		if state ~= entry.active then
 			--ArkInventory.Output( "Change: ", state, ", INDEX[=", entry.index, "] NAME=[", entry.name, "]" )
@@ -311,13 +311,27 @@ local function Scan_Threaded( thread_id )
 	
 	for index = 1, ArkInventory.CrossClient.GetCurrencyListSize( ) do
 		
-		YieldCount = YieldCount + 1
-		
 		if TokenFrame:IsVisible( ) then
-			ArkInventory.OutputDebug( "CURRENCY: ABORTED (FRAME WAS OPENED)" )
-			--FilterActionRestore( )
-			--return
+			ArkInventory.OutputDebug( "CURRENCY: ABORTED (CURRENCY FRAME WAS OPENED)" )
+			FilterActionRestore( )
+			return
 		end
+		
+		if ArkInventory.Global.Mode.Combat then
+			ArkInventory.OutputDebug( "CURRENCY: ABORTED (ENTERED COMBAT)" )
+			ArkInventory.Global.ScanAfterCombat[loc_id] = true
+			FilterActionRestore( )
+			return
+		end
+		
+		if ArkInventory.Global.Mode.DragonRace then
+			ArkInventory.OutputDebug( "CURRENCY: ABORTED (DRAGON RACE)" )
+			ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+			FilterActionRestore( )
+			return
+		end
+		
+		YieldCount = YieldCount + 1
 		
 		local currencyInfo = ArkInventory.CrossClient.GetCurrencyListInfo( index )
 		if currencyInfo then
@@ -465,20 +479,11 @@ local function Scan( )
 	
 	local thread_id = string.format( ArkInventory.Global.Thread.Format.Collection, "currency" )
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		Scan_Threaded( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-	
-	local tf = function ( )
+	local thread_func = function( )
 		Scan_Threaded( thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 
@@ -488,12 +493,6 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE_BUCKET( events )
 	--ArkInventory.Output( "CURRENCY BUCKET [", events, "]" )
 	
 	if not ArkInventory:IsEnabled( ) then return end
-	
-	if ArkInventory.Global.Mode.Combat then
-		-- set to scan when leaving combat
-		ArkInventory.Global.ScanAfterCombat[loc_id] = true
-		return
-	end
 	
 	if not ArkInventory.isLocationMonitored( loc_id ) then
 		--ArkInventory.Output( "IGNORED (CURRENCY NOT MONITORED)" )
@@ -505,9 +504,13 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE_BUCKET( events )
 		return
 	end
 	
-	if IsMounted( ) then
-		-- set to scan after dismounting
-		ArkInventory.Global.ScanAfterDismount[loc_id] = true
+	if ArkInventory.Global.Mode.Combat then
+		ArkInventory.Global.ScanAfterCombat[loc_id] = true
+		return
+	end
+	
+	if ArkInventory.Global.Mode.DragonRace then
+		ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
 		return
 	end
 	
@@ -531,3 +534,4 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE( event, ... )
 	ArkInventory:SendMessage( "EVENT_ARKINV_COLLECTION_CURRENCY_UPDATE_BUCKET", event )
 	
 end
+

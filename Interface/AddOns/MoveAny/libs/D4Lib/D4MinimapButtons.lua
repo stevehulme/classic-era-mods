@@ -1,3 +1,4 @@
+local _, D4 = ...
 local icon = null
 function D4:GetLibDBIcon()
     if not D4:IsOldWow() then

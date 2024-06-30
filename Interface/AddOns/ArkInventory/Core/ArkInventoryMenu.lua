@@ -289,8 +289,6 @@ function ArkInventory.MenuBarOpen( frame )
 	--ArkInventory.Output( "sid=[", sid, "] default=[", sid_def, "]" )
 	
 	
-	local category = ArkInventory.Const.CategoryTypes
-	
 	ArkInventory.Lib.Dewdrop:Open( frame,
 		"point", helper_DewdropMenuPosition( frame ),
 		"relativePoint", helper_DewdropMenuPosition( frame, true ),
@@ -434,7 +432,7 @@ function ArkInventory.MenuBarOpen( frame )
 						)
 						
 						local has_entries = false
-						for _, v in ipairs( ArkInventory.Const.CategoryTypes ) do
+						for _, v in ipairs( ArkInventory.Const.Category.Headers ) do
 							if ArkInventory.CategoryBarHasAssigned( loc_id, bar_id, v ) then
 								has_entries = true
 								ArkInventory.Lib.Dewdrop:AddLine(
@@ -486,7 +484,7 @@ function ArkInventory.MenuBarOpen( frame )
 					
 					else
 						
-						for _, v in ipairs( ArkInventory.Const.CategoryTypes ) do
+						for _, v in ipairs( ArkInventory.Const.Category.Headers ) do
 							ArkInventory.Lib.Dewdrop:AddLine(
 								"text", ArkInventory.Localise[string.format( "CATEGORY_%s", v )],
 								"hasArrow", true,
@@ -614,7 +612,7 @@ function ArkInventory.MenuBarOpen( frame )
 							local t = cat.type_code
 							local cat_bar, def_bar = ArkInventory.CategoryLocationGet( loc_id, cat.id )
 							
-							----ArkInventory.Output2( "loc_id=[", loc_id, "], cat_id=[", cat.id, "], cat_bar=[", cat_bar, "], def_bar=[", def_bar, "]" )
+							----ArkInventory.OutputDebug( "loc_id=[", loc_id, "], cat_id=[", cat.id, "], cat_bar=[", cat_bar, "], def_bar=[", def_bar, "]" )
 							
 							if int_type == "ASSIGN" and abs( cat_bar ) == bar_id and not def_bar then
 								t = "DO_NOT_DISPLAY"
@@ -1144,8 +1142,6 @@ function ArkInventory.MenuItemOpen( frame )
 	local cat0, cat1, cat2 = ArkInventory.ItemCategoryGet( i )
 	local bar_id = math.abs( ArkInventory.CategoryLocationGet( loc_id, cat0 ) )
 	
-	local categories = { "SYSTEM", "CONSUMABLE", "TRADEGOODS", "SKILL", "CLASS", "EMPTY", "CUSTOM", }
-	
 	cat0 = ArkInventory.Global.Category[cat0] or cat0
 	if type( cat0 ) ~= "table" then
 		cat0 = { id = cat0, fullname = string.format( ArkInventory.Localise["CONFIG_OBJECT_DELETED"], ArkInventory.Localise["CATEGORY"], cat0 ) }
@@ -1310,7 +1306,7 @@ function ArkInventory.MenuItemOpen( frame )
 						
 					else
 						
-						for _, v in ipairs( categories ) do
+						for _, v in ipairs( ArkInventory.Const.Category.Headers ) do
 							ArkInventory.Lib.Dewdrop:AddLine(
 								"text", ArkInventory.Localise[string.format( "CATEGORY_%s", v )],
 								"disabled", isEmpty,
@@ -1898,6 +1894,12 @@ function ArkInventory.MenuItemCategoryAssignOpen( offset, level, value, i, loc_i
 					state = ArkInventory.Localise["MAIL"]
 				elseif catset.action.t == ArkInventory.ENUM.ACTION.TYPE.MOVE then
 					state = ArkInventory.Localise["MOVE"]
+				elseif catset.action.t == ArkInventory.ENUM.ACTION.TYPE.USE then
+					state = ArkInventory.Localise["USE"]
+				elseif catset.action.t == ArkInventory.ENUM.ACTION.TYPE.DELETE then
+					state = ArkInventory.Localise["DELETE"]
+				elseif catset.action.t == ArkInventory.ENUM.ACTION.TYPE.SCRAP then
+					state = ArkInventory.Localise["SCRAP"]
 				end
 				
 				text = string.format( "%s: %s%s", text, colour, state )
@@ -1994,6 +1996,7 @@ function ArkInventory.MenuItemCategoryAssignOpen( offset, level, value, i, loc_i
 				
 				ArkInventory.Lib.Dewdrop:AddLine( )
 				
+				
 				local text = ArkInventory.Localise["DISABLED"]
 				local desc = string.format( ArkInventory.Localise["CONFIG_ACTION_TYPE_DESC"], cat.fullname, text )
 				local state = ArkInventory.ENUM.ACTION.TYPE.DISABLED
@@ -2008,6 +2011,7 @@ function ArkInventory.MenuItemCategoryAssignOpen( offset, level, value, i, loc_i
 						catset.action.t = state
 					end
 				)
+				
 				
 				local text = ArkInventory.Localise["VENDOR"]
 				local desc = string.format( ArkInventory.Localise["CONFIG_ACTION_TYPE_DESC"], cat.fullname, text )
@@ -2024,6 +2028,7 @@ function ArkInventory.MenuItemCategoryAssignOpen( offset, level, value, i, loc_i
 					end
 				)
 				
+				
 				local text = ArkInventory.Localise["MAIL"]
 				local desc = string.format( ArkInventory.Localise["CONFIG_ACTION_TYPE_DESC"], cat.fullname, text )
 				local state = ArkInventory.ENUM.ACTION.TYPE.MAIL
@@ -2039,6 +2044,7 @@ function ArkInventory.MenuItemCategoryAssignOpen( offset, level, value, i, loc_i
 					end
 				)
 				
+				
 				local text = ArkInventory.Localise["MOVE"]
 				local desc = string.format( ArkInventory.Localise["CONFIG_ACTION_TYPE_DESC"], cat.fullname, text )
 				local state = ArkInventory.ENUM.ACTION.TYPE.MOVE
@@ -2048,6 +2054,56 @@ function ArkInventory.MenuItemCategoryAssignOpen( offset, level, value, i, loc_i
 					"tooltipTitle", text,
 					"tooltipText", desc,
 					"hidden", true,
+					"isRadio", true,
+					"checked", catset.action.t == state,
+					"func", function( )
+						catset.action.t = state
+					end
+				)
+				
+				
+				local text = ArkInventory.Localise["USE"]
+				local desc = string.format( ArkInventory.Localise["CONFIG_ACTION_TYPE_DESC"], cat.fullname, text )
+				local state = ArkInventory.ENUM.ACTION.TYPE.USE
+				
+				ArkInventory.Lib.Dewdrop:AddLine(
+					"text", text,
+					"tooltipTitle", text,
+					"tooltipText", desc,
+					"hidden", true,
+					"isRadio", true,
+					"checked", catset.action.t == state,
+					"func", function( )
+						catset.action.t = state
+					end
+				)
+				
+				
+				local text = ArkInventory.Localise["DELETE"]
+				local desc = string.format( ArkInventory.Localise["CONFIG_ACTION_TYPE_DESC"], cat.fullname, text )
+				local state = ArkInventory.ENUM.ACTION.TYPE.DELETE
+				
+				ArkInventory.Lib.Dewdrop:AddLine(
+					"text", text,
+					"tooltipTitle", text,
+					"tooltipText", desc,
+					"hidden", true,
+					"isRadio", true,
+					"checked", catset.action.t == state,
+					"func", function( )
+						catset.action.t = state
+					end
+				)
+				
+				
+				local text = ArkInventory.Localise["SCRAP"]
+				local desc = string.format( ArkInventory.Localise["CONFIG_ACTION_TYPE_DESC"], cat.fullname, text )
+				local state = ArkInventory.ENUM.ACTION.TYPE.SCRAP
+				
+				ArkInventory.Lib.Dewdrop:AddLine(
+					"text", text,
+					"tooltipTitle", text,
+					"tooltipText", desc,
 					"isRadio", true,
 					"checked", catset.action.t == state,
 					"func", function( )
@@ -2114,6 +2170,7 @@ function ArkInventory.MenuItemCategoryAssignOpen( offset, level, value, i, loc_i
 					"text", text,
 					"tooltipTitle", text,
 					"tooltipText", desc,
+					"disabled", catset.action.t == ArkInventory.ENUM.ACTION.TYPE.DELETE,
 					"isRadio", true,
 					"checked", catset.action.w == state,
 					"func", function( )
@@ -3758,12 +3815,12 @@ function ArkInventory.MenuLDBTrackingCurrencyListEntries( value, showTitle, code
 			
 		end
 		
-		--ArkInventory.Output2( "" )
+		--ArkInventory.OutputDebug( "" )
 		--ArkInventory.OutputDebug( "HEADER: ", parent.index, " = ", parent.name )
 		
 		for _, entry in ArkInventory.Collection.Currency.ListIterate( ) do
 			
-			--ArkInventory.Output2( "ENTRY: ", entry.index, " / ", entry.parentIndex, " / ", entry.name, " / ", entry.isHeader )
+			--ArkInventory.OutputDebug( "ENTRY: ", entry.index, " / ", entry.parentIndex, " / ", entry.name, " / ", entry.isHeader )
 			
 			local currencyHeader = entry.isHeader and entry.hasCurrency
 			
@@ -4035,7 +4092,7 @@ function ArkInventory.MenuLDBTrackingReputationListHeaders( offset, level, value
 			
 			if entry.parentIndex == nil and entry.name then
 				
-				--ArkInventory.Output2( "HEADER: ", entry )
+				--ArkInventory.OutputDebug( "HEADER: ", entry )
 				
 				local expand = codex.player.data.ldb.tracking.reputation.expand[entry.id]
 				local value = string.format( "HEADER_%s", entry.index )
@@ -4114,7 +4171,7 @@ function ArkInventory.MenuLDBTrackingReputationListEntries( value, showTitle, co
 			
 		end
 		
-		--ArkInventory.Output2( "" )
+		--ArkInventory.OutputDebug( "" )
 		--ArkInventory.OutputDebug( "HEADER: ", parent.index, " = ", parent.name )
 		
 		for _, entry in ArkInventory.Collection.Reputation.ListIterate( ) do
@@ -4417,7 +4474,7 @@ function ArkInventory.MenuLDBTrackingItemOpen( frame )
 					
 					numTokenTypes = numTokenTypes + 1
 					
-					local count = GetItemCount( k )
+					local count = ArkInventory.CrossClient.GetItemCount( k )
 					local info = ArkInventory.GetObjectInfo( k )
 					local checked = codex.player.data.ldb.tracking.item.tracked[k]
 					local t1 = info.name

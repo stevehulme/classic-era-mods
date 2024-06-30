@@ -232,13 +232,28 @@ local function Scan_Threaded( thread_id )
 	
 	for index = 1, C_ToyBox.GetNumTotalDisplayedToys( ) do
 		
-		YieldCount = YieldCount + 1
-		
 		if ToyBox:IsVisible( ) then
-			--ArkInventory.Output( "ABORTED (TOYBOX WAS OPENED)" )
+			ArkInventory.OutputDebug( "TOYBOX: ABORTED (TOYBOX FRAME WAS OPENED)" )
 			FilterActionRestore( )
 			return
 		end
+		
+		if ArkInventory.Global.Mode.Combat then
+			ArkInventory.OutputDebug( "TOYBOX: ABORTED (ENTERED COMBAT)" )
+			ArkInventory.Global.ScanAfterCombat[loc_id] = true
+			FilterActionRestore( )
+			return
+		end
+		
+		if ArkInventory.Global.Mode.DragonRace then
+			ArkInventory.OutputDebug( "TOYBOX: ABORTED (DRAGON RACE)" )
+			ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+			FilterActionRestore( )
+			return
+		end
+		
+		
+		YieldCount = YieldCount + 1
 		
 		local i = C_ToyBox.GetToyFromIndex( index )
 		
@@ -312,20 +327,11 @@ local function Scan( )
 	
 	local thread_id = string.format( ArkInventory.Global.Thread.Format.Collection, "toybox" )
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		Scan_Threaded( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-	
-	local tf = function ( )
+	local thread_func = function( )
 		Scan_Threaded( thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 
@@ -334,11 +340,6 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_TOYBOX_UPDATE_BUCKET( events )
 	--ArkInventory.Output( "TOYBOX BUCKET [", events, "]" )
 	
 	if not ArkInventory:IsEnabled( ) then return end
-	
-	if ArkInventory.Global.Mode.Combat then
-		ArkInventory.Global.ScanAfterCombat[loc_id] = true
-		return
-	end
 	
 	if not ArkInventory.isLocationMonitored( loc_id ) then
 		--ArkInventory.Output( "IGNORED (TOYBOX NOT MONITORED)" )
@@ -349,6 +350,17 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_TOYBOX_UPDATE_BUCKET( events )
 		--ArkInventory.Output( "IGNORED (TOYBOX IS OPEN)" )
 		return
 	end
+	
+	if ArkInventory.Global.Mode.Combat then
+		ArkInventory.Global.ScanAfterCombat[loc_id] = true
+		return
+	end
+	
+	if ArkInventory.Global.Mode.DragonRace then
+		ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+		return
+	end
+	
 	
 	if not collection.isScanning then
 		collection.isScanning = true

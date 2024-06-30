@@ -109,7 +109,7 @@ function t.bookmarks:ShowAddRemoveButton()
         t.bookmarks.addRemoveButton.tooltipTitle = "Bookmark This Page"
     end
     t.bookmarks.addRemoveButton:Show()
-    if GetMouseFocus()==t.bookmarks.addRemoveButton then
+    if t.main:GetMouseFocus()==t.bookmarks.addRemoveButton then
         t.buttons.OnEnter(t.bookmarks.addRemoveButton) -- update tooltip if mouse is over the button
     end
     t.bookmarks.titleButton:Hide()
@@ -215,7 +215,7 @@ function t.bookmarks:BookmarkButtonOnEnter()
         if not t.settings.saved.PinBookmarks then
             GameTooltip:AddLine("Hold Ctrl to keep bookmarks open.",.65,.65,.65,1)
         end
-    
+
         if self.tooltipBody then
             GameTooltip:AddLine(self.tooltipBody,0.95,0.95,0.95,true)
         end

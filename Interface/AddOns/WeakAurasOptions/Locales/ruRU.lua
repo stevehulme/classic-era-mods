@@ -420,6 +420,10 @@ UNIT_POWER  UNIT_AURA, PLAYER_TARGET_CHANGED]=]
 	L["Fade"] = "Выцветание"
 	L["Fade In"] = "Появление"
 	L["Fade Out"] = "Исчезновение"
+	--[[Translation missing --]]
+	L["Fadeout Sound"] = "Fadeout Sound"
+	--[[Translation missing --]]
+	L["Fadeout Time (seconds)"] = "Fadeout Time (seconds)"
 	L["False"] = "Ложь"
 	L["Fetch Affected/Unaffected Names and Units"] = "Получить имена и единицы задействован. и незадействован. игроков"
 	L["Fetch Raid Mark Information"] = "Получить информацию о метке цели"
@@ -600,6 +604,8 @@ Can use \ to escape -.]=] ] = [=[Формат записи: Имя, Имя-Иг�
 	L["Left HUD position"] = "Позиция левого HUD"
 	L["Length"] = "Длина"
 	L["Length of |cFFFF0000%s|r"] = "Длина %s"
+	--[[Translation missing --]]
+	L["LibSharedMedia"] = "LibSharedMedia"
 	L["Limit"] = "Лимит"
 	L["Line"] = "Строка"
 	L["Lines & Particles"] = "Линии или частицы"
@@ -626,8 +632,6 @@ Can use \ to escape -.]=] ] = [=[Формат записи: Имя, Имя-Иг�
 	L["Media Type"] = "Тип медиа"
 	L["Medium Icon"] = "Средняя иконка"
 	L["Message"] = "Сообщение"
-	L["Message Prefix"] = "Префикс сообщения"
-	L["Message Suffix"] = "Суффикс сообщения"
 	L["Message Type"] = "Тип сообщения"
 	L["Min"] = "Мин. значение"
 	L["Minimum"] = "Минимум"
@@ -802,6 +806,8 @@ every 3 events starting from 2nd and ending at 11th: 2-11/3]=]
 	L["Same texture as Foreground"] = "Такая же текстура, что и на переднем плане"
 	L["Saved Data"] = "Сохраненные данные"
 	L["Scale"] = "Масштаб"
+	--[[Translation missing --]]
+	L["Search API"] = "Search API"
 	L["Select Talent"] = "Выбрать талант"
 	L["Select the auras you always want to be listed first"] = "Выберите индикации для гибридной позиции"
 	L["Selected Frame"] = "Выбранный кадр"
@@ -893,6 +899,10 @@ every 3 events starting from 2nd and ending at 11th: 2-11/3]=]
 	L["Stop Sound"] = "Остановить вопроизведение звука"
 	L["Sub Elements"] = "Внутренние элементы"
 	L["Sub Option %i"] = "Внутренний параметр %i"
+	--[[Translation missing --]]
+	L["Subevent"] = "Subevent"
+	--[[Translation missing --]]
+	L["Subevent Suffix"] = "Subevent Suffix"
 	L["Supports multiple entries, separated by commas"] = "Можно указать несколько значений, разделенных запятыми."
 	L["Swipe Overlay Settings"] = "Настройки восстановления (наложение)"
 	L["Templates could not be loaded, the addon is %s"] = "Не удалось загрузить WeakAuras Templates. Причина - %s"
@@ -905,6 +915,8 @@ every 3 events starting from 2nd and ending at 11th: 2-11/3]=]
 	L["Texture Info"] = "Информация о текстуре"
 	L["Texture Picker"] = "Средство выбора текстуры"
 	L["Texture Rotation"] = "Поворот текстуры"
+	--[[Translation missing --]]
+	L["Texture Selection Mode"] = "Texture Selection Mode"
 	L["Texture Settings"] = "Настройки текстуры"
 	L["Texture Wrap"] = "Обтекание текстурой"
 	L["Texture X Offset"] = "Смещение текстуры по X"
@@ -979,6 +991,8 @@ Upgrade your version of WeakAuras or wait for next release before installing thi
 	L["Unit %s is not a valid unit for RegisterUnitEvent"] = "%s не является допустимой единицей для метода RegisterUnitEvent"
 	L["Unit Count"] = "Количество единиц"
 	L["Unit Frames"] = "Рамки единиц"
+	--[[Translation missing --]]
+	L["Unknown"] = "Unknown"
 	L["Unknown property '%s' found in '%s'"] = "Неизвестное свойство %s в переменной %s."
 	L["Unlike the start or finish animations, the main animation will loop over and over until the display is hidden."] = "В отличие от начальной или конечной анимации, основная зациклена и будет повторяться пока индикация не пропадет."
 	L["Update"] = "Обновить"

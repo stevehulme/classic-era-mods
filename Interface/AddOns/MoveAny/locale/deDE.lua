@@ -41,7 +41,7 @@ function MoveAny:LangdeDE()
 		["LID_MAGEARCANECHARGESFRAME"] = "Magier Arkane Ladungen Fenster",
 		["LID_ESSENCEPLAYERFRAME"] = "Essenz Spieler Fenster (Rufer)",
 		["LID_PALADINPOWERBARFRAME"] = "Paladin Machtleiste (Heilige Macht)",
-		["LID_MAFPSFrame"] = "FPS",
+		["LID_MAFPSFrame"] = "FPS (Neuer FPS-Zähler)",
 		["LID_IAPingFrame"] = "Ping",
 		["LID_IACoordsFrame"] = "Koordinatenfenster",
 		["LID_MINIMAP"] = "Minimap",
@@ -101,7 +101,7 @@ function MoveAny:LangdeDE()
 		["LID_MAINMENUEXPBAR"] = "Erfahrungsleiste",
 		["LID_REPUTATIONWATCHBAR"] = "Rufleiste",
 		["LID_UIWIDGETPOWERBAR"] = "Machtleiste (Bossleiste, Elanleiste, Dunkelmond-Jahrmarkt, ...)",
-		["LID_POWERBAR"] = "Power Bar (Encounters, ...)",
+		["LID_POWERBAR"] = "Machtleiste (Boss Begegnungen, ...)",
 		["LID_COUNT"] = "Anzahl",
 		["LID_ROWS"] = "Reihen",
 		["LID_SPACING"] = "Abstand (Lücke)",
@@ -206,9 +206,21 @@ function MoveAny:LangdeDE()
 		["LID_SHARDBARFRAME"] = "Hexenmeister Macht Fenster (Splitter)",
 		["LID_OFFSET"] = "Versatz (Offset)",
 		["LID_EclipseBarFrame"] = "Eclipseleiste (Druide)",
+		["LID_REQUIRESFOR"] = "Benötigt: %s",
+		["LID_REQUIREDFOR"] = "Benötigt für: %s",
+		["LID_RESETELEMENT"] = "Element resetten",
+		["LID_TARGETFRAMEDEBUFF1"] = "Zielfenster Debuff 1",
+		["LID_FOCUSFRAMEDEBUFF1"] = "Fokusfenster Debuff 1",
+		["LID_TARGETFRAMETOTBUFF1"] = "Ziel des Zielfenster Buff 1",
+		["LID_MINIMAPFLAG"] = "Minimap Flagge",
+		["LID_MiniMapInstanceDifficulty"] = "Minimap Flagge Instanz Schwierigkeit",
+		["LID_MiniMapChallengeMode"] = "Minimap Flagge Herausforderungsmodus",
+		["LID_GuildInstanceDifficulty"] = "Minimap Flagge Gilden-Instanz Schwierigkeit",
+		["LID_POWERBARCOUNTERBAR"] = "Machtleiste Gegenleiste",
+		["LID_BUFFTIMER1"] = "Stärkungszeit 1",
 	}
 
-	if D4:GetWoWBuild() ~= "RETAIL" then
+	if MoveAny:GetWoWBuild() ~= "RETAIL" then
 		tab["LID_ACTIONBARS"] = "Aktionsleisten 1 + 5 + 6"
 		tab["LID_ACTIONBAR1"] = "Aktionsleiste 1 (Hauptleiste)"
 		tab["LID_ACTIONBAR2"] = "Aktionsleiste 2 (2. Seite von Aktionsleiste 1)"

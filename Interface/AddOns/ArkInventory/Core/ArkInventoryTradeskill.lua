@@ -700,20 +700,12 @@ local function Scan( )
 	ArkInventory.OutputDebug( "TRADESKILL: SCAN START" )
 	
 	local thread_id = ArkInventory.Global.Thread.Format.Tradeskill
-	local thread_function = function ( )
+	
+	local thread_func = function( )
 		Scan_Threaded( thread_id )
 	end
 	
-	if ArkInventory.Global.Thread.Use then
-		ArkInventory.ThreadStart( thread_id, thread_function )
-	else
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		thread_function( )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 

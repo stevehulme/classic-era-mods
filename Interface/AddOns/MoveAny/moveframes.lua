@@ -1,6 +1,5 @@
 local _, MoveAny = ...
-local MAFRAMES = {"ArchaeologyFrame", "QuestLogDetailFrame", "InspectRecipeFrame", "PVPParentFrame", "SettingsPanel", "SplashFrame", "GameMenuFrame", "InterfaceOptionsFrame", "QuickKeybindFrame", "VideoOptionsFrame", "KeyBindingFrame", "MacroFrame", "AddonList", "ContainerFrameCombinedBags", "LFGParentFrame", "CharacterFrame", "InspectFrame", "SpellBookFrame", "PlayerTalentFrame", "ClassTalentFrame", "FriendsFrame", "HelpFrame", "TradeFrame", "TradeSkillFrame", "CraftFrame", "QuestLogFrame", "WorldMapFrame", "ChallengesKeystoneFrame", "CovenantMissionFrame", "OrderHallMissionFrame", "PVPMatchScoreboard", "GossipFrame", "MerchantFrame", "PetStableFrame", "QuestFrame", "ClassTrainerFrame", "AchievementFrame", "PVEFrame", "EncounterJournal", "WeeklyRewardsFrame", "BankFrame", "WardrobeFrame", "DressUpFrame", "MailFrame", "OpenMailFrame", "AuctionHouseFrame", "AuctionFrame", "ProfessionsCustomerOrdersFrame", "AnimaDiversionFrame", "CovenantSanctumFrame", "SoulbindViewer", "GarrisonLandingPage", "PlayerChoiceFrame", "GenericPlayerChoiseTobbleButton", "WorldStateScoreFrame", "ItemTextFrame", "ExpansionLandingPage", "MajorFactionRenownFrame", "GenericTraitFrame", "FlightMapFrame", "TaxiFrame", "ItemUpgradeFrame", "ProfessionsFrame", "CommunitiesFrame", "CollectionsJournal", "CovenantRenownFrame", "ChallengesKeystoneFrame", "ScriptErrorsFrame", "CalendarFrame", "TimeManagerFrame", "GuildBankFrame", "ItemSocketingFrame", "BlackMarketFrame", "QuestLogPopupDetailFrame", "ItemInteractionFrame", "GarrisonCapacitiveDisplayFrame", "ChannelFrame",}
---[[if D4:GetWoWBuild() ~= "RETAIL" then]]
+local MAFRAMES = {"WeakAurasOptions", "ProfessionsBookFrame", "PlayerSpellsFrame", "GroupLootHistoryFrame", "ModelPreviewFrame", "ScrappingMachineFrame", "TabardFrame", "PVPFrame", "ArchaeologyFrame", "QuestLogDetailFrame", "InspectRecipeFrame", "PVPParentFrame", "SettingsPanel", "SplashFrame", "GameMenuFrame", "InterfaceOptionsFrame", "QuickKeybindFrame", "VideoOptionsFrame", "KeyBindingFrame", "MacroFrame", "AddonList", "ContainerFrameCombinedBags", "LFGParentFrame", "CharacterFrame", "InspectFrame", "SpellBookFrame", "PlayerTalentFrame", "ClassTalentFrame", "FriendsFrame", "HelpFrame", "TradeFrame", "TradeSkillFrame", "CraftFrame", "QuestLogFrame", "WorldMapFrame", "ChallengesKeystoneFrame", "CovenantMissionFrame", "OrderHallMissionFrame", "PVPMatchScoreboard", "GossipFrame", "MerchantFrame", "PetStableFrame", "QuestFrame", "ClassTrainerFrame", "AchievementFrame", "PVEFrame", "EncounterJournal", "WeeklyRewardsFrame", "BankFrame", "WardrobeFrame", "DressUpFrame", "MailFrame", "OpenMailFrame", "AuctionHouseFrame", "AuctionFrame", "ProfessionsCustomerOrdersFrame", "AnimaDiversionFrame", "CovenantSanctumFrame", "SoulbindViewer", "GarrisonLandingPage", "PlayerChoiceFrame", "GenericPlayerChoiseTobbleButton", "WorldStateScoreFrame", "ItemTextFrame", "ExpansionLandingPage", "MajorFactionRenownFrame", "GenericTraitFrame", "FlightMapFrame", "TaxiFrame", "ItemUpgradeFrame", "ProfessionsFrame", "CommunitiesFrame", "CollectionsJournal", "CovenantRenownFrame", "ChallengesKeystoneFrame", "ScriptErrorsFrame", "CalendarFrame", "TimeManagerFrame", "GuildBankFrame", "ItemSocketingFrame", "BlackMarketFrame", "QuestLogPopupDetailFrame", "ItemInteractionFrame", "GarrisonCapacitiveDisplayFrame", "ChannelFrame",}
 -- Buggy on retail --
 if StaticPopup1 then
 	hooksecurefunc(
@@ -71,9 +70,9 @@ function MoveAny:UpdateCurrentFrame()
 		local curMouseX, curMouseY = GetCursorPosition()
 		if prevMouseX and prevMouseY then
 			if curMouseY > prevMouseY then
-				local newScale = math.min(currentFrame:GetScale() + 0.006, 1.5)
+				local newScale = math.min(currentFrame:GetScale() + 0.006, 2.5)
 				if newScale > 0 then
-					newScale = tonumber(string.format("%.4f", newScale))
+					newScale = tonumber(string.format("%.3f", newScale))
 					currentFrame:SetScale(newScale)
 					if currentFrame.isMaximized and newScale > 1 then
 						newScale = 1
@@ -84,7 +83,7 @@ function MoveAny:UpdateCurrentFrame()
 			elseif curMouseY < prevMouseY then
 				local newScale = math.max(currentFrame:GetScale() - 0.006, 0.5)
 				if newScale > 0 then
-					newScale = tonumber(string.format("%.4f", newScale))
+					newScale = tonumber(string.format("%.3f", newScale))
 					currentFrame:SetScale(newScale)
 					if currentFrame.isMaximized and newScale > 1 then
 						newScale = 1
@@ -132,7 +131,14 @@ end
 
 local EnableMouseFrames = {"PlayerChoiceFrame", "GenericPlayerChoiseTobbleButton"}
 local HookedEnableMouseFrames = {}
-function MoveAny:UpdateMoveFrames()
+local run = false
+function MoveAny:UpdateMoveFrames(force)
+	if force then
+		run = false
+	end
+
+	if run then return end
+	run = true
 	if MoveAny:IsEnabled("MOVEFRAMES", true) then
 		for i, name in pairs(EnableMouseFrames) do
 			local frame = _G[name]
@@ -151,23 +157,25 @@ function MoveAny:UpdateMoveFrames()
 		end
 
 		if not InCombatLockdown() then
+			local count = 0
 			for i, name in pairs(MAFS) do
+				count = count + 1
 				local frame = MoveAny:GetFrame(_G[name], name)
-				if frame then
+				if frame ~= nil then
 					MAFS[name] = nil
 					local fm = _G[name .. "Move"]
 					if fm == nil then
 						fm = CreateFrame("FRAME", name .. "Move", MoveAny:GetMainPanel())
 						fm:SetMovable(true)
 						fm:SetUserPlaced(false)
-						fm:SetClampedToScreen(true)
-						fm:RegisterForDrag("Any")
+						fm:SetClampedToScreen(false)
+						fm:RegisterForDrag("LeftClick")
 						fm:EnableMouse(false)
 						hooksecurefunc(
 							frame,
 							"SetScale",
 							function(sel, scale)
-								if scale and scale > 0 then
+								if scale and scale > 0 and (currentFrame == nil or currentFrame ~= sel) then
 									fm:SetScale(scale)
 								end
 							end
@@ -241,7 +249,7 @@ function MoveAny:UpdateMoveFrames()
 						return btn == "MiddleButton"
 					end
 
-					frame:RegisterForDrag("Any")
+					frame:RegisterForDrag("LeftClick")
 					frame:HookScript(
 						"OnMouseDown",
 						function(sel, btn)
@@ -355,7 +363,7 @@ function MoveAny:UpdateMoveFrames()
 									sca = 1
 								end
 
-								if sca and sca > 0 then
+								if sca and sca > 0 and (currentFrame == nil or currentFrame ~= sel) then
 									sel:SetScale(sca)
 								end
 							end
@@ -406,12 +414,30 @@ function MoveAny:UpdateMoveFrames()
 							MoveAny:MAFrameUpdatePos(frame)
 						end
 					end
+				else
+					notFound = true
 				end
 			end
 		else
-			C_Timer.After(0.1, MoveAny.UpdateMoveFrames)
+			C_Timer.After(
+				0.04,
+				function()
+					run = false
+					MoveAny:UpdateMoveFrames(false)
+				end
+			)
 		end
 	end
+end
+
+function MoveAny:ThinkMoveFrames()
+	MoveAny:UpdateMoveFrames(false)
+	C_Timer.After(
+		1,
+		function()
+			MoveAny:ThinkMoveFrames()
+		end
+	)
 end
 
 function MoveAny:MoveFrames()
@@ -432,15 +458,12 @@ function MoveAny:MoveFrames()
 	f:SetScript(
 		"OnEvent",
 		function(sel, event, ...)
-			MoveAny:UpdateMoveFrames()
+			MoveAny:UpdateMoveFrames(true)
 		end
 	)
 
-	MoveAny:UpdateMoveFrames()
-	if PVPFrame then
-		PVPFrame:EnableMouse(false)
-	end
-
+	MoveAny:UpdateMoveFrames(true)
+	MoveAny:ThinkMoveFrames()
 	if BattlefieldFrame then
 		BattlefieldFrame:EnableMouse(false)
 	end

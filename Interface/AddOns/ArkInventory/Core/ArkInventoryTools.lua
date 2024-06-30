@@ -6,12 +6,12 @@ ArkInventory.Tools = { }
 
 
 --[[
--- /dump GetItemClassInfo( ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT )
--- /dump GetItemSubClassInfo( ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.LEATHER )
+-- /dump ArkInventory.CrossClient.GetItemClassInfo( ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT )
+-- /dump ArkInventory.CrossClient.GetItemSubClassInfo( ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.LEATHER )
 
 for x = 4, 4 do
 	--local x = ArkInventory.ENUM.ITEM.TYPE.TRADEGOODS.HERBS
-	local n = GetItemClassInfo( x )
+	local n = ArkInventory.CrossClient.GetItemSubClassInfo( x )
 	--if n and n ~= "" then
 		ArkInventory.Output( "----------" )
 		ArkInventory.Output( x, " ", n )
@@ -29,10 +29,10 @@ end
 local name
 for x = 352170, 352180 do
 --	if IsSpellKnown( x ) then
-		name = GetSpellInfo( x )
+		name = ArkInventory.CrossClient.GetSpellInfo( x )
 --		if name and string.match( string.lower( name ), "flying" ) then
 			ArkInventory.Output( x, " = ", name, " / ", IsSpellKnown( x ) )
---			GetSpellInfo( 352177 )
+--			ArkInventory.CrossClient.GetSpellInfo( 352177 )
 --			IsSpellKnown( 352177 )
 --		end
 --	end
@@ -41,7 +41,7 @@ end
 
 
 --[[
-local z = "beta"
+local z = "^warning"
 ArkInventory.Output( "search=", z )
 for k, v in pairs (_G) do
 	if type( k ) == "string" and type( v ) == "string" then

@@ -4,7 +4,7 @@
 ## Notes: Allows you to view all items from all your characters on the same account, when ever and where ever you want.
 ## Author: Arkayenro - Khaz'goroth
 ## Email: arkayenro at gmail dot com
-## Version: 31029
+## Version: 31033
 ## X-ReleaseType: 
 ## SavedVariables: ARKINVDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_07_Green
@@ -30,6 +30,7 @@
 ## t-Wago-ID: 5bGo1860
 
 
+ArkInventoryLibs.xml
 #@no-lib-strip@
 ArkInventoryExternals.xml
 #@end-no-lib-strip@

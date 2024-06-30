@@ -11,7 +11,7 @@ function t.toolbar:Init()
     t.toolbar:SetHeight(t.constants.BUTTON_SIZE_NORMAL)
 
     -- buttons on right: Settings, Bookmark, Close
-    t.toolbar.closeButton = t.buttons:Create(t.toolbar,24,24,2,1,TinyPad.Toggle,{anchorPoint="RIGHT",relativeTo=t.toolbar,relativePoint="RIGHT"},"Close","TinyPad version "..GetAddOnMetadata("TinyPad","Version"))
+    t.toolbar.closeButton = t.buttons:Create(t.toolbar,24,24,2,1,TinyPad.Toggle,{anchorPoint="RIGHT",relativeTo=t.toolbar,relativePoint="RIGHT"},"Close","TinyPad version "..C_AddOns.GetAddOnMetadata("TinyPad","Version"))
     t.toolbar.bookmarkButton = t.buttons:Create(t.toolbar,24,24,0,4,t.toolbar.BookmarkButtonOnClick,{anchorPoint="RIGHT",relativeTo=t.toolbar.closeButton,relativePoint="LEFT",xoff=-1,yoff=0},"Bookmarks","Go to a bookmarked page or manage bookmarks.\n\n"..t.constants.TOOLTIP_SUBTEXT_COLOR.."Hold Shift to keep bookmarks open until closed with this button.")
     t.toolbar.settingsButton = t.buttons:Create(t.toolbar,24,24,6,0,t.toolbar.SettingsButtonOnClick,{anchorPoint="RIGHT",relativeTo=t.toolbar.bookmarkButton,relativePoint="LEFT",xoff=-1,yoff=0},"Options","Search pages for text, change font and other options.")
     t.toolbar.searchButton = t.buttons:Create(t.toolbar,24,24,4,0,t.toolbar.SearchButtonOnClick,{anchorPoint="RIGHT",relativeTo=t.toolbar.settingsButton,relativePoint="LEFT",xoff=-1,yoff=0},"Search","Search pages for text.")

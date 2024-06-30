@@ -56,13 +56,13 @@ function ttBars:OnApplyConfig(TT_CacheForFrames, cfg, TT_ExtendedConfig)
 	-- set default font if font in config is not valid
 	if (not LibFroznFunctions:FontExists(cfg.barFontFace)) then
 		cfg.barFontFace = nil;
-		tt:AddMessageToChatFrame(MOD_NAME .. ": {error:No valid Font set in option tab {highlight:Bars}. Switching to default Font.}");
+		tt:AddMessageToChatFrame("{caption:" .. MOD_NAME .. "}: {error:No valid Font set in option tab {highlight:Bars}. Switching to default Font.}");
 	end
 	
 	-- set default texture if texture in config is not valid
 	if (not LibFroznFunctions:TextureExists(cfg.barTexture)) then
 		cfg.barTexture = nil;
-		tt:AddMessageToChatFrame(MOD_NAME .. ": {error:No valid texture set in option tab {highlight:Bars}. Switching to default texture.}");
+		tt:AddMessageToChatFrame("{caption:" .. MOD_NAME .. "}: {error:No valid texture set in option tab {highlight:Bars}. Switching to default texture.}");
 	end
 	
 	-- set texture and height of GameTooltip's standard status bar
@@ -93,7 +93,7 @@ function ttBars:OnApplyConfig(TT_CacheForFrames, cfg, TT_ExtendedConfig)
 			
 			if (not tipsProcessed[tip]) then
 				-- register/unregister unit events
-				if (cfg.castBar) then
+				if (cfg.enableBars) and (cfg.castBar) then
 					self:RegisterUnitEvents(tip);
 				else
 					self:UnregisterUnitEvents(tip);
@@ -117,8 +117,8 @@ function ttBars:OnTipSetCurrentDisplayParams(TT_CacheForFrames, tip, currentDisp
 	self:RegisterUnitEvents(tip);
 end
 
--- before tooltip is being styled
-function ttBars:OnTipPreStyle(TT_CacheForFrames, tip, currentDisplayParams, first)
+-- before unit tooltip is being styled
+function ttBars:OnUnitTipPreStyle(TT_CacheForFrames, tip, currentDisplayParams, first)
 	-- hide GameTooltip's standard status bar if needed
 	if (cfg.hideDefaultBar) and (first) then
 		GameTooltipStatusBar:Hide();
@@ -128,8 +128,8 @@ function ttBars:OnTipPreStyle(TT_CacheForFrames, tip, currentDisplayParams, firs
 	self:SetupTipsBars(tip);
 end
 
--- tooltip is being resized
-function ttBars:OnTipResize(TT_CacheForFrames, tip, currentDisplayParams, first)
+-- unit tooltip is being resized
+function ttBars:OnUnitTipResize(TT_CacheForFrames, tip, currentDisplayParams, first)
 	-- set minimum width for bars, so that numbers are not out of bounds.
 	if (not cfg.barEnableTipMinimumWidth) then
 		return;
@@ -179,6 +179,11 @@ end
 function ttBars:SetupTipsBars(tip)
 	-- hide tip's bars
 	self:HideTipsBars(tip);
+	
+	-- check if bars are enabled
+	if (not cfg.enableBars) then
+		return;
+	end
 	
 	-- get frame and current display parameters
 	local frameParams = TT_CacheForFrames[tip];
@@ -567,7 +572,7 @@ end);
 -- register unit events
 function ttBars:RegisterUnitEvents(tip)
 	-- register unit events only needed if cast bar is enabled
-	if (not cfg.castBar) then
+	if (not cfg.enableBars) or (not cfg.castBar) then
 		return;
 	end
 	

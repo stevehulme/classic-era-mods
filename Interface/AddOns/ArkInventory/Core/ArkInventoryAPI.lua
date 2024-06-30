@@ -41,7 +41,7 @@ function ArkInventory.API.CustomBattlePetTooltipReady( ... )
 end
 
 function ArkInventory.API.helper_CustomBattlePetTooltipReady( tooltip, h )
-	--ArkInventory.Output2( { ArkInventory.ObjectStringDecode( h ) } )
+	--ArkInventory.OutputDebug( { ArkInventory.ObjectStringDecode( h ) } )
 	ArkInventory.API.CustomBattlePetTooltipReady( tooltip, h, unpack( ArkInventory.ObjectStringDecode( h ) ) )
 end
 

@@ -224,3 +224,13 @@ function t.main:OnEscape()
     end
 end
 
+function t.main:GetMouseFocus()
+    if select(4,GetBuildInfo())<110000 then
+        return GetMouseFocus()
+    else
+        local focus = GetMouseFoci()
+        if focus and #focus>0 then
+            return focus[1]
+        end
+    end
+end

@@ -94,9 +94,10 @@ function MoveAny:LangruRU()
         ["LID_MABUFFLIMIT"] = "Предел баффа",
         ["LID_MABUFFSPACINGX"] = "Горизонтальное расстояние между баффами",
         ["LID_MABUFFSPACINGY"] = "Расстояние между буферами по вертикали",
+        ["LID_RESETELEMENT"] = "Reset Element",
     }
 
-    if D4:GetWoWBuild() ~= "RETAIL" then
+    if MoveAny:GetWoWBuild() ~= "RETAIL" then
         tab["LID_ACTIONBARS"] = "Панели действий 1 + 5 + 6"
         tab["LID_ACTIONBAR1"] = "Панель действий 1 (главная панель)"
         tab["LID_ACTIONBAR2"] = "Панель действий 2 (2. Страница панели действий 1)"

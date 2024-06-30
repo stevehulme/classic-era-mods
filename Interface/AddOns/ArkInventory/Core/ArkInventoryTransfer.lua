@@ -1308,35 +1308,29 @@ end
 
 local function TransferRun( loc_id )
 	
-	local thread_id = ArkInventory.Global.Thread.Format.Transfer
-	
 	if ArkInventory.Global.Mode.Combat then
 		--ArkInventory.Output( "transfer location ", loc_id, " aborted - in combat" )
 		return
 	end
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		TransferRun_Threaded( loc_id )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
+	local thread_id = ArkInventory.Global.Thread.Format.Transfer
 	
 	if ArkInventory.ThreadRunning( thread_id ) then
+		
 		-- transfer already in progress
 		--ArkInventory.OutputError( ArkInventory.Localise["TRANSFER"], ": ", ArkInventory.Global.Location[loc_id].Name, " " , ArkInventory.Localise["TRANSFER_FAIL_WAIT"] )
 		ArkInventory.OutputError( ArkInventory.Localise["TRANSFER"], ": ", ArkInventory.Localise["TRANSFER_FAIL_WAIT"] )
-		return
+		
+	else
+		
+		-- thread not active, create a new one
+		local thread_func = function( )
+			TransferRun_Threaded( loc_id )
+		end
+		
+		ArkInventory.ThreadStart( thread_id, thread_func )
+		
 	end
-	
-	-- thread not active, create a new one
-	local tf = function ( )
-		TransferRun_Threaded( loc_id )
-	end
-	
-	ArkInventory.ThreadStart( thread_id, tf )
 	
 end
 
@@ -1374,9 +1368,9 @@ function ArkInventory.BarTransfer( loc_id, bar_id, dst_id )
 					
 					local cat_id = ArkInventory.ItemCategoryGet( i )
 					local xbar_id = ArkInventory.CategoryLocationGet( loc_id, cat_id )
-					--ArkInventory.Output2( cat_id, " / ", xbar_id, " = ", h )
+					--ArkInventory.OutputDebug( cat_id, " / ", xbar_id, " = ", h )
 					if xbar_id == bar_id then
-						ArkInventory.Output2( "move ", i.h )
+						ArkInventory.OutputDebug( "move ", i.h )
 					end
 				end
 			end

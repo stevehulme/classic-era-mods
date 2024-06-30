@@ -186,7 +186,7 @@ local spellTable = { -- key, project, table of spell ids
 }
 
 local function GetWowSpellNameHelper( id )
-	local name = GetSpellInfo( id )
+	local name = ArkInventory.CrossClient.GetSpellInfo( id ).name
 	if name then
 		--ArkInventory.Output( "spell [", id, "] = [", name, "]" )
 		return name

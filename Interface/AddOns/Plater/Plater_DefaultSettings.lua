@@ -798,8 +798,10 @@ PLATER_DEFAULT_SETTINGS = {
 		aura_show_tooltip = false,
 		aura_width = 26,
 		aura_height = 16,
+		aura_border_thickness = 1,
 		aura_width2 = 26,
 		aura_height2 = 16,
+		aura_border_thickness2 = 1,
 		auras_per_row_auto = true,
 		auras_per_row_amount = 10,
 		auras_per_row_amount2 = 10,
@@ -885,6 +887,7 @@ PLATER_DEFAULT_SETTINGS = {
 		
 		aura_width_personal = 32,
 		aura_height_personal = 20,
+		aura_border_thickness_personal = 1,
 		aura_show_buffs_personal = false,
 		aura_show_debuffs_personal = true,
 		aura_show_all_duration_buffs_personal = false,
@@ -910,6 +913,7 @@ PLATER_DEFAULT_SETTINGS = {
 			defensive = {.85, .45, .1, 1},
 			offensive = {0, .65, .1, 1},
 			crowdcontrol = {.3, .2, .2, 1},
+			default = {0, 0, 0, 1},
 		},
 		
 		aura_tracker = {

@@ -77,7 +77,7 @@ local function FindItem( loc_id, cl, cb, bp, cs, id, ct )
 	-- working from left to right
 	-- find the matching item in your bag
 	
-	--ArkInventory.Output2( "FindItem( ", loc_id, ", ", cl, ".", cb, ".", cs, ", ", id, " )" )
+	--ArkInventory.OutputDebug( "FindItem( ", loc_id, ", ", cl, ".", cb, ".", cs, ", ", id, " )" )
 	
 	local me = ArkInventory.GetPlayerCodex( )
 	local abort = false
@@ -112,16 +112,16 @@ local function FindItem( loc_id, cl, cb, bp, cs, id, ct )
 				end
 				
 				if loc_id ~= cl then
-					--ArkInventory.Output2( "different location" )
+					--ArkInventory.OutputDebug( "different location" )
 					ok = true
 				elseif loc_id == cl and bag_pos < bp then
-					--ArkInventory.Output2( "same location and lower bag" )
+					--ArkInventory.OutputDebug( "same location and lower bag" )
 					ok = true
 				elseif loc_id == cl and bag_pos == bp and slot_id < cs then
-					--ArkInventory.Output2( "same location and same bag and lower slot" )
+					--ArkInventory.OutputDebug( "same location and same bag and lower slot" )
 					ok = true
 				elseif ( ct ~= 0 and bag_pos ~= bp and bt == 0 ) and ( loc_id ~= ArkInventory.Const.Location.Bank and bag_pos ~= ArkInventory.Global.Location[loc_id].ReagentBag ) then
-					--ArkInventory.Output2( "full scan (bag type) and different bag and normal bag" )
+					--ArkInventory.OutputDebug( "full scan (bag type) and different bag and normal bag" )
 					-- not at the bank and not the reagent bank (or it will loop endlessly)
 					ok = true
 				end
@@ -142,7 +142,7 @@ local function FindItem( loc_id, cl, cb, bp, cs, id, ct )
 							
 							if osd.id == id then
 								
-								--ArkInventory.Output2( "found> ", loc_id, ".", blizzard_id, ".", slot_id )
+								--ArkInventory.OutputDebug( "found> ", loc_id, ".", blizzard_id, ".", slot_id )
 								return abort, recheck, true, blizzard_id, slot_id
 								
 							end
@@ -183,7 +183,7 @@ local function FindPartialStack( loc_id, cl, cb, bp, cs, id )
 	-- cs = current slot of partial stack to fill
 	-- id = item id to search for
 	
-	--ArkInventory.Output2( "FindPartialStack( ", loc_id, " / ", cl, ".", cb, "(", bp, ").", cs, " / ", id, " )" )
+	--ArkInventory.OutputDebug( "FindPartialStack( ", loc_id, " / ", cl, ".", cb, "(", bp, ").", cs, " / ", id, " )" )
 	
 	local me = ArkInventory.GetPlayerCodex( )
 	local abort = false
@@ -215,7 +215,7 @@ local function FindPartialStack( loc_id, cl, cb, bp, cs, id )
 				if select( 3, GetGuildBankItemInfo( tab_id, slot_id ) ) then
 					
 					-- this slot is locked, move on and check it again next time
-					--ArkInventory.Output2( "locked> ", loc_id, ".", tab_id, ".", slot_id )
+					--ArkInventory.OutputDebug( "locked> ", loc_id, ".", tab_id, ".", slot_id )
 					recheck = true
 					
 				else
@@ -231,7 +231,7 @@ local function FindPartialStack( loc_id, cl, cb, bp, cs, id )
 							local count = select( 2, GetGuildBankItemInfo( tab_id, slot_id ) )
 							
 							if count < info.stacksize then
-								--ArkInventory.Output2( "found > ", tab_id, ".", slot_id )
+								--ArkInventory.OutputDebug( "found > ", tab_id, ".", slot_id )
 								return abort, recheck, true, tab_id, slot_id
 							end
 							
@@ -292,7 +292,7 @@ local function FindPartialStack( loc_id, cl, cb, bp, cs, id )
 								if info.id == id then
 									
 									if itemInfo.stackCount < info.stacksize then
-										--ArkInventory.Output2( "found > ", blizzard_id, ".", slot_id, " ", itemInfo.stackCount, " of ", h, " for ", cb, ".", cs )
+										--ArkInventory.OutputDebug( "found > ", blizzard_id, ".", slot_id, " ", itemInfo.stackCount, " of ", h, " for ", cb, ".", cs )
 										return abort, recheck, true, blizzard_id, slot_id
 									end
 									
@@ -425,6 +425,12 @@ local function FindProfessionItem( loc_id, cl, cb, bp, cs, ct )
 		return abort, recheck, false
 	end
 	
+	local restack_priority = ArkInventory.db.option.restack.priority
+	if restack_priority and not ArkInventory.Const.Slot.Data[ArkInventory.Const.Slot.Type.Reagent].ClientCheck then
+		-- the regent bank doesnt exist until draenor so in the classic clients this causes issues so we turn it off
+		restack_priority = false
+	end
+	
 	for bag_pos, blizzard_id in ipairs( ArkInventory.Global.Location[loc_id].Bags ) do
 		
 		local ab, bt, count = RestackBagCheck( blizzard_id )
@@ -440,7 +446,7 @@ local function FindProfessionItem( loc_id, cl, cb, bp, cs, ct )
 			
 			local pri_ok = false
 			
-			if ArkInventory.db.option.restack.priority then
+			if restack_priority then
 				-- priority is reagent bank
 				--if blizzard_id ~= ArkInventory.ENUM.BAG.INDEX.REAGENTBANK and ( bt == 0 or bt == ct ) then
 				if ( not ArkInventory.Global.BlizzardReagentContainerIDs[blizzard_id] ) and ( bt == 0 or bt == ct ) then
@@ -566,6 +572,12 @@ local function FindCraftingItem( loc_id, cl, cb, bp, cs )
 	
 	--ArkInventory.Output( "find crafting item in ", ArkInventory.Global.Location[loc_id].Name, " for slot ", ArkInventory.Global.Location[cl].Name, ".", cb, ".", cs )
 	
+	local restack_priority = ArkInventory.db.option.restack.priority
+	if restack_priority and not ArkInventory.Const.Slot.Data[ArkInventory.Const.Slot.Type.Reagent].ClientCheck then
+		-- the regent bank doesnt exist until draenor so in the classic clients this causes issues so we turn it off
+		restack_priority = false
+	end
+	
 	for bag_pos, blizzard_id in ipairs( ArkInventory.Global.Location[loc_id].Bags ) do
 		
 		local ab, bt, count = RestackBagCheck( blizzard_id )
@@ -581,7 +593,7 @@ local function FindCraftingItem( loc_id, cl, cb, bp, cs )
 			
 			local pri_ok
 			
-			if ArkInventory.db.option.restack.priority then
+			if restack_priority then
 				-- priority is reagent bank
 				--if blizzard_id ~= ArkInventory.ENUM.BAG.INDEX.REAGENTBANK and ( bt == 0 or cb == ArkInventory.ENUM.BAG.INDEX.REAGENTBANK ) then
 				if ( not ArkInventory.Global.BlizzardReagentContainerIDs[blizzard_id] ) and ( bt == 0 or ArkInventory.Global.BlizzardReagentContainerIDs[cb] ) then
@@ -742,7 +754,7 @@ local function StackBags( loc_id )
 								
 								if ok then
 									
-									--ArkInventory.Output2( "merge> ", blizzard_id, ".", slot_id, " + ", pb, ".", ps )
+									--ArkInventory.OutputDebug( "merge> ", blizzard_id, ".", slot_id, " + ", pb, ".", ps )
 									
 									ClearCursor( )
 									ArkInventory.CrossClient.PickupContainerItem( pb, ps )
@@ -1038,7 +1050,7 @@ local function Consolidate( loc_id )
 		
 		if ArkInventory.db.option.restack.bank then
 			
-			--ArkInventory.Output2( "fill up normal bank slots with crafting items" )
+			--ArkInventory.OutputDebug( "fill up normal bank slots with crafting items" )
 			
 			for bag_pos = #ArkInventory.Global.Location[loc_id].Bags, 1, -1 do
 				
@@ -1440,15 +1452,6 @@ local function RestackRun( loc_id )
 	
 	local thread_id = ArkInventory.Global.Thread.Format.Restack
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " start" )
-		RestackRun_Threaded( loc_id )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s took %0.0fms", thread_id, tz ) )
-		return
-	end
-	
 	if ArkInventory.ThreadRunning( thread_id ) then
 		-- restack already in progress
 		--ArkInventory.OutputError( ArkInventory.RestackString( ), ": ", ArkInventory.Global.Location[loc_id].Name, " " , ArkInventory.Localise["RESTACK_FAIL_WAIT"] )
@@ -1456,12 +1459,11 @@ local function RestackRun( loc_id )
 		return
 	end
 	
-	-- thread not active, create a new one
-	local tf = function ( )
+	local thread_func = function( )
 		RestackRun_Threaded( loc_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 

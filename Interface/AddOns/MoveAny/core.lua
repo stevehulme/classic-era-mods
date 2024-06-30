@@ -25,14 +25,6 @@ local MAUIP = CreateFrame("Frame", "UIParent")
 MAUIP:SetAllPoints(UIParent)
 MAUIP.unit = "player"
 MAUIP.auraRows = 0
-hooksecurefunc(
-	UIParent,
-	"SetScale",
-	function(self, scale)
-		MAUIP:SetScale(scale)
-	end
-)
-
 function MoveAny:SetMAUIPAlpha(alpha)
 	if UIParent:IsShown() then
 		MAUIP:SetAlpha(alpha)
@@ -41,14 +33,38 @@ function MoveAny:SetMAUIPAlpha(alpha)
 	end
 end
 
-MAUIP:SetScale(UIParent:GetScale())
-hooksecurefunc(
-	UIParent,
-	"SetAlpha",
-	function(self, alpha)
-		MoveAny:SetMAUIPAlpha(alpha)
+local uiscalecvar = CreateFrame("Frame")
+uiscalecvar:RegisterEvent("CVAR_UPDATE")
+uiscalecvar:SetScript(
+	"OnEvent",
+	function(self, event, target, value)
+		if event == "CVAR_UPDATE" and (target == "uiScale" or target == "useUiScale") then
+			if MoveAny:GetCVar("useUiScale") == "1" then
+				MAUIP:SetScale(MoveAny:GetCVar("uiScale"))
+			else
+				MAUIP:SetScale(UIParent:GetScale())
+			end
+
+			MoveAny:UpdateGrid()
+		end
 	end
 )
+
+hooksecurefunc(
+	UIParent,
+	"SetScale",
+	function(self, scale)
+		if MoveAny:GetCVar("useUiScale") == "0" then
+			MAUIP:SetScale(scale)
+		end
+	end
+)
+
+if MoveAny:GetCVar("useUiScale") == "1" then
+	MAUIP:SetScale(MoveAny:GetCVar("uiScale"))
+else
+	MAUIP:SetScale(UIParent:GetScale())
+end
 
 MoveAny:SetMAUIPAlpha(UIParent:GetAlpha())
 hooksecurefunc(
@@ -235,13 +251,13 @@ function MoveAny:UpdateMALock()
 end
 
 function MoveAny:InitSlash()
-	D4:AddSlash("move", MoveAny.ToggleMALock)
-	D4:AddSlash("moveany", MoveAny.ToggleMALock)
+	MoveAny:AddSlash("move", MoveAny.ToggleMALock)
+	MoveAny:AddSlash("moveany", MoveAny.ToggleMALock)
 	if C_UI then
-		D4:AddSlash("rl", C_UI.Reload)
-		D4:AddSlash("rel", C_UI.Reload)
+		MoveAny:AddSlash("rl", C_UI.Reload)
+		MoveAny:AddSlash("rel", C_UI.Reload)
 	else
-		D4:AddSlash("rl", ReloadUi)
-		D4:AddSlash("rel", ReloadUi)
+		MoveAny:AddSlash("rl", ReloadUi)
+		MoveAny:AddSlash("rel", ReloadUi)
 	end
 end

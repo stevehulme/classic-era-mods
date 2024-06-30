@@ -371,7 +371,7 @@
       </OnMouseUp>
       
       <PreClick>
-        ArkInventory.Frame_Item_PreClick( self, button, down )
+        return ArkInventory.Frame_Item_PreClick( self, button, down )
       </PreClick>
       
       <PostClick>
@@ -2260,25 +2260,19 @@
     <Scripts>
       
       <OnLoad>
-        
-        ArkInventory.Frame_AddBorder( self )
-        
-        ArkInventory.OnLoad( )
-        
-        self:RegisterForDrag( "LeftButton" )
-        
+        ArkInventory.Debug.Frame_OnLoad( self )
       </OnLoad>
       
       <OnShow>
-        ArkInventory.MediaFrameDefaultFontSet( self )
+        ArkInventory.Debug.Frame_OnShow( self )
       </OnShow>
       
       <OnDragStart>
-        self:StartMoving( )
+        ArkInventory.Debug.Frame_OnDragStart( self )
       </OnDragStart>
       
       <OnDragStop>
-        self:StopMovingOrSizing( )
+        ArkInventory.Debug.OnDragStop( self )
       </OnDragStop>
       
     </Scripts>

@@ -201,23 +201,11 @@ function ArkInventorySearch.Frame_Table_Refresh( )
 	
 	ArkInventorySearch.cycle = 0
 	
-	if not ArkInventory.Global.Thread.Use then
-		local tz = debugprofilestop( )
-		ArkInventory.OutputThread( thread_id, " starting" )
-		ArkInventorySearch.Frame_Table_Refresh_Threaded( frame, thread_id )
-		tz = debugprofilestop( ) - tz
-		ArkInventory.OutputThread( string.format( "%s dead after %0.0fms", thread_id, tz ) )
-		return
-	end
-	
-	-- load the co-routine, overwite existing, the garbage collector will sort it out
-	local tf = function ( )
+	local thread_func = function( )
 		ArkInventorySearch.Frame_Table_Refresh_Threaded( frame, thread_id )
 	end
 	
-	ArkInventory.ThreadStart( thread_id, tf )
-	
-	--ArkInventory.Output( "draw location ", loc_id, " complete" )
+	ArkInventory.ThreadStart( thread_id, thread_func )
 	
 end
 

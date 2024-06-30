@@ -94,9 +94,10 @@ function MoveAny:LangzhCN()
         ["LID_MABUFFLIMIT"] = "缓冲限制",
         ["LID_MABUFFSPACINGX"] = "缓冲间隔水平",
         ["LID_MABUFFSPACINGY"] = "缓冲间隔 垂直",
+        ["LID_RESETELEMENT"] = "Reset Element",
     }
 
-    if D4:GetWoWBuild() ~= "RETAIL" then
+    if MoveAny:GetWoWBuild() ~= "RETAIL" then
         tab["LID_ACTIONBARS"] = "动作栏1 + 5 + 6"
         tab["LID_ACTIONBAR1"] = "动作栏1（主栏）"
         tab["LID_ACTIONBAR2"] = "动作条2（动作条1的第2页）"
