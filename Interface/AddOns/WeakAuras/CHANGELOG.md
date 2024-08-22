@@ -1,24 +1,14 @@
-# [5.14.1](https://github.com/WeakAuras/WeakAuras2/tree/5.14.1) (2024-06-22)
+# [5.16.1](https://github.com/WeakAuras/WeakAuras2/tree/5.16.1) (2024-08-16)
 
-[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.14.0...5.14.1)
+[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.16.0...5.16.1)
 
 ## Highlights
 
- - Fixes an issue with Cooldowns introduced in the last release 
+ - Bug fix for spell API 
 
 ## Commits
 
-InfusOnWoW (2):
+mrbuds (1):
 
-- Fix Spell Cooldowns override tracking
-- Load Race: Add Earthern to list
-
-mrbuds (6):
-
-- Fix "Cooldown Ready (Equipment Slot)" trigger
-- fix tracking of "targettarget" fixes #5176
-- Export debug table: sort the tables
-- Texture Picker: add LSM statusbar textures
-- Glow sub element: support texture & progresstexture
-- Fix min/max progress with old auras
+- IsPlayerSpell and IsSpellKnown now make error an with 0
 

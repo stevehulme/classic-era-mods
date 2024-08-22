@@ -54,6 +54,30 @@ function MoveAny:InitMicroMenu()
 		end
 
 		MAMenuBar.btns = {}
+		hooksecurefunc(
+			MAMenuBar,
+			"SetParent",
+			function(sel, parent)
+				if parent == MAHIDDEN then
+					for i, mbname in pairs(MBTNS) do
+						local mb = _G[mbname]
+						if mb then
+							mb:SetAlpha(0)
+							mb:EnableMouse(false)
+						end
+					end
+				else
+					for i, mbname in pairs(MBTNS) do
+						local mb = _G[mbname]
+						if mb then
+							mb:SetAlpha(1)
+							mb:EnableMouse(true)
+						end
+					end
+				end
+			end
+		)
+
 		if MBTNS then
 			for i, mbname in pairs(MBTNS) do
 				local mb = _G[mbname]
@@ -103,7 +127,15 @@ function MoveAny:InitMicroMenu()
 						end
 					)
 
-					if MoveAny:GetWoWBuild() == "RETAIL" and mb ~= HelpMicroButton and mb ~= MainMenuMicroButton then
+					if MoveAny:GetWoWBuild() == "RETAIL" then
+						hooksecurefunc(
+							MAMenuBar,
+							"SetScale",
+							function(sel, scale)
+								mb:SetScale(scale)
+							end
+						)
+
 						hooksecurefunc(
 							mb,
 							"SetScale",
@@ -112,14 +144,6 @@ function MoveAny:InitMicroMenu()
 								sel.ma_set_s = true
 								mb:SetScale(MAMenuBar:GetScale())
 								sel.ma_set_s = false
-							end
-						)
-
-						hooksecurefunc(
-							MAMenuBar,
-							"SetScale",
-							function(sel, scale)
-								mb:SetScale(scale)
 							end
 						)
 
@@ -141,10 +165,12 @@ function MoveAny:InitMicroMenu()
 							function(sel)
 								if sel.ma_SetScaleAdjustment then return end
 								sel.ma_SetScaleAdjustment = true
-								MicroMenu:SetScaleAdjustment(1)
+								sel:SetScaleAdjustment(1)
 								sel.ma_SetScaleAdjustment = false
 							end
 						)
+
+						MicroMenu:SetScaleAdjustment(1)
 					end
 
 					mb:Show()

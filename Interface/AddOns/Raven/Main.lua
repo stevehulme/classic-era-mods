@@ -67,6 +67,7 @@ MOD.updateDispels = true -- need to update dispel types
 MOD.knownBrokers = {} -- table of registered data brokers
 MOD.brokerList = {} -- table of brokers suitable for a selection list
 MOD.cooldownSpells = {} -- table of spell ids that have a cooldown to track, updated when spellbook changes
+MOD.spellOverrides = {} -- table of overriding spell ids
 MOD.chargeSpells = {} -- table of spell ids with max charges
 MOD.petSpells = {} -- table of pet spell ids with a cooldown to track
 MOD.professionSpells = {} -- table of profession spell ids with a cooldown to track
@@ -362,9 +363,9 @@ local function CheckTalentSpecialization() talentsInitialized = false; unitUpdat
 -- Function called to detect global cooldowns
 local function CheckGCD(event, unit, spell)
 	if unit == "player" and spell then
-		local name = GetSpellInfo(spell) -- added verification of spell argument due to error seen while testing 1/1/2019
+		local name = SHIM:GetSpellInfo(spell) -- added verification of spell argument due to error seen while testing 1/1/2019
 		if name and (name ~= "") then
-			local start, duration = GetSpellCooldown(spell)
+			local start, duration = SHIM:GetSpellCooldown(spell)
 			if start and duration and (duration > 0) and (duration <= 1.5) then startGCD = start; durationGCD = duration; TriggerCooldownUpdate() end
 		end
 	end
@@ -374,7 +375,7 @@ end
 -- Function called for successful spell cast
 local function CheckSpellCasts(event, unit, lineID, spellID)
 	CheckGCD(event, unit, spellID)
-	local name = GetSpellInfo(spellID)
+	local name = SHIM:GetSpellInfo(spellID)
 	if name and (name ~= "") and MOD.db.global.DetectSpellEffects then MOD:DetectSpellEffect(name, unit) end -- check if spell triggers a spell effect
 end
 
@@ -771,7 +772,7 @@ local function CombatLogTracker() -- no longer passes in arguments with the even
 			end
 		elseif e == "SPELL_SUMMON" then
 			if MOD.myClass == "MAGE" and spellID == 99063 then -- special case for mage T12 2-piece
-				local name = GetSpellInfo(99061) -- T12 bonus spell name
+				local name = SHIM:GetSpellInfo(99061) -- T12 bonus spell name
 				if name and name ~= "" then
 					if MOD.db.global.DetectInternalCooldowns then MOD:DetectInternalCooldown(name, false) end
 					if MOD.db.global.DetectSpellEffects then MOD:DetectSpellEffect(name, "player") end
@@ -780,7 +781,7 @@ local function CombatLogTracker() -- no longer passes in arguments with the even
 				local duration = MOD.warlockCreatures[spellID]
 				if duration then
 					local gt = AllocateTable() -- use table pool for minion tracking
-					gt.expire = duration + now; gt.duration = duration; gt.name = dstName; gt.icon = GetSpellTexture(spellID); gt.spell = spellID
+					gt.expire = duration + now; gt.duration = duration; gt.name = dstName; gt.icon = SHIM:GetSpellTexture(spellID); gt.spell = spellID
 					if duration == 22 then gt.energy = 5 end -- imps have 22 second duration and also are subject to energy limit for 5 casts
 					summonedCreatures[dstGUID] = gt -- summoned creature table contains expire time, duration, name and icon
 				end
@@ -938,11 +939,11 @@ function MOD:OnDisable() end
 
 -- Cache icons for special purposes such as shared cooldowns
 local function InitializeIcons()
-	iconGCD = GetSpellTexture(28730) -- cached for global cooldown (using same icon as Arcane Torrent, must be valid)
-	iconPotion = GetItemIcon(31677) -- icon for shared potions cooldown
-	iconElixir = GetItemIcon(28104) -- icon for shared elixirs cooldown
+	iconGCD = SHIM:GetSpellTexture(28730) -- cached for global cooldown (using same icon as Arcane Torrent, must be valid)
+	iconPotion = SHIM:GetItemIconByID(31677) -- icon for shared potions cooldown
+	iconElixir = SHIM:GetItemIconByID(28104) -- icon for shared elixirs cooldown
 
-	MOD:SetIcon(L["Rune"], GetSpellTexture(48266)) -- cached for death knight runes (this is for Frost Presence)
+	MOD:SetIcon(L["Rune"], SHIM:GetSpellTexture(48266)) -- cached for death knight runes (this is for Frost Presence)
 end
 
 -- Updates will be driven by the new timer function, compute elapsed time since last update
@@ -1088,27 +1089,33 @@ local function InitializeTalents()
 
 				for _,entryID in pairs(nodeInfo.entryIDs) do
 					entryInfo = C_Traits.GetEntryInfo(activeConfigID, entryID)
+                    if not entryInfo.definitionID then
+                        break
+                    end
 
-					definitionInfo = C_Traits.GetDefinitionInfo(entryInfo.definitionID)
-					name, rank, icon = GetSpellInfo(definitionInfo.spellID)
+                    definitionInfo = C_Traits.GetDefinitionInfo(entryInfo.definitionID)
+                    if not definitionInfo.spellID then
+                        break
+                    end
 
-					if name then
-						local talentActive;
+                    name, rank, icon = SHIM:GetSpellInfo(definitionInfo.spellID)
+                    if name then
+                        local talentActive
 
-						if bit.band(nodeInfo.flags, 1) == 1 and nodeInfo.entryIDsWithCommittedRanks[1] ~= nil then
-							talentActive = entryID == nodeInfo.entryIDsWithCommittedRanks[1]
-						else
-							talentActive = nodeInfo.currentRank > 0
-						end
+                        if bit.band(nodeInfo.flags, 1) == 1 and nodeInfo.entryIDsWithCommittedRanks[1] ~= nil then
+                            talentActive = entryID == nodeInfo.entryIDsWithCommittedRanks[1]
+                        else
+                            talentActive = nodeInfo.currentRank > 0
+                        end
 
-						MOD.talents[name] = {
-							tab = currentSpec,
-							icon = icon,
-							active = talentActive
-						}
-						MOD.talentList[select] = name
-						select = select + 1
-					end
+                        MOD.talents[name] = {
+                            tab = currentSpec,
+                            icon = icon,
+                            active = talentActive
+                        }
+                        MOD.talentList[select] = name
+                        select = select + 1
+                    end
 				end
 			end
 		end
@@ -1117,6 +1124,7 @@ local function InitializeTalents()
 		for i, t in pairs(MOD.talentList) do
 			MOD.talents[t].select = i
 		end
+
 		MOD.updateDispels = true
 	end
 end
@@ -1584,9 +1592,6 @@ local function GetWeaponBuffs()
 			mainHandBuff = GetWeaponBuffNameOld(invSlot)
 		end
 
-		local name, rank, icon, castTime, minRange, maxRange
-			= GetSpellInfo(spellId or spellName or spellLink)
-
 		if not mainHandBuff then -- if tooltip scan fails then use fallback of weapon name or slot name
 			local weaponLink = GetInventoryItemLink("player", invSlot)
 			if weaponLink then mainHandBuff = SHIM:GetItemInfo(weaponLink) end
@@ -1805,7 +1810,7 @@ local function GetPowerBuffs()
 		if IsSpellKnown(116011) then -- rune of power
 			local haveTotem, name, startTime, duration, icon = GetTotemInfo(1)
 			if haveTotem and name and name ~= "" and now <= (startTime + duration) then
-				local sp = GetSpellInfo(52623)
+				local sp = SHIM:GetSpellInfo(52623)
 				AddAura("player", sp, true, 52623, 1, "Power", duration, "player", nil, nil, 1, icon, startTime + duration, "text", sp)
 			end
 		end
@@ -1820,7 +1825,7 @@ local function GetPowerBuffs()
 		local chi = UnitPower("player", Enum.PowerType.Chi)
 		local _, pToken = UnitPowerType("player")
 		local name = _G[pToken]
-		local icon = GetSpellTexture(179126)
+		local icon = SHIM:GetSpellTexture(179126)
 		if chi and chi > 0 then
 			AddAura("player", name, true, nil, chi, "Power", 0, "player", nil, nil, nil, icon, 0, "text", name)
 			return
@@ -1836,13 +1841,13 @@ local function GetPowerBuffs()
 			local ap = UnitPower("player", Enum.PowerType.LunarPower)
 			local _, pToken = UnitPowerType("player")
 			local name = _G[pToken]
-			local icon = GetSpellTexture(164686) -- dark eclipse
+			local icon = SHIM:GetSpellTexture(164686) -- dark eclipse
 			AddAura("player", name, true, nil, ap, "Power", 0, "player", nil, nil, nil, icon, 0, "text", name)
 			return
 		end
 	end
 	if power and power > 0 then
-		local name, _, icon = GetSpellInfo(id)
+		local name, _, icon = SHIM:GetSpellInfo(id)
 		if name and (name ~= "") then
 			AddAura("player", name, true, id, power, "Power", 0, "player", nil, nil, nil, icon, 0, "text", name)
 		end
@@ -1934,7 +1939,7 @@ function MOD:UpdateTrackers()
 			end
 		end
 		if not InCombatLockdown() then -- if out of combat then release unlimited duration trackers for Corruption (needed for Absolute Corruption talent)
-			local corruption = GetSpellInfo(172) -- use localized string for Corruption instead of spell id, in case multiple ids are involved
+			local corruption = SHIM:GetSpellInfo(172) -- use localized string for Corruption instead of spell id, in case multiple ids are involved
 			for _, tracker in pairs(unitDebuffs) do
 				for k, t in pairs(tracker) do if (t[13] == corruption) and (t[5] == 0) then tracker[k] = ReleaseTable(t) end end
 			end
@@ -2019,41 +2024,54 @@ end
 
 -- Check if the named spell or item is on cooldown, return a cooldown table
 function MOD:CheckCooldown(name)
-	if name and name ~= "" then -- make sure valid name provided, could be spell name, number, or #number
-		local id = nil
-		if string.find(name, "^#%d+") then id = tonumber(string.sub(name, 2)) else id = tonumber(name) end
-		if id then name = GetSpellInfo(id) end -- may need to convert from spell id to name
-		if name and name ~= "" then return ValidateCooldown(activeCooldowns[name]) end -- make sure cooldown is still valid
-	end
-	return nil
+    if name and name ~= "" then -- make sure valid name provided, could be spell name, number, or #number
+        local id = nil
+        if string.find(name, "^#%d+") then id = tonumber(string.sub(name, 2)) else id = tonumber(name) end
+        if id then name = SHIM:GetSpellInfo(id) end -- may need to convert from spell id to name
+        if name and name ~= "" then
+            name = MOD.spellOverrides[name] or name
+
+            -- make sure cooldown is still valid
+            return ValidateCooldown(activeCooldowns[name])
+        end
+    end
+    return nil
 end
 
 -- Check if name is a spell in the spell book and, therefore, known to the player
 -- If usable is true then verify it is not passive and has sufficient resources (e.g., mana, insanity, soul shards)
 -- If ready is true then make sure it is not on cooldown or out of charges
 function MOD:CheckSpellStatus(name, usable, ready)
-	local result = false
-	if name and name ~= "" then -- make sure valid name provided, could be spell name, number, or #number
-		local id = nil
-		if string.find(name, "^#%d+") then id = tonumber(string.sub(name, 2)) else id = tonumber(name) end
-		if id then name = GetSpellInfo(id) end -- may need to convert from spell id to name
-		if name and name ~= "" then
-			local spellID = MOD.bookSpells[name]
+    local result = false
+    if name and name ~= "" then -- make sure valid name provided, could be spell name, number, or #number
+        local id = nil
+        if string.find(name, "^#%d+") then id = tonumber(string.sub(name, 2)) else id = tonumber(name) end
+        if id then name = SHIM:GetSpellInfo(id) end -- may need to convert from spell id to name
+        if name and name ~= "" then
+            if MOD.spellOverrides[name] then
+                name = MOD.spellOverrides[name]
+            end
 
-			if spellID then -- spell is known by the player
-				if usable then
-					result = not IsPassiveSpell(spellID) and IsUsableSpell(name) -- check non-passive and has resources
-				else
-					result = true
-				end
-			end
-		end
-	end
-	if result and ready then
-		local cd = ValidateCooldown(activeCooldowns[name]) -- look up in the active cooldowns table
-		result = not cd or (cd[1] == nil) or (cd[4] == nil) or (cd[9] and cd[9] > 0) -- check if ready
-	end
-	return result
+            local spellID = MOD.bookSpells[name]
+            if spellID then -- spell is known by the player
+                if usable then
+                    result = SHIM:IsUsableSpell(name) -- check has resources
+                else
+                    result = true
+                end
+            end
+        end
+    end
+
+    if result and ready then
+        name = MOD.spellOverrides[name] or name
+
+        local spellID = MOD.bookSpells[name]
+        local cd = ValidateCooldown(activeCooldowns[name]) -- look up in the active cooldowns table
+        result = not cd or (cd[1] == nil) or (cd[4] == nil) or (cd[9] and cd[9] > 0) -- check if ready
+    end
+
+    return result
 end
 
 -- Iterate over current cooldowns, calling the function with cooldown name, cooldown table, and optional parameters
@@ -2208,7 +2226,7 @@ function MOD:UpdateCooldowns()
 			for name, ls in pairs(MOD.lockoutSpells) do
 				if not lockouts[ls.school] then lockouts[ls.school] = 0 end -- initialize when school seen for first time
 				if ls.index and (lockouts[ls.school] == 0) then
-					local start, duration = GetSpellCooldown(ls.index, "spell")
+					local start, duration = SHIM:GetSpellBookItemCooldown(ls.index, "spell")
 					if start and (start > 0) and (duration > 1.5) then -- locked out!
 						lockouts[ls.school] = duration; lockstarts[ls.school] = start; lockedOut = true
 						AddCooldown(ls.label, nil, iconGCD, start, duration, "spell", ls.text, "player")
@@ -2218,9 +2236,9 @@ function MOD:UpdateCooldowns()
 		end
 
 		for spellID in pairs(MOD.cooldownSpells) do -- check all player spells with cooldowns (includes professions)
-			local name, _, icon = GetSpellInfo(spellID)
+			local name, _, icon = SHIM:GetSpellInfo(spellID)
 			if name and name ~= "" and icon then -- make sure we have a valid spell name
-				local start, duration, enable = GetSpellCooldown(spellID)
+				local start, duration, enable = SHIM:GetSpellCooldown(spellID)
 				if start and (start > 0) and (enable == 1) and (duration > 1.5) then -- don't include global cooldowns
 					if (MOD.myClass ~= "DEATHKNIGHT") or CheckRuneCooldown(name, duration) then -- if death knight check rune cooldown
 						AddCooldown(name, spellID, icon, start, duration, "spell id", spellID, "player")
@@ -2230,9 +2248,9 @@ function MOD:UpdateCooldowns()
 		end
 
 		for spellID in pairs(MOD.chargeSpells) do -- check all player spells with charges
-			local name, _, icon = GetSpellInfo(spellID)
+			local name, _, icon = SHIM:GetSpellInfo(spellID)
 			if name and name ~= "" and icon then -- make sure we have a valid spell name
-				local count, charges, start, duration = GetSpellCharges(spellID)
+				local count, charges, start, duration = SHIM:GetSpellChargesByID(spellID)
 				if count and charges and count < charges then
 					if start and start > 0 and duration and duration > 1.5 then -- don't include global cooldowns
 						if (MOD.myClass ~= "DEATHKNIGHT") or CheckRuneCooldown(name, duration) then -- if death knight check rune cooldown
@@ -2245,9 +2263,9 @@ function MOD:UpdateCooldowns()
 
 		if UnitExists("pet") then -- make sure you have a pet before check all pet spells with cooldowns
 			for spellID in pairs(MOD.petSpells) do
-				local name, _, icon = GetSpellInfo(spellID)
+				local name, _, icon = SHIM:GetSpellInfo(spellID)
 				if name and name ~= "" and icon then -- make sure we have a valid spell name
-					local start, duration, enable = GetSpellCooldown(spellID)
+					local start, duration, enable = SHIM:GetSpellCooldown(spellID)
 					if start and (start > 0) and (enable == 1) and (duration > 1.5) then -- don't include global cooldowns
 						AddCooldown(name, spellID, icon, start, duration, "spell id", spellID, "pet")
 					end
@@ -2263,9 +2281,9 @@ function MOD:UpdateCooldowns()
 			for slot = 1, 6 do
 				local actionType, spellID = GetActionInfo(slot + offset)
 				if actionType == "spell" then
-					local start, duration, enable = GetSpellCooldown(spellID)
+					local start, duration, enable = SHIM:GetSpellCooldown(spellID)
 					if start and (start > 0) and (enable == 1) and (duration > 1.5) then -- don't include global cooldowns
-						local name, _, icon = GetSpellInfo(spellID)
+						local name, _, icon = SHIM:GetSpellInfo(spellID)
 						if name and name ~= "" and icon then
 							AddCooldown(name, spellID, icon, start, duration, "spell id", spellID, "player")
 						end

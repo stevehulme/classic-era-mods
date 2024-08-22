@@ -2,8 +2,10 @@
 local _, MoveAny = ...
 function MoveAny:LangdeDE()
 	local tab = {
-		["LID_MMBTNLEFT"] = "Linksklick => Sperren/Entsperren + Optionen",
-		["LID_MMBTNRIGHT"] = "Shift + Rechtsklick => Minimapknopf verstecken",
+		["LID_LEFTCLICK"] = "Linksklick",
+		["LID_RIGHTCLICK"] = "Rechtsklick",
+		["LID_MMBTNLEFT"] = "Sperren/Entsperren + Optionen",
+		["LID_MMBTNRIGHT"] = "Minimapknopf verstecken",
 		["LID_GENERAL"] = "Allgemein",
 		["LID_SHOWMINIMAPBUTTON"] = "Minimapknopf anzeigen",
 		["LID_GRIDSIZE"] = "Rastergröße (Grid)",
@@ -166,7 +168,8 @@ function MoveAny:LangdeDE()
 		["LID_BLIZZARDACTIONBUTTONSART"] = "Aktionsleiste 1 Blizzard-Kunst",
 		["LID_OBJECTIVETRACKERBONUSBANNERFRAME"] = "Objektiv Tracker Fenster (World Quest Titel)",
 		["LID_MOVESMALLBAGS"] = "Bewegen/Skalieren von kleinen Taschen",
-		["LID_MOVELOOTFRAME"] = "Bewegen/Skalieren von Beutefenster (Loot)",
+		["LID_MOVELOOTFRAME"] = "Bewegen von Beutefenster (Loot)",
+		["LID_SCALELOOTFRAME"] = "Skalieren von Beutefenster (Loot)",
 		["LID_NEEDSARELOAD"] = "Braucht ein Neu laden",
 		["LID_RAIDBOSSEMOTEFRAME"] = "Raid Boss Emotionen Fenster",
 		["LID_STARTHELP"] = "Klicken Sie auf die MoveAny Minimap-Schaltfläche, um die Einstellungen zu öffnen",
@@ -218,6 +221,10 @@ function MoveAny:LangdeDE()
 		["LID_GuildInstanceDifficulty"] = "Minimap Flagge Gilden-Instanz Schwierigkeit",
 		["LID_POWERBARCOUNTERBAR"] = "Machtleiste Gegenleiste",
 		["LID_BUFFTIMER1"] = "Stärkungszeit 1",
+		["LID_FRAMES"] = "Fenster",
+		["LID_SCALEFRAMES"] = "Fenster skalieren",
+		["LID_RESETFRAMES"] = "Fenster resetten",
+		["LID_MOVEANYINFO"] = "Wählen Sie die Dinge aus, die Sie ändern möchten",
 	}
 
 	if MoveAny:GetWoWBuild() ~= "RETAIL" then

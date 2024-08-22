@@ -159,7 +159,7 @@ if CF_CATA and playerClass == "PALADIN" and playerRace ~= "Tauren" then -- Only 
 end
 
 if MODERN then -- failing ability rank disambiguation
-	local Spell_ForcedID = {126819, 28272, 28271, 161372, 51514, 210873, 211004, 211010, 211015, 783}
+	local Spell_ForcedID = {126819, 28272, 28271, 161372, 51514, 210873, 211004, 211010, 211015, 783, 126892}
 	local function checkForcedIDCastable(id)
 		return not not FindSpellBookSlotBySpellID(id), "forced-id-cast"
 	end
@@ -283,6 +283,13 @@ if MODERN then -- /equipset {not a set name} errors
 		end
 	]])
 	RW:RegisterCommand(SLASH_EQUIP_SET1, true, false, f)
+end
+
+if MODERN then -- ClassTalentHelper commands are in SlashCmdList instead of SecureCmdList
+	RW:ImportSlashCmd("TALENT_LOADOUT_BY_NAME", true, false)
+	RW:ImportSlashCmd("TALENT_LOADOUT_BY_INDEX", true, false)
+	RW:ImportSlashCmd("TALENT_SPEC_BY_NAME", true, false)
+	RW:ImportSlashCmd("TALENT_SPEC_BY_INDEX", true, false)
 end
 
 if CI_ERA then -- 1.15.1 SoD rune abilities

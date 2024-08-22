@@ -2,8 +2,10 @@
 local _, MoveAny = ...
 function MoveAny:LangitIT()
 	local tab = {
-		["LID_MMBTNLEFT"] = "Click sinistro => Blocca/Sblocca + Opzioni",
-		["LID_MMBTNRIGHT"] = "Maiusc + clic destro => Nascondi pulsante Minimap",
+		["LID_LEFTCLICK"] = "Click sinistro",
+		["LID_RIGHTCLICK"] = "Clic destro",
+		["LID_MMBTNLEFT"] = "Blocca/Sblocca + Opzioni",
+		["LID_MMBTNRIGHT"] = "Nascondi pulsante Minimap",
 		["LID_GENERAL"] = "Generale",
 		["LID_SHOWMINIMAPBUTTON"] = "Mostra pulsante Minimap",
 		["LID_GRIDSIZE"] = "Gridsize",
@@ -124,7 +126,6 @@ function MoveAny:LangitIT()
 		["LID_BLIZZARDACTIONBUTTONSART"] = "Actionbar 1 Blizzard-Art",
 		["LID_OBJECTIVETRACKERBONUSBANNERFRAME"] = "Objective Tracker Frame (World Quest Title)",
 		["LID_MOVESMALLBAGS"] = "Move/Scale Small Bags",
-		["LID_MOVELOOTFRAME"] = "Move/Scale Lootframe",
 		["LID_NEEDSARELOAD"] = "Needs a Reload",
 		["LID_RAIDBOSSEMOTEFRAME"] = "Raid Boss Emote Frame",
 		["LID_STARTHELP"] = "Click the MoveAny Minimap Button to open the settings.",

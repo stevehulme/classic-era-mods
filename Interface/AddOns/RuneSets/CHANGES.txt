@@ -1,13 +1,13 @@
-tag 2f6fb6237fcd3a6541d6ccfec09d0a1244df7313 1.2.5
+tag 32e951847a3f4febc78f3b397d3eafa1e8a0a2db 1.2.8
 Author:	Road-block <dridzt.addons@hotmail.com>
-Date:	Sat Apr 27 13:57:22 2024 +0300
+Date:	Sat Aug 17 12:46:38 2024 +0300
 
-updates
+v1.2.8 "two finger slots"
 
-commit c341649c98510fd4d28d94651417e920e06158ad
+commit 61c6f5974223633848300107fb0fc6124e7f9d91
 Author: Road-block <dridzt.addons@hotmail.com>
-Date:   Sat Apr 27 13:56:04 2024 +0300
+Date:   Sat Aug 17 12:45:42 2024 +0300
 
-    add a little more space for future rune slots to runesets frame
-    better handling of multiple un-engraved pieces equipped in quick succession
+    add second ring slot
+    update embeds
 

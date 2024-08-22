@@ -902,8 +902,8 @@ local default_profile = {
 		},
 
 	--segments
-		segments_amount = 40,
-		segments_amount_to_save = 40,
+		segments_amount = 25,
+		segments_amount_to_save = 15,
 		segments_panic_mode = false,
 		segments_auto_erase = 1,
 
@@ -1375,6 +1375,10 @@ local default_global_data = {
 		damage_scroll_position = {
 			scale = 1,
 		},
+        cleu_debug_panel = {
+            position = {},
+            scaletable = {scale = 1},
+        },
 		data_wipes_exp = {
 			["9"] = false,
 			["10"] = false,
@@ -1386,6 +1390,11 @@ local default_global_data = {
 		current_exp_raid_encounters = {},
 		encounter_journal_cache = {}, --store a dump of the encounter journal
 		installed_skins_cache = {},
+
+		debug_options_panel = {
+			scaletable = {scale = 1},
+			position = {},
+		},
 
 		user_is_patreon_supporter = false,
 
@@ -1940,8 +1949,9 @@ end
 ---@param newProfileName string
 ---@param bImportAutoRunCode boolean
 ---@param bIsFromImportPrompt boolean
+---@param overwriteExisting boolean
 ---@return boolean
-function Details:ImportProfile (profileString, newProfileName, bImportAutoRunCode, bIsFromImportPrompt)
+function Details:ImportProfile (profileString, newProfileName, bImportAutoRunCode, bIsFromImportPrompt, overwriteExisting)
 	if (not newProfileName or type(newProfileName) ~= "string" or string.len(newProfileName) < 2) then
 		Details:Msg("invalid profile name or profile name is too short.") --localize-me
 		return false
@@ -1955,11 +1965,13 @@ function Details:ImportProfile (profileString, newProfileName, bImportAutoRunCod
 
 		local profileObject = Details:GetProfile (newProfileName, false)
 		local nameWasDuplicate = false
-		while(profileObject) do
-			newProfileName = newProfileName .. '2';
-			profileObject = Details:GetProfile(newProfileName, false)
-			nameWasDuplicate = true
-		end
+    if not overwriteExisting then
+      while(profileObject) do
+        newProfileName = newProfileName .. '2';
+        profileObject = Details:GetProfile(newProfileName, false)
+        nameWasDuplicate = true
+      end
+    end
 		if (not profileObject) then
 			--profile doesn't exists, create new
 			profileObject = Details:CreateProfile (newProfileName)
@@ -2035,9 +2047,10 @@ function Details:ImportProfile (profileString, newProfileName, bImportAutoRunCod
 		mythicPlusSettings.mythicrun_chart_frame_minimized = {}
 		mythicPlusSettings.finished_run_frame = {}
 
-		--make the max amount of segments be 30
-		Details.segments_amount = 40
-		Details.segments_amount_to_save = 40
+		--max segments allowed
+		Details.segments_amount = 25
+		--max segments to save between sections
+		Details.segments_amount_to_save = 15
 
 		--transfer instance data to the new created profile
 		profileObject.instances = DetailsFramework.table.copy({}, profileData.instances)
@@ -2105,7 +2118,7 @@ function Details.ShowImportProfileConfirmation(message, callback)
 		checkboxLabel:SetJustifyH("left")
 		promptFrame.checkboxLabel = checkboxLabel
 
-		local buttonTrue = detailsFramework:CreateButton(promptFrame, nil, 60, 20, "Okey", nil, nil, nil, nil, nil, nil, options_dropdown_template)
+		local buttonTrue = detailsFramework:CreateButton(promptFrame, nil, 60, 20, "Okay", nil, nil, nil, nil, nil, nil, options_dropdown_template)
 		buttonTrue:SetPoint("bottomright", promptFrame, "bottomright", -10, 5)
 		promptFrame.button_true = buttonTrue
 

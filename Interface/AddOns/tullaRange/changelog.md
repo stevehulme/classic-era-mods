@@ -1,5 +1,18 @@
 # tullaRange release notes
 
+## 11.0.2
+
+* Fix IsUsableSpell typo
+
+## 11.0.1
+
+* Fixed errors when summoning a pet in WoW 11.0.2
+
+## 11.0.0
+
+* Fix an options menu error in WoW 11.0.0
+* Update TOCs for 11.0.2 and 1.15.3
+
 ## 10.2.6
 
 * Update TOCs

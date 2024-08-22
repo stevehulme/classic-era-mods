@@ -8,8 +8,10 @@ end
 
 function MoveAny:LangenUS()
 	local tab = {
-		["LID_MMBTNLEFT"] = "Left Click => Locks/Unlocks + Options",
-		["LID_MMBTNRIGHT"] = "Shift + Right Click => Hide Minimap Button",
+		["LID_LEFTCLICK"] = "Leftclick",
+		["LID_RIGHTCLICK"] = "Rightclick",
+		["LID_MMBTNLEFT"] = "Locks/Unlocks + Options",
+		["LID_MMBTNRIGHT"] = "Hide Minimap Button",
 		["LID_GENERAL"] = "General",
 		["LID_SHOWMINIMAPBUTTON"] = "Show Minimap Button",
 		["LID_GRIDSIZE"] = "Gridsize (Grid)",
@@ -172,11 +174,12 @@ function MoveAny:LangenUS()
 		["LID_BLIZZARDACTIONBUTTONSART"] = "Actionbar 1 Blizzard-Art",
 		["LID_OBJECTIVETRACKERBONUSBANNERFRAME"] = "Objective Tracker Frame (World Quest Title)",
 		["LID_MOVESMALLBAGS"] = "Move/Scale Small Bags",
-		["LID_MOVELOOTFRAME"] = "Move/Scale Lootframe",
+		["LID_MOVELOOTFRAME"] = "Move Lootframe",
+		["LID_SCALELOOTFRAME"] = "Scale Lootframe",
 		["LID_NEEDSARELOAD"] = "Needs a Reload",
 		["LID_RAIDBOSSEMOTEFRAME"] = "Raid Boss Emote Frame",
 		["LID_STARTHELP"] = "Click the MoveAny Minimap Button to open the settings.",
-		["LID_STARTHELP2"] = "Or tap /move or /moveany in chat to open the settings.",
+		["LID_STARTHELP2"] = "Or type /move or /moveany in chat to open the settings.",
 		["LID_STARTHELP3"] = "To hide these messages deactivate tips in the MoveAny menu.",
 		["LID_SHOWTIPS"] = "Show Tips",
 		["LID_OVERRIDEACTIONBAR"] = "Override Action Bar (Vehicle Bar)",
@@ -224,6 +227,11 @@ function MoveAny:LangenUS()
 		["LID_GuildInstanceDifficulty"] = "Minimap Flag Guild-Instance Difficulty",
 		["LID_POWERBARCOUNTERBAR"] = "Powerbar Counterbar",
 		["LID_BUFFTIMER1"] = "BuffTimer 1",
+		["LID_FRAMES"] = "Windows",
+		["LID_SCALEFRAMES"] = "Scale Windows",
+		["LID_RESETFRAMES"] = "Reset Windows",
+		["LID_ExpansionLandingPageMinimapButton"] = "ExpansionLandingPageMinimapButton",
+		["LID_MOVEANYINFO"] = "Select the things you want to modify",
 	}
 
 	if MoveAny:GetWoWBuild() ~= "RETAIL" then

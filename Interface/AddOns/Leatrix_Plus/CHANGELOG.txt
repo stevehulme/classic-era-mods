@@ -1,4 +1,31 @@
-﻿1.15.37 - 26th June 2024
+﻿1.15.45 - 21st August 2024
+- For 'Enhance minimap' ('Interface'), the 'MoveAny' addon button will now show in the combine addon buttons frame.
+- Added flight times.
+
+1.15.44 - 14th August 2024
+- Added flight times.
+
+1.15.42 - 31st July 2024
+- For 'Automate quests' ('Automation'), quests from Windcaller Kaldon (Silithus) will no longer be selected, accepted or turned-in automatically.
+- Added flight times.
+
+1.15.41 - 24th July 2024
+- Added flight times.
+
+1.15.40 - 17th July 2024
+- Added flight times.
+
+1.15.39 - 10th July 2024
+- Updated for game version 1.15.3.
+- Added flight times.
+
+1.15.38 - 3rd July 2024
+- Updated for game version 1.15.3.
+- For 'Enhance minimap' ('Interface'), added a button texture for Zygor.
+- PTR (1.15.3): For 'Hide chat buttons' ('Chat'), the new social button will now be hidden.
+- Added flight times.
+
+1.15.37 - 26th June 2024
 - Added flight times.
 
 1.15.36 - 19th June 2024
@@ -12,7 +39,7 @@
 
 1.15.32 - 22nd May 2024
 - Added a new option called 'Enhance flight map' ('Interface').  If enabled, you can customise the flight map (such as map scale, map position and icon size).  You can adjust the settings in the configuration panel.  Hold down ALT and drag the flight map to move it.
-- For 'Enhance minimap', added support for Narcissus custom minimap button.
+- For 'Enhance minimap' ('Interface'), added support for Narcissus custom minimap button.
 - Added flight times.
 
 1.15.31 - 15th May 2024

@@ -608,7 +608,7 @@ end
   local function SubInItemInfo(link)
     local res = link
 
-    local _, _, subType, equipLocation, icon, classID = GetItemInfoInstant(link)
+    local _, _, subType, equipLocation, icon, classID = C_Item.GetItemInfoInstant(link)
 
     local details = {}
 
@@ -620,7 +620,7 @@ end
       table.insert(details, _G[equipLocation])
     end
 
-    local level = GetDetailedItemLevelInfo(link)
+    local level = C_Item.GetDetailedItemLevelInfo(link)
     if module.db.profile.item.itemLevel and IsGear(classID) and level then
       table.insert(details, level)
     end
@@ -638,7 +638,13 @@ end
 
   local function SubInSpellInfo(link)
     local spellID = tonumber(link:match("Hspell:(%d+)"))
-    local icon = select(3, GetSpellInfo(spellID))
+    local icon
+    if C_Spell and C_Spell.GetSpellInfo then
+      local info = C_Spell.GetSpellInfo(spellID)
+      icon = info and info.iconID
+    else
+      icon = select(3, GetSpellInfo(spellID))
+    end
 
     local res = link
     if module.db.profile.spell.icon and icon then

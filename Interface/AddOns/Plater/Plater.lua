@@ -371,7 +371,10 @@ Plater.AnchorNamesByPhraseId = {
 	local DB_CASTBAR_HIDE_ENEMIES
 	local DB_CASTBAR_HIDE_FRIENDLY
 
+	---@type plater_spelldata[]
 	local DB_CAPTURED_SPELLS = {}
+
+	---@type plater_spelldata[]
 	local DB_CAPTURED_CASTS = {}
 
 	--store the aggro color table for tanks and dps
@@ -410,6 +413,7 @@ Plater.AnchorNamesByPhraseId = {
 	local TANK_CACHE = {}
 
 	--store pet GUIDs
+	---@type plater_petinfo[]
 	local PET_CACHE = {}
 	--store pets summoned by the player it self
 	Plater.PlayerPetCache = {}
@@ -600,10 +604,13 @@ Plater.AnchorNamesByPhraseId = {
 					end
 					
 				elseif (class == "MAGE") then
-					if isTalentLearned(62212) then -- Searing Touch
+					if IsPlayerSpell(2948) then -- Scorch
 						lowExecute = 0.3
+						if isTalentLearned(449349) then --Sunfury Execution (for Scorch)
+							lowExecute = 0.35
+						end
 					end
-					if isTalentLearned(62083) then --Firestarter
+					if IsPlayerSpell(205026) then --Firestarter
 						highExecute = 0.9
 					end
 					if IsPlayerSpell(384581) then -- Arcane Bombardment
@@ -1534,13 +1541,11 @@ Plater.AnchorNamesByPhraseId = {
 				if not caller then
 					caller, line = callstack:match("in function <([^:%[>]+):(%d+)>")
 				end
+				
+				--print((caller and caller .. ":" .. line) or callstack)
+				local isCVarUtil = (caller and caller:lower():find("[\\/]sharedxml[\\/]cvarutil%.lua"))
+				cvarLastChangedTable [cvar] = not isCVarUtil and (caller and (caller .. ":" .. line)) or callstack or "N/A"
 			end
-
-			--print((caller and caller .. ":" .. line) or callstack)
-			
-			local isCVarUtil = (caller and caller:lower():find("[\\/]sharedxml[\\/]cvarutil%.lua"))
-			
-			cvarLastChangedTable [cvar] = not isCVarUtil and (caller and (caller .. ":" .. line)) or callstack or "N/A"
 		end
 		
 	end
@@ -2110,10 +2115,38 @@ Plater.AnchorNamesByPhraseId = {
 			Plater.CombatTime = GetTime()
 
 			--store names and casts from 'last' combat, this is used when showing Npcs Colors and Cast Colors to bump up stuff from the last combat
-			Plater.LastCombat = {
-				npcNames = {},
-				spellNames = {},
-			}
+			table.wipe(Plater.LastCombat.npcNames)
+			table.wipe(Plater.LastCombat.spellNames)
+
+			--store player and pet guids for friendly affiliation
+			local unitCachePlayers
+			local unitCachePets
+
+			if (IsInRaid()) then
+				unitCachePlayers = platerInternal.UnitIdCache.Raid --raid1, raid2, raid3
+				unitCachePets = platerInternal.UnitIdCache.RaidPet --raidpet1, raidpet2, raidpet3
+			else
+				unitCachePlayers = platerInternal.UnitIdCache.Party --player, party1, party2
+				unitCachePets = platerInternal.UnitIdCache.PartyPet --partypet1, partypet2
+			end
+
+			table.wipe(platerInternal.HasFriendlyAffiliation)
+
+			for i = 1, #unitCachePlayers do
+				local unitGuid = UnitGUID(unitCachePlayers[i])
+				if (unitGuid) then
+					platerInternal.HasFriendlyAffiliation[unitGuid] = true
+				else
+					break
+				end
+			end
+
+			for i = 1, #unitCachePets do
+				local unitGuid = UnitGUID(unitCachePets[i])
+				if (unitGuid) then
+					platerInternal.HasFriendlyAffiliation[unitGuid] = true
+				end
+			end
 		end,
 
 		PLAYER_REGEN_ENABLED = function()
@@ -2379,7 +2412,7 @@ Plater.AnchorNamesByPhraseId = {
 			C_Timer.After (0.3, Plater.UpdatePlateClickSpace)
 			
 			C_Timer.After (0.4, function() 
-				Plater.RefreshAutoToggle(PLAYER_IN_COMBAT) -- refresh this
+				Plater.RefreshAutoToggle(InCombatLockdown()) -- refresh this
 				Plater.UpdateBaseNameplateOptions()
 			end)
 			
@@ -3001,6 +3034,12 @@ Plater.AnchorNamesByPhraseId = {
 					castIconFrame:SetParent(dummyMasqueIconButton)
 					castIconFrame:SetPoint("TOPLEFT")
 					castIconFrame:SetPoint("BOTTOMRIGHT")
+					
+					dummyMasqueIconButton:EnableMouse (false)
+					if dummyMasqueIconButton.EnableMouseMotion then
+						dummyMasqueIconButton:EnableMouseMotion (false)
+					end
+					
 					castIconFrame:Show()
 					
 					--overwrite original and keep a reference
@@ -3741,6 +3780,12 @@ Plater.AnchorNamesByPhraseId = {
 			
 			-- add private aura anchors
 			Plater.HandlePrivateAuraAnchors(plateFrame.unitFrame) -- requires namePlateUnitToken, PlaterOnScreen and IsSelf to be set
+
+			--check if the cast bar test is enabled
+			if (Plater.IsShowingCastBarTest) then
+				--start a castbar test for this unit
+				platerInternal.CastBar.StartTestCastBarForNameplate(plateFrame)
+			end
 		end,
 
 		-- ~removed
@@ -4031,6 +4076,8 @@ function Plater.InitializeSavedVariables()
 end
 
 function Plater.OnInit() --private --~oninit ~init
+	LibStub ("AceDBOptions-3.0"):GetOptionsTable (Plater.db, true) -- register this now, to ensure no default "realm", "char - realm" profiles are shown in profiles management
+	
 	do
 		local languageCurrentVersion = 1
 		if (not PlaterLanguage) then
@@ -4696,85 +4743,91 @@ function Plater.OnInit() --private --~oninit ~init
 
 			Plater.IsTestRunning = true
 		end
+
+		function platerInternal.CastBar.StartTestCastBarForNameplate(plateFrame)
+			local castTime = Plater.CastBarTestFrame.castTime
+			---@cast plateFrame plateframe
+			if plateFrame.unitFrame.PlaterOnScreen then
+				local castBar = plateFrame.unitFrame.castBar
+				
+				local spellName, _, spellIcon = GetSpellInfo(116)
+
+				castBar.Text:SetText(spellName)
+				castBar.Icon:SetTexture(spellIcon)
+				castBar.Icon:SetAlpha(1)
+				castBar.Icon:Show()
+				castBar.percentText:Show()
+				castBar:SetMinMaxValues(0, (castTime or 3))
+				castBar:SetValue(0)
+				castBar.Spark:Show()
+				castBar.casting = true
+				castBar.finished = false
+				castBar.value = 0
+				castBar.maxValue = (castTime or 3)
+				castBar.canInterrupt = castNoInterrupt or math.random (1, 2) == 1
+				--castBar.canInterrupt = true
+				--castBar.channeling = true
+				castBar:UpdateCastColor()
+
+				castBar.spellName = 		spellName
+				castBar.spellID = 			116
+				castBar.spellTexture = 		spellIcon
+				castBar.spellStartTime = 	GetTime()
+				castBar.spellEndTime = 		GetTime() + (castTime or 3)
+				
+				castBar.SpellStartTime = 	GetTime()
+				castBar.SpellEndTime = 		GetTime() + (castTime or 3)
+				
+				castBar.playedFinishedTest = nil
+				
+				castBar.flashTexture:Hide()
+				castBar:Animation_StopAllAnimations()
+
+				if (castBar.channeling) then
+					Plater.CastBarOnEvent_Hook(castBar, "UNIT_SPELLCAST_CHANNEL_START", plateFrame.unitFrame.unit, plateFrame.unitFrame.unit)
+				else
+					Plater.CastBarOnEvent_Hook(castBar, "UNIT_SPELLCAST_START", plateFrame.unitFrame.unit, plateFrame.unitFrame.unit)
+				end
+
+				platerInternal.Audio.PlaySoundForCastStart(castBar.spellID)
+				
+				if (not castBar:IsShown()) then
+					castBar:Animation_FadeIn()
+					castBar:Show()
+				end
+
+				Plater.UpdateCastbarTargetText(castBar)
+				local textString = castBar.FrameOverlay.TargetName
+				textString:Show()
+				textString:SetText("Target Name")
+			end
+		end
 		
 		function Plater.DoCastBarTest (castNoInterrupt, castTime)
-
 			Plater.CastBarTestFrame.castTime = castTime or 3
 			
 			for _, plateFrame in ipairs (Plater.GetAllShownPlates()) do
-				---@cast plateFrame plateframe
-				if plateFrame.unitFrame.PlaterOnScreen then
-					local castBar = plateFrame.unitFrame.castBar
-					
-					local spellName, _, spellIcon = GetSpellInfo(116)
-
-					castBar.Text:SetText(spellName)
-					castBar.Icon:SetTexture(spellIcon)
-					castBar.Icon:SetAlpha(1)
-					castBar.Icon:Show()
-					castBar.percentText:Show()
-					castBar:SetMinMaxValues(0, (castTime or 3))
-					castBar:SetValue(0)
-					castBar.Spark:Show()
-					castBar.casting = true
-					castBar.finished = false
-					castBar.value = 0
-					castBar.maxValue = (castTime or 3)
-					castBar.canInterrupt = castNoInterrupt or math.random (1, 2) == 1
-					--castBar.canInterrupt = true
-					--castBar.channeling = true
-					castBar:UpdateCastColor()
-
-					castBar.spellName = 		spellName
-					castBar.spellID = 			116
-					castBar.spellTexture = 		spellIcon
-					castBar.spellStartTime = 	GetTime()
-					castBar.spellEndTime = 		GetTime() + (castTime or 3)
-					
-					castBar.SpellStartTime = 	GetTime()
-					castBar.SpellEndTime = 		GetTime() + (castTime or 3)
-					
-					castBar.playedFinishedTest = nil
-					
-					castBar.flashTexture:Hide()
-					castBar:Animation_StopAllAnimations()
-
-					if (castBar.channeling) then
-						Plater.CastBarOnEvent_Hook(castBar, "UNIT_SPELLCAST_CHANNEL_START", plateFrame.unitFrame.unit, plateFrame.unitFrame.unit)
-					else
-						Plater.CastBarOnEvent_Hook(castBar, "UNIT_SPELLCAST_START", plateFrame.unitFrame.unit, plateFrame.unitFrame.unit)
-					end
-					
-					if (not castBar:IsShown()) then
-						castBar:Animation_FadeIn()
-						castBar:Show()
-					end
-
-					Plater.UpdateCastbarTargetText(castBar)
-					local textString = castBar.FrameOverlay.TargetName
-					textString:Show()
-					textString:SetText("Target Name")
-				end
+				platerInternal.CastBar.StartTestCastBarForNameplate(plateFrame)
 			end
 			
 			local totalTime = 0
+			local checkEachSeconds = 0.4 --0.4 default
 			local forward = true
 
 			Plater.CastBarTestFrame:SetScript ("OnUpdate", function (self, deltaTime)
-				if (totalTime >= (Plater.CastBarTestFrame.castTime + 0.1)) then
+				if (totalTime >= checkEachSeconds) then --(Plater.CastBarTestFrame.castTime + 0.1)
 					totalTime = 0
 
 					for _, plateFrame in ipairs (Plater.GetAllShownPlates()) do
 						---@cast plateFrame plateframe
 						if plateFrame.unitFrame.PlaterOnScreen then
 							local castBar = plateFrame.unitFrame.castBar
-							local textString = castBar.FrameOverlay.TargetName
-							textString:Show()
-							textString:SetText("Target Name")
+							--local textString = castBar.FrameOverlay.TargetName
+							--textString:Show()
+							--textString:SetText("Target Name")
 
 							if (castBar.finished and not castBar.playedFinishedTest) then
 								Plater.CastBarOnEvent_Hook (castBar, "UNIT_SPELLCAST_STOP", plateFrame.unitFrame.unit, plateFrame.unitFrame.unit)
-								--castBar:Hide()
 								castBar.playedFinishedTest = true
 							end
 						end
@@ -4782,11 +4835,18 @@ function Plater.OnInit() --private --~oninit ~init
 					
 					if (Plater.IsShowingCastBarTest) then
 						--run another cycle
-						Plater.CastBarTestFrame.ScheduleNewCycle = C_Timer.NewTimer(0.5, function()
-							if (Plater.IsShowingCastBarTest) then
-								Plater.StartCastBarTest(Plater.CastBarTestFrame.castNoInterrupt, Plater.CastBarTestFrame.castTime, true)
-							end
-						end)
+						if (not Plater.CastBarTestFrame.ScheduleNewCycle) then
+							Plater.CastBarTestFrame.ScheduleNewCycle = C_Timer.NewTimer(0.5, function()
+								if (Plater.IsShowingCastBarTest) then
+									for _, plateFrame in ipairs (Plater.GetAllShownPlates()) do
+										if (not plateFrame.unitFrame.castBar:IsShown()) then
+											platerInternal.CastBar.StartTestCastBarForNameplate(plateFrame)
+										end
+									end
+								end
+								Plater.CastBarTestFrame.ScheduleNewCycle = nil
+							end)
+						end
 					else
 						--don't run another cycle
 						Plater.CastBarTestFrame:SetScript("OnUpdate", nil)
@@ -5022,6 +5082,9 @@ function Plater.OnInit() --private --~oninit ~init
 					if (globalScriptObject and (self.casting or self.channeling) and not self.IsInterrupted) then
 						self:OnHideWidget()
 					end
+
+					--reset the visibility of the spell name text
+					self.Text:Show()
 					
 					local curTime = GetTime()
 					--local name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellId = UnitCastingInfo (unitCast)
@@ -5058,6 +5121,7 @@ function Plater.OnInit() --private --~oninit ~init
 					
 					--reset spark color and size
 					self.Spark:SetVertexColor(unpack(profile.cast_statusbar_spark_color))
+					self.Spark:SetAlpha (profile.cast_statusbar_spark_alpha)
 					PixelUtil.SetSize(self.Spark, profile.cast_statusbar_spark_width, self:GetHeight())
 
 					--cut the spell name text to fit within the castbar
@@ -5893,6 +5957,7 @@ end
 			PixelUtil.SetHeight (castBar, castBarHeight)
 			--PixelUtil.SetSize (castBar.BorderShield, castBarHeight * 1.4, castBarHeight * 1.4)
 			PixelUtil.SetSize (castBar.Spark, profile.cast_statusbar_spark_width, castBarHeight)
+			castBar.Spark:SetAlpha (profile.cast_statusbar_spark_alpha)
 			Plater.UpdateCastbarIcon(castBar)
 
 			castBar._points = {{"topleft", healthBar, "bottomleft", castBarOffSetXRel + castBarOffSetX, castBarOffSetY},
@@ -9227,6 +9292,7 @@ end
 
 	-- defined local above
 	parserFunctions = {
+		--todo: if animations are disabled, SPELL_DAMAGE doesn't need to be read
 		SPELL_DAMAGE = function (time, token, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical)
 			if (SPELL_WITH_ANIMATIONS [spellName] and sourceGUID == Plater.PlayerGUID) then
 				for _, plateFrame in ipairs (Plater.GetAllShownPlates()) do
@@ -9237,6 +9303,7 @@ end
 			end
 		end,
 		
+		--~summon
 		SPELL_SUMMON = function (time, token, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical)
 		--[=[ --some actors are not having the pet flag 0x3000, so we are directly adding all target summons into the cache
 			print ("Summon", targetFlag, bit.band (targetFlag, 0x00003000) ~= 0)
@@ -9251,11 +9318,22 @@ end
 			end
 		--]=]
 
-			local entry = {ownerGUID = sourceGUID, ownerName = sourceName, petName = targetName, time = time}
-			PET_CACHE [targetGUID] = entry
+			---@type plater_petinfo
+			local entry = {
+				ownerGUID = sourceGUID,
+				ownerName = sourceName,
+				petName = targetName,
+				time = time
+			}
+			PET_CACHE[targetGUID] = entry
 			
 			if (sourceGUID == Plater.PlayerGUID) then
 				Plater.PlayerPetCache [targetGUID] = entry
+			end
+
+			--check if the summoner has friendly affiliation, if it is friendly, add it to the friendly affiliation cache
+			if ((sourceFlag and bit.band(sourceFlag, 0x10) ~= 0) or (targetFlag and bit.band(targetFlag, 0x10) ~= 0)) then --0x10 = affiliation friendly
+				platerInternal.HasFriendlyAffiliation[targetGUID] = true
 			end
 		end,
 		
@@ -9267,6 +9345,7 @@ end
 			if (not Plater.db.profile.show_interrupt_author) then
 				return
 			end
+
 			--~interrupt
 			local name = sourceName
 			for _, plateFrame in ipairs (Plater.GetAllShownPlates()) do
@@ -9335,19 +9414,42 @@ end
 		
 		SPELL_CAST_SUCCESS = function (time, token, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical)
 			if ((tonumber(spellID) or 0) > 0 and (not DB_CAPTURED_SPELLS[spellID] or DB_CAPTURED_SPELLS[spellID].isChanneled == nil)) then -- check isChanneled to ensure update of already existing data
-				if (not sourceFlag or bit.band(sourceFlag, 0x00000400) == 0) then --not a player
-					local npcId = Plater:GetNpcIdFromGuid(sourceGUID or "")
-					local isChanneled = false
-					if sourceGUID and UnitTokenFromGUID then -- this is the only proper way to check for channeled spells...
-						local unit = UnitTokenFromGUID(sourceGUID)
-						if unit and UnitChannelInfo (unit) then
-							isChanneled = true
-						end 
-					end
-					if (npcId and npcId ~= 0) then
-						DB_CAPTURED_SPELLS[spellID] = {event = token, source = sourceName, npcID = npcId, encounterID = Plater.CurrentEncounterID, encounterName = Plater.CurrentEncounterName, isChanneled = isChanneled}
-						if isChanneled and not DB_CAPTURED_CASTS[spellID] then
-							DB_CAPTURED_CASTS[spellID] = {event = token, source = sourceName, npcID = npcId, encounterID = Plater.CurrentEncounterID, encounterName = Plater.CurrentEncounterName, isChanneled = isChanneled}
+				if (not platerInternal.HasFriendlyAffiliation[sourceGUID]) then
+					if (not sourceFlag or bit.band(sourceFlag, 0x60) ~= 0) then --is neutral or hostile
+						local npcId = Plater:GetNpcIdFromGuid(sourceGUID or "")
+						local isChanneled = false
+						if sourceGUID and UnitTokenFromGUID then -- this is the only proper way to check for channeled spells...
+							local unit = UnitTokenFromGUID(sourceGUID)
+							if unit and UnitChannelInfo(unit) then
+								isChanneled = true
+							end 
+						end
+
+						if (npcId and npcId ~= 0) then
+							---@type plater_spelldata
+							local spellData = {
+								event = token,
+								source = sourceName,
+								npcID = npcId,
+								encounterID = Plater.CurrentEncounterID,
+								encounterName = Plater.CurrentEncounterName,
+								isChanneled = isChanneled
+							}
+							--print("added DB_CAPTURED_SPELLS 1:", sourceName, spellID, spellName)
+							DB_CAPTURED_SPELLS[spellID] = spellData
+
+							if isChanneled and not DB_CAPTURED_CASTS[spellID] then
+								---@type plater_spelldata
+								local spellData = {
+									event = token,
+									source = sourceName,
+									npcID = npcId,
+									encounterID = Plater.CurrentEncounterID,
+									encounterName = Plater.CurrentEncounterName,
+									isChanneled = isChanneled
+								}
+								DB_CAPTURED_CASTS[spellID] = spellData
+							end
 						end
 					end
 				end
@@ -9355,11 +9457,19 @@ end
 		end,
 		
 		SPELL_CAST_START = function (time, token, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical)
-			if (not DB_CAPTURED_CASTS[spellID]) then
-				if (not sourceFlag or bit.band(sourceFlag, 0x00000400) == 0) then --not a player
+			if (not DB_CAPTURED_CASTS[spellID] and not platerInternal.HasFriendlyAffiliation[sourceGUID]) then
+				if (not sourceFlag or bit.band(sourceFlag, 0x60) ~= 0) then --is neutral or hostile
 					local npcId = Plater:GetNpcIdFromGuid(sourceGUID or "")
 					if (npcId and npcId ~= 0) then
-						DB_CAPTURED_CASTS[spellID] = {event = token, source = sourceName, npcID = npcId, encounterID = Plater.CurrentEncounterID, encounterName = Plater.CurrentEncounterName}
+						---@type plater_spelldata
+						local spellData = {
+							event = token,
+							source = sourceName,
+							npcID = npcId,
+							encounterID = Plater.CurrentEncounterID,
+							encounterName = Plater.CurrentEncounterName
+						}
+						DB_CAPTURED_CASTS[spellID] = spellData
 					end
 				end
 			end
@@ -9371,13 +9481,22 @@ end
 			platerInternal.Audio.PlaySoundForCastStart(spellID)
 		end,
 
-		SPELL_AURA_APPLIED = function (time, token, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, amount, overKill, school, resisted, blocked, absorbed, isCritical)
-			if (not DB_CAPTURED_SPELLS[spellID]) then
-				if (not sourceFlag or bit.band(sourceFlag, 0x00000400) == 0) then --not a player
+		SPELL_AURA_APPLIED = function (time, token, hidding, sourceGUID, sourceName, sourceFlag, sourceFlag2, targetGUID, targetName, targetFlag, targetFlag2, spellID, spellName, spellType, auraType, overKill, school, resisted, blocked, absorbed, isCritical)
+			if (not DB_CAPTURED_SPELLS[spellID] and not platerInternal.HasFriendlyAffiliation[sourceGUID]) then
+				if (not sourceFlag or bit.band(sourceFlag, 0x60) ~= 0) then --is neutral or hostile
 					local npcId = Plater:GetNpcIdFromGuid(sourceGUID or "")
 					if (npcId and npcId ~= 0) then
-						local auraType = amount
-						DB_CAPTURED_SPELLS [spellID] = {event = token, source = sourceName, type = auraType, npcID = npcId, encounterID = Plater.CurrentEncounterID, encounterName = Plater.CurrentEncounterName}
+						---@type plater_spelldata
+						local spellData = {
+							event = token,
+							source = sourceName,
+							type = auraType,
+							npcID = npcId,
+							encounterID = Plater.CurrentEncounterID,
+							encounterName = Plater.CurrentEncounterName
+						}
+						--print("added DB_CAPTURED_SPELLS 2:", sourceName, spellID, spellName, sourceFlag)
+						DB_CAPTURED_SPELLS[spellID] = spellData
 					end
 				end
 			end
@@ -10830,11 +10949,11 @@ end
 --> scripting ~scripting
 	
 	--the mod/script error handler
-	local errorContext = nil
+	local errorContext = {}
 	local prevErrors = {}
 	local ErrorHandler = function(errorMessage)
-		errorContext = errorContext or "Plater error: "
-		local msg = errorContext .. errorMessage
+		errorContext.message = errorContext.message or "Plater error: "
+		local msg = errorContext.message .. errorMessage
 		--throttle error messages a bit...
 		local lastTime = prevErrors[msg]
 		local curTime = GetTime()
@@ -10842,14 +10961,18 @@ end
 			return
 		end
 		prevErrors[msg] = curTime
+		DevTool:AddData(errorContext)
+		local modscriptInfo = errorContext.modscript and errorContext.modscript.url and ("Mod/Script URL: " .. errorContext.modscript.url .. "\n") or nil
 		if BugGrabber then
-			geterrorhandler()(errorContext .. "\n" .. Plater.fullVersionInfo .. "\n" .. errorMessage)
+			geterrorhandler()(errorContext.message .. "\n" .. (modscriptInfo or "") .. Plater.fullVersionInfo .. "\n" .. errorMessage)
 		end
-		Plater:Msg (msg)
+		Plater:Msg (msg .. (modscriptInfo and ("\n" .. modscriptInfo) or ""))
+		errorContext = {}
 		return errorMessage
 	end
-	local GetErrorHandler = function(context)
-		errorContext = context
+	local GetErrorHandler = function(contextMessage, contextModScript)
+		errorContext.message = contextMessage
+		errorContext.modscript = contextModScript
 		return ErrorHandler
 	end
 	platerInternal.GetErrorHandler = GetErrorHandler
@@ -10898,11 +11021,11 @@ end
 				if (globalScriptObject.HasConstructor and (not scriptInfo.Initialized or forceHotReload)) then
 					local modName = scriptInfo.GlobalScriptObject.DBScriptObject.Name
 					Plater.StartLogPerformance("Mod-RunHooks", modName, "Constructor")
-					local okay, errortext = xpcall (globalScriptObject.Constructor, GetErrorHandler("Mod |cFFAAAA22" .. modName .. "|r Constructor error: "), self, self.displayedUnit or self.unit or self:GetParent()[MEMBER_UNITID], self, scriptInfo.Env, PLATER_GLOBAL_MOD_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
+					local okay, errortext = xpcall (globalScriptObject.Constructor, GetErrorHandler("Plater Mod |cFFAAAA22" .. modName .. "|r Constructor error: ", globalScriptObject.DBScriptObject), self, self.displayedUnit or self.unit or self:GetParent()[MEMBER_UNITID], self, scriptInfo.Env, PLATER_GLOBAL_MOD_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
 					Plater.EndLogPerformance("Mod-RunHooks", modName, "Constructor")
 					if (not okay) then
 						--handled via error handler
-						--Plater:Msg ("Mod |cFFAAAA22" .. modName .. "|r Constructor error: " .. errortext)
+						--Plater:Msg ("Plater Mod |cFFAAAA22" .. modName .. "|r Constructor error: " .. errortext)
 					end
 					scriptInfo.Initialized = true
 				end
@@ -10960,11 +11083,11 @@ end
 				local unitFrame = self.unitFrame or self
 				local scriptName = scriptInfo.GlobalScriptObject.DBScriptObject.Name
 				Plater.StartLogPerformance("Scripts", scriptName, "Constructor")
-				local okay, errortext = xpcall (scriptInfo.GlobalScriptObject ["ConstructorCode"], GetErrorHandler("Script |cFFAAAA22" .. scriptName .. "|r Constructor error: "), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
+				local okay, errortext = xpcall (scriptInfo.GlobalScriptObject ["ConstructorCode"], GetErrorHandler("Plater Script |cFFAAAA22" .. scriptName .. "|r Constructor error: ", scriptInfo.GlobalScriptObject.DBScriptObject), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
 				Plater.EndLogPerformance("Scripts", scriptName, "Constructor")
 				if (not okay) then
 					--handled via error handler
-					--Plater:Msg ("Script |cFFAAAA22" .. scriptName .. "|r Constructor error: " .. errortext)
+					--Plater:Msg ("Plater Script |cFFAAAA22" .. scriptName .. "|r Constructor error: " .. errortext)
 				end
 			end
 		end,
@@ -10982,11 +11105,11 @@ end
 			local unitFrame = self.unitFrame or self
 			local scriptName = scriptInfo.GlobalScriptObject.DBScriptObject.Name
 			Plater.StartLogPerformance("Scripts", scriptName, "OnUpdate")
-			local okay, errortext = xpcall (scriptInfo.GlobalScriptObject ["UpdateCode"], GetErrorHandler("Script |cFFAAAA22" .. scriptName .. "|r OnUpdate error: "), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
+			local okay, errortext = xpcall (scriptInfo.GlobalScriptObject ["UpdateCode"], GetErrorHandler("Plater Script |cFFAAAA22" .. scriptName .. "|r OnUpdate error: ", scriptInfo.GlobalScriptObject.DBScriptObject), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
 			Plater.EndLogPerformance("Scripts", scriptName, "OnUpdate")
 			if (not okay) then
 				--handled via error handler
-				--Plater:Msg ("Script |cFFAAAA22" .. scriptName .. "|r OnUpdate error: " .. errortext)
+				--Plater:Msg ("Plater Script |cFFAAAA22" .. scriptName .. "|r OnUpdate error: " .. errortext)
 			end
 		end,
 		
@@ -11002,12 +11125,12 @@ end
 
 			local func = scriptInfo.GlobalScriptObject["OnShowCode"]
 
-			local okay, errortext = xpcall(func, GetErrorHandler("Script |cFFAAAA22" .. scriptName .. "|r OnShow error: "), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
+			local okay, errortext = xpcall(func, GetErrorHandler("Plater Script |cFFAAAA22" .. scriptName .. "|r OnShow error: ", scriptInfo.GlobalScriptObject.DBScriptObject), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
 			Plater.EndLogPerformance("Scripts", scriptName, "OnShow")
 
 			if (not okay) then
 				--handled via error handler
-				--Plater:Msg ("Script |cFFAAAA22" .. scriptName .. "|r OnShow error: " .. errortext)
+				--Plater:Msg ("Plater Script |cFFAAAA22" .. scriptName .. "|r OnShow error: " .. errortext)
 			end
 			
 			scriptInfo.IsActive = true
@@ -11020,11 +11143,11 @@ end
 			local unitFrame = self.unitFrame or self
 			local scriptName = scriptInfo.GlobalScriptObject.DBScriptObject.Name
 			Plater.StartLogPerformance("Scripts", scriptName, "OnHide")
-			local okay, errortext = xpcall (scriptInfo.GlobalScriptObject ["OnHideCode"], GetErrorHandler("Script |cFFAAAA22" .. scriptName .. "|r OnHide error: "), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
+			local okay, errortext = xpcall (scriptInfo.GlobalScriptObject ["OnHideCode"], GetErrorHandler("Plater Script |cFFAAAA22" .. scriptName .. "|r OnHide error: ", scriptInfo.GlobalScriptObject.DBScriptObject), self, unitFrame.displayedUnit or unitFrame.unit or unitFrame.PlateFrame[MEMBER_UNITID], unitFrame, scriptInfo.Env, PLATER_GLOBAL_SCRIPT_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
 			Plater.EndLogPerformance("Scripts", scriptName, "OnHide")
 			if (not okay) then
 				--handled via error handler
-				--Plater:Msg ("Script |cFFAAAA22" .. scriptName .. "|r OnHide error: " .. errortext)
+				--Plater:Msg ("Plater Script |cFFAAAA22" .. scriptName .. "|r OnHide error: " .. errortext)
 			end
 			
 			scriptInfo.IsActive = false
@@ -11036,22 +11159,22 @@ end
 			--dispatch the init script
 			local scriptName = globalScriptObject.DBScriptObject.Name
 			Plater.StartLogPerformance("Scripts", scriptName, "Initialization")
-			local okay, errortext = xpcall (globalScriptObject ["Initialization"], GetErrorHandler("Script |cFFAAAA22" .. scriptName .. "|r Initialization error: "), PLATER_GLOBAL_SCRIPT_ENV [globalScriptObject.DBScriptObject.scriptId])
+			local okay, errortext = xpcall (globalScriptObject ["Initialization"], GetErrorHandler("Plater Script |cFFAAAA22" .. scriptName .. "|r Initialization error: ", globalScriptObject.DBScriptObject), PLATER_GLOBAL_SCRIPT_ENV [globalScriptObject.DBScriptObject.scriptId])
 			Plater.EndLogPerformance("Scripts", scriptName, "Initialization")
 			if (not okay) then
 				--handled via error handler
-				--Plater:Msg ("Script |cFFAAAA22" .. scriptName .. "|r Initialization error: " .. errortext)
+				--Plater:Msg ("Plater Script |cFFAAAA22" .. scriptName .. "|r Initialization error: " .. errortext)
 			end
 		end,
 		
 		ScriptRunCommMessageHook = function(globalScriptObject, hookName, source, ...)
 			local modName = globalScriptObject.DBScriptObject.Name
 			Plater.StartLogPerformance("Mod-RunHooks", modName, hookName)
-			local okay, errortext = xpcall (globalScriptObject [hookName], GetErrorHandler("Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: "), PLATER_GLOBAL_MOD_ENV [globalScriptObject.DBScriptObject.scriptId], source, ...)
+			local okay, errortext = xpcall (globalScriptObject [hookName], GetErrorHandler("Plater Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: ", globalScriptObject.DBScriptObject), PLATER_GLOBAL_MOD_ENV [globalScriptObject.DBScriptObject.scriptId], source, ...)
 			Plater.EndLogPerformance("Mod-RunHooks", modName, hookName)
 			if (not okay) then
 				--handled via error handler
-				--Plater:Msg ("Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: " .. errortext)
+				--Plater:Msg ("Plater Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: " .. errortext)
 			end
 		end,
 		
@@ -11060,11 +11183,11 @@ end
 			--at the moment, self is always the unit frame
 			local modName = scriptInfo.GlobalScriptObject.DBScriptObject.Name
 			Plater.StartLogPerformance("Mod-RunHooks", modName, hookName)
-			local okay, errortext = xpcall (scriptInfo.GlobalScriptObject [hookName], GetErrorHandler("Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: "), frame or self, self.displayedUnit, self, scriptInfo.Env, PLATER_GLOBAL_MOD_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId], ...)
+			local okay, errortext = xpcall (scriptInfo.GlobalScriptObject [hookName], GetErrorHandler("Plater Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: ", scriptInfo.GlobalScriptObject.DBScriptObject), frame or self, self.displayedUnit, self, scriptInfo.Env, PLATER_GLOBAL_MOD_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId], ...)
 			Plater.EndLogPerformance("Mod-RunHooks", modName, hookName)
 			if (not okay) then
 				--handled via error handler
-				--Plater:Msg ("Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: " .. errortext)
+				--Plater:Msg ("Plater Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: " .. errortext)
 			end
 		end,
 		
@@ -11073,11 +11196,11 @@ end
 			local func = hookInfo [hookName]
 			local modName = hookInfo.DBScriptObject.Name
 			Plater.StartLogPerformance("Mod-RunHooks", modName, " -NoAttach- " .. hookName)
-			local okay, errortext = xpcall (func, GetErrorHandler("Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: "), PLATER_GLOBAL_MOD_ENV [hookInfo.DBScriptObject.scriptId])
+			local okay, errortext = xpcall (func, GetErrorHandler("Plater Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: ", hookInfo.DBScriptObject), PLATER_GLOBAL_MOD_ENV [hookInfo.DBScriptObject.scriptId])
 			Plater.EndLogPerformance("Mod-RunHooks", modName, " -NoAttach- " .. hookName)
 			if (not okay) then
 				--handled via error handler
-				--Plater:Msg ("Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: " .. errortext)
+				--Plater:Msg ("Plater Mod |cFFAAAA22" .. modName .. "|r code for |cFFBB8800" .. hookName .. "|r error: " .. errortext)
 			end
 		end,
 		
@@ -11850,7 +11973,7 @@ end
 						local scriptContainer = unitFrame:ScriptGetContainer()
 						local scriptInfo = unitFrame:HookGetInfo(globalScriptObject, scriptContainer, "Destructor")
 
-						local okay, errortext = xpcall (func, GetErrorHandler("Mod: |cFFAAAA22" .. scriptInfo.GlobalScriptObject.DBScriptObject.Name .. "|r " .. scriptObject.Name .. " error: "), unitFrame, unitFrame.displayedUnit, unitFrame, scriptInfo.Env, PLATER_GLOBAL_MOD_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
+						local okay, errortext = xpcall (func, GetErrorHandler("Mod: |cFFAAAA22" .. scriptInfo.GlobalScriptObject.DBScriptObject.Name .. "|r " .. scriptObject.Name .. " error: ", scriptObject), unitFrame, unitFrame.displayedUnit, unitFrame, scriptInfo.Env, PLATER_GLOBAL_MOD_ENV [scriptInfo.GlobalScriptObject.DBScriptObject.scriptId])
 						if (not okay) then
 							--handled via error handler
 							--Plater:Msg ("Mod: |cFFAAAA22" .. scriptInfo.GlobalScriptObject.DBScriptObject.Name .. "|r " .. scriptObject.Name .. " error: " .. errortext)
@@ -11906,7 +12029,8 @@ end
 		[4] = true, -- Toggle
 		[5] = false, -- Label
 		[6] = false, -- Blank Line
-		[7] = true -- Texture
+		[7] = true, -- List
+		[8] = true, -- Audio
 	}
 	
 	--compile scripts from the Hooking tab
@@ -12032,7 +12156,8 @@ end
 			if (options_for_config_table[thisOption.Type]) then
 				if (type(scriptOptionsValues[thisOption.Key]) == "boolean") then
 					PLATER_GLOBAL_MOD_ENV [scriptObject.scriptId].config[thisOption.Key] = scriptOptionsValues[thisOption.Key]
-				elseif (thisOption.Type == 7) then
+
+				elseif (thisOption.Type == 7) then --list type
 					--check if the options is a list
 					
 					--build default values if needed
@@ -12180,7 +12305,6 @@ end
 		for i = 1, #scriptOptions do
 			local thisOption = scriptOptions[i]
 			if (options_for_config_table[thisOption.Type]) then
-
 				if (type(scriptOptionsValues[thisOption.Key]) == "boolean") then
 					PLATER_GLOBAL_SCRIPT_ENV [scriptObject.scriptId].config[thisOption.Key] = scriptOptionsValues[thisOption.Key]
 

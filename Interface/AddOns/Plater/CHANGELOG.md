@@ -1,13 +1,15 @@
+@Linaori:
+- Adding 'remove all sounds' button.
+
 @Terciob:
-- Updates and preparations for scripts for TWW.
+- Fixes to default scripts.
+- Adding option to change audio colldown on the Cast Colors tab.
 
 @cont1nuity:
-- First load of the options menu will only take place out of combat now and be triggered automatically when combat ends.
-- Fixing an issue with out of order health updates.
-- Adding memory profiling.
-- Adding aura border thickness options.
-- Some improvements for TWW handling (still a mess with default nameplates, though).
-- More profiling for mods/scripts.
-- Some slight improvements to health text handling.
-- Improvements to pixel perfect aura borders.
+- New profile import API.
+- Fixing Chi resource visuals.
+- Don't show any 'player-realm' or 'realm' default profiles unless they explicitly exist.
+- Fixing cvar last changed recognition.
+- Adding option to disable text on DMB timer icons.
+- Fixing Mage execute range.
 

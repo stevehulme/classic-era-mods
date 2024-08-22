@@ -461,11 +461,7 @@ detailsFramework.TextEntryCounter = detailsFramework.TextEntryCounter or 1
 		end
 
 		self:SetJustifyH("left")
-        if detailsFramework.IsCataWow() then
-		    self:SetJustifyV("middle")
-        else
-		    self:SetJustifyV("center")
-        end
+        self:SetJustifyV("middle")
 		self:SetTextInsets(18, 14, 0, 0)
 
 		local magnifyingGlassTexture = self:CreateTexture(nil, "OVERLAY")
@@ -639,6 +635,9 @@ function detailsFramework:NewTextEntry(parent, container, name, member, width, h
 	newTextEntryObject.editbox:SetText("")
 	newTextEntryObject.editbox:SetAutoFocus(false)
 	newTextEntryObject.editbox:SetFontObject("GameFontHighlightSmall")
+
+	newTextEntryObject.editbox:SetJustifyH("left")
+	newTextEntryObject.editbox:SetTextInsets(5, 3, 0, 0)
 
 	--editbox label
 	newTextEntryObject.editbox.label = newTextEntryObject.editbox:CreateFontString("$parent_Desc", "OVERLAY", "GameFontHighlightSmall")

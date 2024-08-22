@@ -1,6 +1,6 @@
 local config, COMPAT, ADDON, T = {}, select(4,GetBuildInfo()), ...
 local MODERN, CF_WRATH, CI_ERA = COMPAT >= 10e4, COMPAT < 10e4 and COMPAT >= 3e4, COMPAT < 2e4
-local L, EV, TS, XU, frame = T.L, T.Evie, T.TenSettings, T.exUI, nil
+local L, EV, TS, XU, PC, frame = T.L, T.Evie, T.TenSettings, T.exUI, T.OPieCore, nil
 local GameTooltip = T.NotGameTooltip or GameTooltip
 T.config = config
 
@@ -13,7 +13,13 @@ do -- /opie
 		end
 	end
 	addSuffix(function()
-		print("|cff0080ffOPie|r |cffffffff" .. (C_AddOns.GetAddOnMetadata(ADDON, "Version") or "??") .. "|r")
+		local sx, m, ok, m2 = ""
+		if not PC then
+			m = "Restart World of Warcraft. If this message continues to appear, delete and re-install OPie."
+			ok, m2 = pcall(L, m)
+			sx = "\n  |cffe82020" .. (ok and m2 or m)
+		end
+		print("|cff0080ffOPie|r |cffffffff" .. (C_AddOns.GetAddOnMetadata(ADDON, "Version") or "??") .. "|r" .. sx)
 	end, "version", "v")
 	T.AddSlashSuffix = addSuffix
 
@@ -39,7 +45,7 @@ if TS and TS.Localize then
 	})
 end
 
-local KR, PC = T.ActionBook:compatible("Kindred",1,0), T.OPieCore
+local KR = T.ActionBook:compatible("Kindred",1,0)
 
 do -- config.ui
 	config.ui = {}
@@ -230,19 +236,22 @@ do -- config.bind
 	local specialSymbolMap = {OPEN="[", CLOSE="]", SEMICOLON=";"}
 	local function SetBindingText(self, bind, pre, post, hasBinding)
 		if type(bind) == "string" and bind:match("%[.*%]") then
-			return SetBindingText(self, KR:EvaluateCmdOptions(bind), pre, post or " |cff20ff20[+]|r", true)
+			bind, post, hasBinding = KR:EvaluateCmdOptions(bind), post or " |cff20ff20[+]|r", true
 		end
-		local bindText = bind and bind ~= "" and GetBindingText((bind:gsub("[^%-]+$", specialSymbolMap)))
+		local pre2
+		pre2, bind = (bind or ""):match('^%s*(!*)%s*(%S.*)$')
+		bind = bind and KR:UnescapeCmdOptionsValue(bind):gsub("[^%-]+$", specialSymbolMap)
+		local bindText = bind and bind ~= "" and GetBindingText(bind)
 		if CI_ERA and bindText and bind:match("PAD") then
 			for ai in bindText:gmatch("|A:([^:]+)") do
 				if not C_Texture.GetAtlasInfo(ai) then -- BUG[1.14.4/2310]
-					bindText = bind:gsub("[^%-]+$", specialSymbolMap)
+					bindText = bind
 					break
 				end
 			end
 		end
-		self.hasSetBinding, self.bindCoreText = not not (hasBinding or bindText), bindText
-		return self:SetText((pre or "") .. (bindText or L"Not bound") .. (post or ""))
+		self.hasSetBinding = not not (hasBinding or bindText)
+		return self:SetText((pre or "") .. (pre2 or "") .. (bindText or L"Not bound") .. (post or ""))
 	end
 	local function ToggleAlternateEditor(self, bind)
 		if alternateFrame:IsShown() and alternateFrame.owner == self then
@@ -386,9 +395,9 @@ local OPC_Options = {
 		{"radio", "InteractionMode", {L"Quick", L"Relaxed", L"Mouse-less"}},
 		{"twof", tag="OnPrimaryPress", caption=L"On ring binding press:", menuOption="RingAtMouse"},
 		{"twof", tag="OnPrimaryRelease", caption=L"On ring binding release:", menuOption="QuickActionOnRelease", depOn="InteractionMode", depValue=2},
-		{"twof", tag="OnLeft", caption=L"On left click:", depOn="InteractionMode", depValue=2, otherwise=DISABLED_TEXT},
+		{"twof", tag="OnLeft", caption=L"On left click:", menuOption="NoClose", depOn="InteractionMode", depValue=2, otherwise=DISABLED_TEXT},
 		{"twof", tag="OnRight", caption=L"On right click:"},
-		{"twof", "QuickAction", caption=L"Quick action repeat:", depOn="InteractionMode", depValueSet=REQ_POINTER, otherwise=DISABLED_TEXT},
+		{"twof", "QuickAction", caption=L"Quick action repeat trigger:", depOn="InteractionMode", depValueSet=REQ_POINTER, otherwise=DISABLED_TEXT},
 		{"twof", "PadSupportMode", caption=L"Controller directional input:", reqFeature="GamePad", depOn="InteractionMode", depValueSet=REQ_POINTER, otherwise=DISABLED_TEXT, menu={"freelook", "freelook1", "cursor", "none", freelook=L"Camera analog stick", freelook1=L"Movement analog stick", cursor=L"Virtual mouse cursor", none=L"None"}},
 		{"twof", "SliceBinding", caption="Per-slice bindings:", depOn="InteractionMode"},
 		{"bool", "ClickPriority", caption=L"Prevent other UI interactions", captionTop=L"While a ring is open:", depOn="InteractionMode", depValueSet=REQ_POINTER, otherwise=false},
@@ -686,22 +695,38 @@ do -- customized widgets
 		widget:SetValue(newval)
 		local doNothingText = "|cffa0a0a0" .. L"Do nothing"
 		optionControl.OnRight.widget:Disable()
-		optionControl.OnRight.text:SetText(newval ~= 3 and "Close ring" or doNothingText)
+		optionControl.OnRight.text:SetText(newval ~= 3 and L"Close ring" or doNothingText)
 		optionControl.OnPrimaryRelease.otherwise = newval == 1 and L"Use slice and close ring" or doNothingText
 		optionControl.ClickPriority.widget:SetShown(newval ~= 3)
 		optionControl.SliceBinding.forced = newval == 3
 		OPC_IsViewDirty = true
 	end
+	local function onPrimaryPressReopenClick(_, pref, owner)
+		pref = pref == "Refresh" and 0 or pref == "Rehome" and 1 or pref == "Close" and 2 or nil
+		if pref then
+			OPC_AlterOption(widgetControl[owner], "ReOpenAction", pref)
+		end
+	end
 	function optionControl.OnPrimaryPress.menuInitializer()
 		local c = optionControl.OnPrimaryPress
 		local info = {func=onMenuOptionSetClick, arg2=c.widget, minWidth=240}
 		local atMouse = PC:GetOption("RingAtMouse", OR_CurrentOptionsDomain)
+		local reOpen = PC:GetOption("ReOpenAction", OR_CurrentOptionsDomain)
 		info.text, info.arg1, info.checked = L"Open ring at screen center", false, not atMouse
 		UIDropDownMenu_AddButton(info)
 		info.text, info.arg1, info.checked = L"Open ring at mouse", true, atMouse
 		UIDropDownMenu_AddButton(info)
+
 		UIDropDownMenu_AddSeparator()
-		info.customFrame, info.func = offsetPanel
+		info.text, info.isTitle, info.func, info.checked = L"If the ring is already open:", true, onPrimaryPressReopenClick
+		UIDropDownMenu_AddButton(info)
+		info.text, info.arg1, info.checked, info.isTitle, info.disabled = L"Reopen ring", "Refresh", reOpen == 0, nil
+		UIDropDownMenu_AddButton(info)
+		info.text, info.arg1, info.checked = L"Close ring", "Close", reOpen == 2
+		UIDropDownMenu_AddButton(info)
+
+		UIDropDownMenu_AddSeparator()
+		info.customFrame, info.func, info.text, info.arg1 = offsetPanel
 		UIDropDownMenu_AddButton(info)
 		offsetControl:refresh()
 	end
@@ -709,18 +734,27 @@ do -- customized widgets
 		local atMouse = PC:GetOption("RingAtMouse", OR_CurrentOptionsDomain)
 		self.text:SetText(atMouse and L"Open ring at mouse" or L"Open ring at screen center")
 	end
+	local function currentDomainHasQA()
+		return PC:GetOption("CenterAction", OR_CurrentOptionsDomain) or PC:GetOption("MotionAction", OR_CurrentOptionsDomain)
+	end
 	function optionControl.OnPrimaryRelease:refresh()
 		self.text:SetText(not self.widget:IsEnabled() and self.otherwise
-		                  or PC:GetOption("QuickActionOnRelease", OR_CurrentOptionsDomain) and L"Quick action if mouse remains still"
+		                  or PC:GetOption("QuickActionOnRelease", OR_CurrentOptionsDomain) and currentDomainHasQA() and L"Close after quick action"
 		                  or L"Do nothing")
 	end
 	function optionControl.OnPrimaryRelease.menuInitializer()
 		local c = optionControl.OnPrimaryRelease
-		local info = {func=onMenuOptionSetClick, arg2=c.widget, minWidth=240}
+		local info = {func=onMenuOptionSetClick, arg2=c.widget, minWidth=240, tooltipWhileDisabled=true, tooltipOnButton=true}
 		local qaOnRelease = PC:GetOption("QuickActionOnRelease", OR_CurrentOptionsDomain)
-		info.text, info.arg1, info.checked = L"Quick action if mouse remains still", true, qaOnRelease
+		local hasQA = currentDomainHasQA()
+		info.text, info.arg1, info.checked = L"Close after quick action", true, hasQA and qaOnRelease
+		if not hasQA then
+			local opt = "|cffffffff" .. (L"Quick action repeat trigger:"):gsub("%s*:%s*$", "") .. "|r"
+			info.disabled, info.tooltipTitle, info.tooltipText = true, info.text, (L"Select a %s interaction to enable this option."):format(opt)
+		end
 		UIDropDownMenu_AddButton(info)
 		info.text, info.arg1, info.checked = L"Do nothing", false, not qaOnRelease
+		info.disabled, info.tooltipTitle, info.tooltipText = nil
 		UIDropDownMenu_AddButton(info)
 	end
 	function optionControl.QuickAction.menuInitializer()
@@ -741,11 +775,15 @@ do -- customized widgets
 			motion and L"Unmoved cursor" or
 			((enabled and "" or "|cffa0a0a0") .. L"Disabled")
 		)
+		optionControl.OnPrimaryRelease:refresh()
 	end
 	function optionControl.OnLeft.menuInitializer()
 		local c = optionControl.OnLeft
-		local info = {func=onMenuOptionToggle, arg2=c.widget, minWidth=240, isNotRadio=true}
-		info.text, info.arg1, info.checked = L"Leave open after use", "NoClose", PC:GetOption("NoClose", OR_CurrentOptionsDomain)
+		local info = {func=onMenuOptionSetClick, arg2=c.widget, minWidth=240}
+		local doClose = not PC:GetOption("NoClose", OR_CurrentOptionsDomain)
+		info.text, info.arg1, info.checked = L"Use slice and close ring", false, doClose
+		UIDropDownMenu_AddButton(info)
+		info.text, info.arg1, info.checked = L"Use slice", true, not doClose
 		UIDropDownMenu_AddButton(info)
 	end
 	function optionControl.OnLeft:refresh()

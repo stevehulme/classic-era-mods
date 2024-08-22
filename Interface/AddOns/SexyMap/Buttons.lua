@@ -366,6 +366,10 @@ function mod:OnEnable()
 	hooksecurefunc(ExpansionLandingPageMinimapButton, "UpdateIconForGarrison", function()
 		mod:UpdateDraggables(ExpansionLandingPageMinimapButton)
 	end)
+	-- Stop Blizz moving the icon || Minimap.lua ExpansionLandingPageMinimapButtonMixin:SetLandingPageIconOffset() >> anchor:SetPoint()
+	hooksecurefunc(ExpansionLandingPageMinimapButton, "SetLandingPageIconOffset", function()
+		mod:UpdateDraggables(ExpansionLandingPageMinimapButton)
+	end)
 	sm.core:RegisterModuleOptions("Buttons", options, L["Buttons"])
 
 	C_Timer.After(1, mod.StartFrameGrab)
@@ -418,7 +422,7 @@ do
 
 	function mod:HideAllButtons()
 		if not mod.db.controlVisibility or moving then return end
-		local focus = GetMouseFocus() -- Minimap or Minimap icons including nil checks to compensate for other addons
+		local focus = GetMouseFocus and GetMouseFocus() or GetMouseFoci and GetMouseFoci()[1] -- Minimap or Minimap icons including nil checks to compensate for other addons
 		if focus and not focus:IsForbidden() and ((focus:GetName() == "Minimap") or (focus:GetParent() and focus:GetParent():GetName() and focus:GetParent():GetName():find("Mini[Mm]ap"))) then
 			fadeStop = true
 			return

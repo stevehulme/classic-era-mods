@@ -801,20 +801,22 @@ if WeakAuras.IsRetail() then
   end
 end
 
----@param index integer
+---@param spellId integer
 ---@return boolean hasTalent
----@return number? talentId
-function WeakAuras.CheckPvpTalentByIndex(index)
+---@return number? spellid
+function WeakAuras.CheckPvpTalentBySpellId(spellId)
   local checkTalentSlotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1)
   if checkTalentSlotInfo then
-    local checkTalentId = checkTalentSlotInfo.availableTalentIDs[index]
     for i = 1, 3 do
       local talentSlotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(i)
-      if talentSlotInfo and (talentSlotInfo.selectedTalentID == checkTalentId) then
-        return true, checkTalentId
+      if talentSlotInfo and talentSlotInfo.selectedTalentID then
+        local selectedSpellId = select(6, GetPvpTalentInfoByID(talentSlotInfo.selectedTalentID))
+        if selectedSpellId == spellId then
+          return true, spellId
+        end
       end
     end
-    return false, checkTalentId
+    return false, spellId
   end
   return false
 end
@@ -1043,11 +1045,12 @@ function Private.ExecEnv.CheckRaidFlags(flags, flagToCheck)
 end
 
 local function IsSpellKnownOrOverridesAndBaseIsKnown(spell, pet)
+  if spell == 0 then return false end
   if IsSpellKnown(spell, pet) then
     return true
   end
   local baseSpell = FindBaseSpellByID(spell)
-  if baseSpell and baseSpell ~= spell then
+  if baseSpell and baseSpell ~= spell and baseSpell ~= 0 then
     if FindSpellOverrideByID(baseSpell) == spell then
       return IsSpellKnown(baseSpell, pet)
     end
@@ -1057,11 +1060,12 @@ end
 ---@param spell string|number
 ---@return boolean result
 function WeakAuras.IsPlayerSpellOrOverridesAndBaseIsPlayerSpell(spell)
+  if spell == 0 then return false end
   if IsPlayerSpell(spell) then
     return true
   end
   local baseSpell = FindBaseSpellByID(spell)
-  if baseSpell and baseSpell ~= spell then
+  if baseSpell and baseSpell ~= spell and baseSpell ~= 0 then
     if FindSpellOverrideByID(baseSpell) == spell then
       return IsPlayerSpell(baseSpell)
     end
@@ -1071,6 +1075,7 @@ end
 
 ---@private
 function WeakAuras.IsSpellKnownForLoad(spell, exact)
+  if spell == 0 then return false end
   local result = IsPlayerSpell(spell)
                  or IsSpellKnownOrOverridesAndBaseIsKnown(spell, false)
                  or IsSpellKnownOrOverridesAndBaseIsKnown(spell, true)
@@ -1091,6 +1096,7 @@ end
 ---@param pet boolean?
 ---@return boolean result
 function WeakAuras.IsSpellKnown(spell, pet)
+  if spell == 0 then return false end
   if (pet) then
     return IsSpellKnownOrOverridesAndBaseIsKnown(spell, true)
   end
@@ -1107,14 +1113,6 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
     return false;
   end
   return WeakAuras.IsSpellKnown(spell, false) or WeakAuras.IsSpellKnown(spell, true)
-end
-
-function Private.ExecEnv.CompareSpellIds(a, b, exactCheck)
-  if exactCheck then
-    return tonumber(a) == tonumber(b)
-  else
-    return Private.ExecEnv.GetSpellName(a or "") == Private.ExecEnv.GetSpellName(b or "")
-  end
 end
 
 do
@@ -1348,7 +1346,7 @@ Private.load_prototype = {
     },
     {
       name = "dragonriding",
-      display = L["Dragonriding"],
+      display = L["Skyriding"],
       type = "tristate",
       init = WeakAuras.IsRetail() and "arg" or nil,
       width = WeakAuras.doubleWidth,
@@ -1663,17 +1661,23 @@ Private.load_prototype = {
             single_spec = GetSpecialization();
           end
 
-          -- print ("Using talent cache", single_class, single_spec);
           -- If a single specific class was found, load the specific list for it
+          if not single_class then
+            single_class = select(2, UnitClass("player"))
+          end
+          if not single_spec then
+            single_spec  = GetSpecialization()
+          end
+
           if(single_class and Private.pvp_talent_types_specific[single_class]
             and single_spec and Private.pvp_talent_types_specific[single_class][single_spec]) then
             return Private.pvp_talent_types_specific[single_class][single_spec];
           else
-            return Private.pvp_talent_types;
+            return {}
           end
         end
       end,
-      test = "WeakAuras.CheckPvpTalentByIndex(%d)",
+      test = "WeakAuras.CheckPvpTalentBySpellId(%d)",
       enable = WeakAuras.IsRetail(),
       hidden = not WeakAuras.IsRetail(),
       events = {"PLAYER_PVP_TALENT_UPDATE"}
@@ -2201,6 +2205,12 @@ Private.event_categories = {
   }
 }
 
+local GetNameAndIconForSpellName = function(trigger)
+  local effectiveSpellId = Private.ExecEnv.GetEffectiveSpellId(trigger.spellName, trigger.use_exact_spellName, not trigger.use_ignoreoverride)
+  local name, _, icon = Private.ExecEnv.GetSpellInfo(effectiveSpellId)
+  return name, icon
+end
+
 Private.event_prototypes = {
   ["Unit Characteristics"] = {
     type = "unit",
@@ -2523,9 +2533,11 @@ Private.event_prototypes = {
     init = function(trigger)
       local ret = [=[
         local useWatched = %s
-        local factionID = useWatched and select(6, GetWatchedFactionInfo()) or %q
+        local factionID = useWatched and Private.ExecEnv.GetWatchedFactionId() or %q
         local minValue, maxValue, currentValue
         local factionData = Private.ExecEnv.GetFactionDataByID(factionID)
+        if not factionData then return end;
+
         local name, description = factionData.name, factionData.description
         local standingID = factionData.reaction
         local hasRep = factionData.isHeaderWithRep
@@ -5090,6 +5102,7 @@ Private.event_prototypes = {
       else
         name = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName
       end
+      if name == nil then return {} end
       return { "WA_UPDATE_OVERLAY_GLOW:" .. name }
     end,
     force_events = "WA_UPDATE_OVERLAY_GLOW",
@@ -5119,18 +5132,7 @@ Private.event_prototypes = {
         return string.format(ret, spellName or "");
       end
     end,
-    GetNameAndIcon = function(trigger)
-      local spellName
-      if (trigger.use_exact_spellName) then
-        spellName = tonumber(trigger.spellName)
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName
-      end
-      if spellName then
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellName)
-        return name, icon
-      end
-    end,
+    GetNameAndIcon = GetNameAndIconForSpellName,
     statesParameter = "one",
     args = {
       {
@@ -5144,7 +5146,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -5168,13 +5170,8 @@ Private.event_prototypes = {
       end
     end,
     loadInternalEventFunc = function(trigger, untrigger)
-      trigger.spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0;
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0;
+      if spellName == nil then return {} end
       local events = {
         "SPELL_COOLDOWN_CHANGED:" .. spellName,
         "COOLDOWN_REMAINING_CHECK:" .. spellName,
@@ -5190,27 +5187,16 @@ Private.event_prototypes = {
     force_events = "SPELL_COOLDOWN_FORCE",
     name = L["Cooldown/Charges/Count"],
     loadFunc = function(trigger)
-      trigger.spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0;
-      local spellName;
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0;
+      local exactMatch = trigger.use_exact_spellName
       local followoverride = not trigger.use_ignoreoverride
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
-      WeakAuras.WatchSpellCooldown(spellName, trigger.use_matchedRune, followoverride)
+      WeakAuras.WatchSpellCooldown(spellName, trigger.use_matchedRune, exactMatch, followoverride)
       if (trigger.use_showgcd) then
         WeakAuras.WatchGCD();
       end
     end,
     init = function(trigger)
-      trigger.spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0;
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
       local ret = {}
 
       local showOnCheck = "false";
@@ -5238,14 +5224,16 @@ Private.event_prototypes = {
         local showgcd = %s;
         local showlossofcontrol = %s;
         local ignoreSpellKnown = %s;
+        local useExact = %s
         local followoverride = %s
         local track = %q
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellname)
-        local startTime, duration, gcdCooldown, readyTime, modRate, paused = WeakAuras.GetSpellCooldown(spellname, ignoreRuneCD, showgcd, ignoreSpellKnown, track, followoverride)
-        local charges, maxCharges, spellCount, chargeGainTime, chargeLostTime = WeakAuras.GetSpellCharges(spellname, ignoreSpellKnown, followoverride)
+        local effectiveSpellId = Private.ExecEnv.GetEffectiveSpellId(spellname, useExact, followoverride)
+        local name, _, icon = Private.ExecEnv.GetSpellInfo(effectiveSpellId)
+        local startTime, duration, gcdCooldown, readyTime, modRate, paused = WeakAuras.GetSpellCooldown(effectiveSpellId, ignoreRuneCD, showgcd, ignoreSpellKnown, track)
+        local charges, maxCharges, spellCount, chargeGainTime, chargeLostTime = WeakAuras.GetSpellCharges(effectiveSpellId, ignoreSpellKnown)
         local stacks = maxCharges and maxCharges ~= 1 and charges or (spellCount and spellCount > 0 and spellCount) or nil;
         if showlossofcontrol and startTime and duration then
-          local locStart, locDuration = GetSpellLossOfControlCooldown(spellname);
+          local locStart, locDuration = WeakAuras.GetSpellLossOfControlCooldown(spellname);
           if locStart and locDuration and (locStart + locDuration) > (startTime + duration) then
             startTime = locStart
             duration = locDuration
@@ -5264,6 +5252,7 @@ Private.event_prototypes = {
         (trigger.use_showgcd and "true" or "false"),
         (trigger.use_showlossofcontrol and "true" or "false"),
         (trigger.use_ignoreSpellKnown and "true" or "false"),
+        (trigger.use_exact_spellName and "true" or "false"),
         (not trigger.use_ignoreoverride and "true" or "false"),
         track,
         showOnCheck
@@ -5359,18 +5348,7 @@ Private.event_prototypes = {
 
       return table.concat(ret)
     end,
-    GetNameAndIcon = function(trigger)
-      local spellName
-      if (trigger.use_exact_spellName) then
-        spellName = tonumber(trigger.spellName)
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName
-      end
-      if spellName then
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellName)
-        return name, icon
-      end
-    end,
+    GetNameAndIcon = GetNameAndIconForSpellName,
     statesParameter = "one",
     progressType = "timed",
     useModRate = true,
@@ -5583,7 +5561,7 @@ Private.event_prototypes = {
         test = "true",
         conditionType = "bool",
         conditionTest = function(state, needle)
-          return state and state.show and (Private.ExecEnv.IsUsableSpell(state.spellname) == (needle == 1))
+          return state and state.show and (Private.ExecEnv.IsUsableSpell(state.spellname or "") == (needle == 1))
         end,
         conditionEvents = AddTargetConditionEvents({
           "SPELL_UPDATE_USABLE",
@@ -5597,7 +5575,7 @@ Private.event_prototypes = {
         test = "true",
         conditionType = "bool",
         conditionTest = function(state, needle)
-          return state and state.show and (select(2, Private.ExecEnv.IsUsableSpell(state.spellname)) == (needle == 1));
+          return state and state.show and (select(2, Private.ExecEnv.IsUsableSpell(state.spellname or "")) == (needle == 1));
         end,
         conditionEvents = AddTargetConditionEvents({
           "SPELL_UPDATE_USABLE",
@@ -5633,7 +5611,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -5645,68 +5623,32 @@ Private.event_prototypes = {
     type = "spell",
     events = {},
     loadInternalEventFunc = function(trigger, untrigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
+      if spellName == nil then return {} end
       return { "SPELL_COOLDOWN_READY:" .. spellName }
     end,
     name = L["Cooldown Ready Event"],
     loadFunc = function(trigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName;
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
+      local useExact = trigger.use_exact_spellName
       local followoverride = not trigger.use_ignoreoverride
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
-      WeakAuras.WatchSpellCooldown(spellName, false, followoverride)
+      WeakAuras.WatchSpellCooldown(spellName, false, useExact, followoverride)
     end,
     init = function(trigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
-
-      if (type(spellName) == "string") then
-        spellName = string.format("%q", spellName)
-      end
-
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
       local ret = [=[
-        local spellname = %s
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellname)
+        local triggerSpellName = %s
         local useExact = %s
         local followoverride = %s
-        local match
-        if followoverride then
-          match = Private.ExecEnv.CompareSpellIds(spellname, spellName, useExact)
-        else
-          match = Private.ExecEnv.CompareSpellIds(spellname, overrideSpell, useExact)
-        end
+        local name, _, icon = Private.ExecEnv.GetSpellInfo(overrideSpell)
+        local effectiveTriggerSpellName = Private.ExecEnv.GetEffectiveSpellId(triggerSpellName, useExact, followoverride)
+        local match = overrideSpell == effectiveTriggerSpellName
       ]=]
       return ret:format(spellName,
                         trigger.use_exact_spellName and "true" or "false",
                         not trigger.use_ignoreoverride and "true" or "false")
     end,
-    GetNameAndIcon = function(trigger)
-      local spellName
-      if (trigger.use_exact_spellName) then
-        spellName = tonumber(trigger.spellName)
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName
-      end
-      if spellName then
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellName)
-        return name, icon
-      end
-    end,
+    GetNameAndIcon = GetNameAndIconForSpellName,
     statesParameter = "one",
     args = {
       {
@@ -5742,7 +5684,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -5755,67 +5697,33 @@ Private.event_prototypes = {
     type = "spell",
     events = {},
     loadInternalEventFunc = function(trigger, untrigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
+      if spellName == nil then return {} end
       return { "SPELL_CHARGES_CHANGED:" .. spellName }
     end,
     name = L["Charges Changed Event"],
     loadFunc = function(trigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName;
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
+      local useExact = trigger.use_exact_spellName
       local followoverride = not trigger.use_ignoreoverride
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
-      WeakAuras.WatchSpellCooldown(spellName, false, followoverride)
+      WeakAuras.WatchSpellCooldown(spellName, false, useExact, followoverride)
     end,
     init = function(trigger)
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName
-        spellName = spellName or ""
-      end
-      if (type(spellName) == "string") then
-        spellName = string.format("%q", spellName)
-      end
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
       local ret = [=[
-        local spellname = %s
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellname)
+        local triggerSpellName = %s
         local useExact = %s
         local followoverride = %s
-        local match
-        if followoverride then
-          match = Private.ExecEnv.CompareSpellIds(spellname, spellName, useExact)
-        else
-          match = Private.ExecEnv.CompareSpellIds(spellname, overrideSpell, useExact)
-        end
+        local effectiveTriggerSpellName = Private.ExecEnv.GetEffectiveSpellId(triggerSpellName, useExact, followoverride)
+        local name, _, icon = Private.ExecEnv.GetSpellInfo(overrideSpell)
+        local match = overrideSpell == effectiveTriggerSpellName
       ]=]
       return ret:format(spellName,
                         trigger.use_exact_spellName and "true" or "false",
                         not trigger.use_ignoreoverride and "true" or "false")
     end,
     statesParameter = "one",
-    GetNameAndIcon = function(trigger)
-      local spellName
-      if (trigger.use_exact_spellName) then
-        spellName = tonumber(trigger.spellName)
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName
-      end
-      if spellName then
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellName)
-        return name, icon
-      end
-    end,
+    GetNameAndIcon = GetNameAndIconForSpellName,
     args = {
       {
         name = "spellName",
@@ -5873,7 +5781,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -6036,7 +5944,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -6239,7 +6147,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -6324,7 +6232,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -6386,7 +6294,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -6459,7 +6367,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -6575,7 +6483,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -6627,43 +6535,30 @@ Private.event_prototypes = {
       }
     end,
     loadInternalEventFunc = function(trigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
+      if spellName == nil then return {} end
       return { "SPELL_COOLDOWN_CHANGED:" .. spellName }
     end,
     force_events = "SPELL_UPDATE_USABLE",
     name = L["Action Usable"],
     statesParameter = "one",
     loadFunc = function(trigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName;
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
+      local useExact = trigger.use_exact_spellName
       local followoverride = not trigger.use_ignoreoverride
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
-      WeakAuras.WatchSpellCooldown(spellName, false, followoverride)
+      WeakAuras.WatchSpellCooldown(spellName, false, useExact, followoverride)
     end,
     init = function(trigger)
-      trigger.spellName = trigger.spellName or 0;
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName;
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName;
-      end
+      local spellName = type(trigger.spellName) ~= "table" and trigger.spellName or 0
       local ret = [=[
         local spellName = %s
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellName)
+        local useExact = %s
         local followoverride = %s
-        local startTime, duration, gcdCooldown, readyTime, paused = WeakAuras.GetSpellCooldown(spellName, nil, nil, nil, nil, followoverride)
-        local charges, maxCharges, spellCount, chargeGainTime, chargeLostTime = WeakAuras.GetSpellCharges(spellName, nil, followoverride)
+        local effectiveSpellId = Private.ExecEnv.GetEffectiveSpellId(spellName, useExact, followoverride)
+        local name, _, icon = Private.ExecEnv.GetSpellInfo(effectiveSpellId)
+
+        local startTime, duration, gcdCooldown, readyTime, paused = WeakAuras.GetSpellCooldown(effectiveSpellId, nil, nil, nil, nil)
+        local charges, maxCharges, spellCount, chargeGainTime, chargeLostTime = WeakAuras.GetSpellCharges(effectiveSpellId, nil)
         local stacks = maxCharges and maxCharges > 1 and charges
                        or spellCount and spellCount > 0 and spellCount
                        or nil
@@ -6671,7 +6566,7 @@ Private.event_prototypes = {
           charges = (duration == 0 or gcdCooldown) and 1 or 0;
         end
         local ready = (startTime == 0 and not paused) or charges > 0
-        local active = Private.ExecEnv.IsUsableSpell(spellName) and ready
+        local active = Private.ExecEnv.IsUsableSpell(spellName or "") and ready
       ]=]
       if(trigger.use_targetRequired) then
         ret = ret.."active = active and WeakAuras.IsSpellInRange(spellName or '', 'target')\n";
@@ -6685,20 +6580,10 @@ Private.event_prototypes = {
       end
 
       return ret:format(spellName,
+                        trigger.use_exact_spellName and "true" or "false",
                         not trigger.use_ignoreoverride and "true" or "false")
     end,
-    GetNameAndIcon = function(trigger)
-      local spellName
-      if (trigger.use_exact_spellName) then
-        spellName = tonumber(trigger.spellName)
-      else
-        spellName = type(trigger.spellName) == "number" and Private.ExecEnv.GetSpellName(trigger.spellName) or trigger.spellName
-      end
-      if spellName then
-        local name, _, icon = Private.ExecEnv.GetSpellInfo(spellName)
-        return name, icon
-      end
-    end,
+    GetNameAndIcon = GetNameAndIconForSpellName,
     args = {
       {
         name = "spellName",
@@ -6795,7 +6680,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -7172,9 +7057,9 @@ Private.event_prototypes = {
           local index = %s
           local activeName, activeIcon, _
 
-          local active, talentId = WeakAuras.CheckPvpTalentByIndex(index)
-          if talentId then
-            _, activeName, activeIcon = GetPvpTalentInfoByID(talentId)
+          local active, spellId = WeakAuras.CheckPvpTalentBySpellId(index)
+          if spellId then
+            activeName, _, activeIcon = Private.ExecEnv.GetSpellInfo(spellId)
           end
         ]]):format(index or 0))
         if (inverse) then
@@ -7195,9 +7080,9 @@ Private.event_prototypes = {
             table.insert(ret, ([[
               if (not active) then
                 local index = %s
-                active, talentId = WeakAuras.CheckPvpTalentByIndex(index)
-                if active and talentId then
-                  _, activeName, activeIcon = GetPvpTalentInfoByID(talentId)
+                active, spellId = WeakAuras.CheckPvpTalentBySpellId(index)
+                if active and spellId then
+                  activeName, _, activeIcon = Private.ExecEnv.GetSpellInfo(spellId)
                 end
               end
             ]]):format(index))
@@ -7222,7 +7107,7 @@ Private.event_prototypes = {
           if(Private.pvp_talent_types_specific[class] and  Private.pvp_talent_types_specific[class][spec]) then
             return Private.pvp_talent_types_specific[class][spec];
           else
-            return Private.pvp_talent_types;
+            return {}
           end
         end,
         test = "active",
@@ -7273,6 +7158,8 @@ Private.event_prototypes = {
         display = L["Class and Specialization"],
         type = "multiselect",
         values = "spec_types_all",
+        store = "true",
+        conditionType = "select"
       },
       {
         hidden = true,
@@ -7854,6 +7741,16 @@ Private.event_prototypes = {
         test = "true"
       },
       {
+        name = "enchantID",
+        hidden = true,
+        test = "true",
+        display = L["Enchant ID"],
+        store = true,
+        conditionType = "number",
+        operator_types = "only_equal",
+        noProgressSource = true
+      },
+      {
         name = "stacks",
         display = L["Stack Count"],
         type = "number",
@@ -7896,7 +7793,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -7904,7 +7801,7 @@ Private.event_prototypes = {
         name = "enchanted",
         display = L["Enchanted"],
         hidden = true,
-        init = "found ~= nil",
+        init = "found == true",
         test = "true",
         store = true,
         conditionType = "bool",
@@ -7980,7 +7877,8 @@ Private.event_prototypes = {
           "CHAT_MSG_YELL",
           "CHAT_MSG_SYSTEM",
           "CHAT_MSG_TEXT_EMOTE",
-          "CHAT_MSG_LOOT"
+          "CHAT_MSG_LOOT",
+          "CHAT_MSG_COMMUNITIES_CHANNEL"
         }
       }
     end,
@@ -8680,7 +8578,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -8805,7 +8703,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = "true",
-        init = "icon or 'Interface/Icons/INV_Misc_QuestionMark'",
+        init = "icon",
         store = "true",
         test = "true",
       },
@@ -8999,7 +8897,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -9642,7 +9540,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },
@@ -11013,7 +10911,7 @@ Private.event_prototypes = {
       {
         name = "icon",
         hidden = true,
-        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        init = "icon",
         test = "true",
         store = true
       },

@@ -15,6 +15,9 @@ local wipe = table.wipe
 
 local Loc = LibStub("AceLocale-3.0"):GetLocale("Details")
 
+---@type petcontainer
+local petContainer = Details222.PetContainer
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --API
 
@@ -23,7 +26,7 @@ function Details:ResetSegmentOverallData()
 	return segmentClass:ResetOverallData()
 end
 
---reset segments and overall data
+--erase all combat data stored
 function Details:ResetSegmentData()
 	return segmentClass:ResetAllCombatData()
 end
@@ -890,7 +893,8 @@ function segmentClass:ResetAllCombatData()
 	Details:Destroy(Details.cache_damage_group)
 	Details:Destroy(Details.cache_healing_group)
 
-	Details222.Pets.PetContainerCleanup()
+	petContainer.DoMaintenance()
+
 	Details:ResetSpecCache(true)
 
 	--stop combat ticker
@@ -916,7 +920,10 @@ function segmentClass:ResetAllCombatData()
 		for i = #segmentsTable, 1, -1 do
 			---@type combat
 			local thisCombatObject = segmentsTable[i]
-			Details:DestroyCombat(thisCombatObject)
+			--check if the combat is already destroyed
+			if (not thisCombatObject.__destroyed) then
+				Details:DestroyCombat(thisCombatObject)
+			end
 		end
 
 		--the current combat when finished will be moved to the first index of "segmentsTable", need the check if the current combat was already destroyed
@@ -938,9 +945,8 @@ function segmentClass:ResetAllCombatData()
 		Details.tabela_vigente = combatClass:NovaTabela(nil, Details.tabela_overall)
 
 		--create new container to store pets
-		Details.tabela_pets = Details.container_pets:NovoContainer()
-		Details:UpdatePetCache()
-		Details.container_pets:BuscarPets()
+		petContainer.Reset()
+		petContainer.PetScan("ResetAllCombatData")
 	end
 
 	---@type instance[]

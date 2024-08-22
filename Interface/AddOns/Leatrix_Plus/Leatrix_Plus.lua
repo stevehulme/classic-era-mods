@@ -1,5 +1,5 @@
 ﻿----------------------------------------------------------------------
--- 	Leatrix Plus 1.15.37 (26th June 2024)
+-- 	Leatrix Plus 1.15.45 (21st August 2024)
 ----------------------------------------------------------------------
 
 --	01:Functions 02:Locks   03:Restart 40:Player   45:Rest
@@ -19,7 +19,7 @@
 	local void
 
 	-- Version
-	LeaPlusLC["AddonVer"] = "1.15.37"
+	LeaPlusLC["AddonVer"] = "1.15.45"
 
 	-- Get locale table
 	local void, Leatrix_Plus = ...
@@ -35,19 +35,14 @@
 			end)
 			return
 		end
-		if gametocversion and gametocversion == 11404 then
+		if gametocversion and gametocversion == 11503 then
 			-- Used for upcoming game patch
 			LeaPlusLC.NewPatch = true
 		end
 	end
 
-	-- Check for addons
+	-- Check for ElvUI
 	if C_AddOns.IsAddOnLoaded("ElvUI") then LeaPlusLC.ElvUI = unpack(ElvUI) end
-	if C_AddOns.IsAddOnLoaded("Glass") then LeaPlusLC.Glass = true end
-	if C_AddOns.IsAddOnLoaded("CharacterStatsClassic") then LeaPlusLC.CharacterStatsClassic = true end
-	if C_AddOns.IsAddOnLoaded("ClassicProfessionFilter") then LeaPlusLC.ClassicProfessionFilter = true end
-	if C_AddOns.IsAddOnLoaded("TitanClassic") then LeaPlusLC.TitanClassic = true end
-	if C_AddOns.IsAddOnLoaded("totalRP3") then LeaPlusLC.totalRP3 = true end
 
 ----------------------------------------------------------------------
 --	L00: Leatrix Plus
@@ -1684,6 +1679,7 @@
 						or npcID == "14921" -- Rin'wosho the Trader (Zul'Gurub Isle, Stranglethorn Vale)
 						or npcID == "15864" -- Valadar Starsong (Coin of Ancestry Collector, Moonglade)
 						or npcID == "15909" -- Fariel Starsong (Coin of Ancestry Collector, Moonglade)
+						or npcID == "15540" -- Windcaller Kaldon (Badge Collector, Silithus)
 						-- Ignore supply officers
 						or npcID == "213077" -- Elaine Compton <Supply Officer> (Stormwind)
 						or npcID == "214099" -- Tamelyn Aldridge <Supply Officer> (Ironforge)
@@ -5485,6 +5481,11 @@
 					end
 					-- Move GameTooltip to below the minimap in case the button uses it
 					button:HookScript("OnEnter", SetButtonTooltip)
+					-- Special case for MoveAny because it doesn't have button.db
+					if buttonName == "moveany" then
+						button.db = button.db or {}
+						if not button.db.hide then button.db.hide = false end
+					end
 				end
 
 				-- Hide new LibDBIcon icons
@@ -5815,6 +5816,21 @@
 						end)
 						myButton:HookScript("OnLeave", function()
 							_G[name]:GetScript("OnLeave")()
+							GameTooltip:Hide()
+						end)
+					elseif name == "ZygorGuidesViewerMapIcon" then
+						-- Zygor (uses LibDBIcon10_LeaPlusCustomIcon_ZygorGuidesViewerMapIcon)
+						local myButton = LibStub("LibDBIcon-1.0"):GetMinimapButton("LeaPlusCustomIcon_" .. name)
+						myButton.icon:SetTexture("Interface\\AddOns\\ZygorGuidesViewerClassic\\Skins\\minimap-icon.tga")
+						hooksecurefunc(myButton.icon, "UpdateCoord", function()
+							myButton.icon:SetTexCoord(0, 0.5, 0, 0.25)
+						end)
+						myButton.icon:SetTexCoord(0, 0.5, 0, 0.25)
+						myButton:HookScript("OnEnter", function()
+							_G[name]:GetScript("OnEnter")(_G[name], true)
+							ReanchorTooltip(GameTooltip, myButton)
+						end)
+						myButton:HookScript("OnLeave", function()
 							GameTooltip:Hide()
 						end)
 					elseif name == "TomCats-MinimapButton"				-- TomCat's Tours
@@ -6287,6 +6303,13 @@
 				if LeaPlusLC["CombineAddonButtons"] == "On" then
 					--C_Timer.After(0.1, function() -- Removed for now
 						local buttonName = strlower(name)
+
+						-- Special case for MoveAny because it doesn't have button.db
+						if buttonName == "moveany" then
+							button.db = button.db or {}
+							if not button.db.hide then button.db.hide = false end
+						end
+
 						if not strfind(strlower(LeaPlusDB["MiniExcludeList"]), buttonName) then
 							if button.db and not button.db.hide then
 								button:Hide()
@@ -6779,7 +6802,7 @@
 					-- Default layout
 					LeaPlusCB["ShowHelm"].f:SetText(L["Helm"])
 					LeaPlusCB["ShowHelm"]:ClearAllPoints()
-					if LeaPlusLC.CharacterStatsClassic then
+					if C_AddOns.IsAddOnLoaded("CharacterStatsClassic") then
 						LeaPlusCB["ShowHelm"]:SetPoint("TOPLEFT", 65, -258)
 					else
 						LeaPlusCB["ShowHelm"]:SetPoint("TOPLEFT", 65, -270)
@@ -6790,7 +6813,7 @@
 
 					LeaPlusCB["ShowCloak"].f:SetText(L["Cloak"])
 					LeaPlusCB["ShowCloak"]:ClearAllPoints()
-					if LeaPlusLC.CharacterStatsClassic then
+					if C_AddOns.IsAddOnLoaded("CharacterStatsClassic") then
 						LeaPlusCB["ShowCloak"]:SetPoint("TOPLEFT", 275, -258)
 					else
 						LeaPlusCB["ShowCloak"]:SetPoint("TOPLEFT", 275, -270)
@@ -8021,7 +8044,7 @@
 				end
 
 				-- Classic Profession Filter addon fixes
-				if LeaPlusLC.ClassicProfessionFilter and TradeSkillFrame.SearchBox and TradeSkillFrame.HaveMats and TradeSkillFrame.HaveMats.text then
+				if C_AddOns.IsAddOnLoaded("ClassicProfessionFilter") and TradeSkillFrame.SearchBox and TradeSkillFrame.HaveMats and TradeSkillFrame.HaveMats.text then
 					TradeSkillFrame.SearchBox:ClearAllPoints()
 					TradeSkillFrame.SearchBox:SetPoint("LEFT", TradeSkillRankFrame, "RIGHT", 20, -10)
 
@@ -8219,7 +8242,7 @@
 				end)
 
 				-- Classic Profession Filter addon fixes
-				if LeaPlusLC.ClassicProfessionFilter and CraftFrame.SearchBox and CraftFrame.HaveMats and CraftFrame.HaveMats.text and CraftFrame.SearchMats and CraftFrame.SearchMats.text then
+				if C_AddOns.IsAddOnLoaded("ClassicProfessionFilter") and CraftFrame.SearchBox and CraftFrame.HaveMats and CraftFrame.HaveMats.text and CraftFrame.SearchMats and CraftFrame.SearchMats.text then
 					CraftFrame.SearchBox:ClearAllPoints()
 					CraftFrame.SearchBox:SetPoint("LEFT", CraftRankFrame, "RIGHT", 20, -10)
 
@@ -9930,7 +9953,7 @@
 					UIWidgetTopCenterContainerFrame:SetScale(LeaPlusLC["WidgetScale"])
 				else
 					-- Show Titan Panel screen adjust warning if Titan Panel is installed with screen adjust enabled
-					if LeaPlusLC.TitanClassic then
+					if C_AddOns.IsAddOnLoaded("TitanClassic") then
 						if TitanPanelSetVar and TitanPanelGetVar then
 							if not TitanPanelGetVar("ScreenAdjust") then
 								titanFrame:Show()
@@ -10004,11 +10027,19 @@
 			local function HideButtons(chtfrm)
 				_G[chtfrm .. "ButtonFrameUpButton"]:SetParent(tframe)
 				_G[chtfrm .. "ButtonFrameDownButton"]:SetParent(tframe)
-				_G[chtfrm .. "ButtonFrameMinimizeButton"]:SetParent(tframe)
-				_G[chtfrm .. "ButtonFrameUpButton"]:Hide();
-				_G[chtfrm .. "ButtonFrameDownButton"]:Hide();
-				_G[chtfrm .. "ButtonFrameMinimizeButton"]:Hide();
+				if _G[chtfrm .. "ButtonFrameMinimizeButton"] then -- LeaPlusLC.NewPatch: Removed in 1.15.3
+					_G[chtfrm .. "ButtonFrameMinimizeButton"]:SetParent(tframe)
+				end
+				_G[chtfrm .. "ButtonFrameUpButton"]:Hide()
+				_G[chtfrm .. "ButtonFrameDownButton"]:Hide()
+				if _G[chtfrm .. "ButtonFrameMinimizeButton"] then -- LeaPlusLC.NewPatch: Removed in 1.15.3
+					_G[chtfrm .. "ButtonFrameMinimizeButton"]:Hide()
+				end
 				_G[chtfrm .. "ButtonFrame"]:SetSize(0.1,0.1)
+			end
+
+			if FriendsMicroButton then -- LeaPlusLC.NewPatch: Added in 1.15.3
+				FriendsMicroButton:Hide()
 			end
 
 			-- Function to highlight chat tabs and click to scroll to bottom
@@ -10983,7 +11014,7 @@
 				if LibDBIconTooltip then LibDBIconTooltip:SetScale(LeaPlusLC["LeaPlusTipSize"]) end
 
 				-- Total RP 3
-				if LeaPlusLC.totalRP3 and TRP3_MainTooltip and TRP3_CharacterTooltip then
+				if C_AddOns.IsAddOnLoaded("totalRP3") and TRP3_MainTooltip and TRP3_CharacterTooltip then
 					TRP3_MainTooltip:SetScale(LeaPlusLC["LeaPlusTipSize"])
 					TRP3_CharacterTooltip:SetScale(LeaPlusLC["LeaPlusTipSize"])
 				end
@@ -12871,7 +12902,7 @@
 					end
 
 					-- Disable items that conflict with Glass
-					if LeaPlusLC.Glass then
+					if C_AddOns.IsAddOnLoaded("Glass") then
 						local reason = L["Cannot be used with Glass"]
 						Lock("UseEasyChatResizing", reason) -- Use easy resizing
 						Lock("NoCombatLogTab", reason) -- Hide the combat log

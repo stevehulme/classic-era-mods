@@ -41,6 +41,9 @@ local slotid_to_icon = {
   [INVSLOT_WRIST] = "iconWrists", -- P3
   [INVSLOT_HAND] = "iconHands",
   [INVSLOT_BACK] = "iconBack", -- P4
+  [INVSLOT_FINGER1] = "iconFinger", -- P4
+  [INVSLOT_FINGER2] = "iconFinger2", -- P4
+  [INVSLOT_MAINHAND] = "iconMainHand" -- P5?
 }
 local icon_to_tex = {
   iconHead = 136516,
@@ -52,6 +55,9 @@ local icon_to_tex = {
   iconWrists = 136530,
   iconHands = 136515,
   iconBack = 136512, -- yep same as chest for some reason
+  iconFinger = 136514,
+  iconFinger2 = 136523,
+  iconMainHand = 136518,
 }
 local ordered_slots = {
   INVSLOT_HEAD, -- 1
@@ -62,7 +68,10 @@ local ordered_slots = {
   INVSLOT_FEET, -- 8
   INVSLOT_WRIST, -- 9
   INVSLOT_HAND, -- 10
+  INVSLOT_FINGER1, -- 11
+  INVSLOT_FINGER2, -- 12
   INVSLOT_BACK, -- 15
+  INVSLOT_MAINHAND, -- 16
 }
 local state_names = {
   ["pvp"] = L["PvP"],
@@ -122,7 +131,7 @@ local function ResizeRuneButtons()
   for i,button in pairs(EngravingFrame.scrollFrame.buttons) do
     if button.typeName then
       button.name:SetJustifyH("CENTER")
-      button.name:SetJustifyV("CENTER")
+      button.name:SetJustifyV("MIDDLE")
       button.icon:SetSize(18,18)
     end
     button:Hide()
@@ -670,23 +679,27 @@ function addon.utils.NoRunePrompt(slot)
 end
 function addon.utils.CheckRuneSlots(slot)
   if slot then
-    local runeInfo = C_Engraving.GetRuneForEquipmentSlot(slot)
-    if not (runeInfo and runeInfo.skillLineAbilityID) then
-      local ownedSlotRunes = C_Engraving.GetRunesForCategory(slot, true) -- owned only
-      -- maybe we do a quickload popout down the road for now just show Engraving
-      if #ownedSlotRunes > 0 then
-        addon.utils.NoRunePrompt(slot)
+    if C_Engraving.IsEquipmentSlotEngravable(slot) then
+      local runeInfo = C_Engraving.GetRuneForEquipmentSlot(slot)
+      if not (runeInfo and runeInfo.skillLineAbilityID) then
+        local ownedSlotRunes = C_Engraving.GetRunesForCategory(slot, true) -- owned only
+        -- maybe we do a quickload popout down the road for now just show Engraving
+        if #ownedSlotRunes > 0 then
+          addon.utils.NoRunePrompt(slot)
+        end
       end
     end
   else
     for _,slot in ipairs(ordered_slots) do
-      local ownedSlotRunes = C_Engraving.GetRunesForCategory(slot, true) -- owned only
-      if #ownedSlotRunes > 0 then
-        local equipped = GetInventoryItemID("player", slot)
-        if equipped and not (GetInventoryItemBroken("player", slot)) then
-          local runeInfo = C_Engraving.GetRuneForEquipmentSlot(slot)
-          if not (runeInfo and runeInfo.skillLineAbilityID) then
-            addon.utils.NoRunePrompt(slot)
+      if C_Engraving.IsEquipmentSlotEngravable(slot) then
+        local ownedSlotRunes = C_Engraving.GetRunesForCategory(slot, true) -- owned only
+        if #ownedSlotRunes > 0 then
+          local equipped = GetInventoryItemID("player", slot)
+          if equipped and not (GetInventoryItemBroken("player", slot)) then
+            local runeInfo = C_Engraving.GetRuneForEquipmentSlot(slot)
+            if not (runeInfo and runeInfo.skillLineAbilityID) then
+              addon.utils.NoRunePrompt(slot)
+            end
           end
         end
       end
@@ -728,7 +741,9 @@ function addon:PLAYER_ENTERING_WORLD(event,...)
       AutomateSet(newStatus)
     end
   end
-  addon.utils.CheckRuneSlots()
+  C_Timer.After(10, function()
+    addon.utils.CheckRuneSlots()
+  end)
 end
 
 function addon:ZONE_CHANGED_NEW_AREA(event,...)
@@ -1132,7 +1147,7 @@ end
 function addon.Frame.Collapse(self)
   self.collapsed = true
   self:SetPoint("TOPLEFT", EngravingFrame, "TOPLEFT",0,0)
-  self.toggleButton:SetPoint("RIGHT", -12, 0)
+  self.toggleButton:SetPoint("RIGHT", -52, 0)
   self.contentFrame:Hide()
   RuneSetsSetOptionFrame:Hide()
   self:Lower()
