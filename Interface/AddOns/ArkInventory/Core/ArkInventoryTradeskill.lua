@@ -357,7 +357,7 @@ local function helper_GoodToScan2( )
 	
 	if C_TradeSkillUI.IsTradeSkillLinked( ) then
 		
-		local codex = ArkInventory.GetPlayerCodex( )
+		local codex = ArkInventory.Codex.GetPlayer( )
 		local link, linkedPlayerName = C_TradeSkillUI.GetTradeSkillListLink( )
 		
 		local osd = ArkInventory.ObjectStringDecode( link )
@@ -449,7 +449,7 @@ local function Scan_UI( )
 	
 	if not helper_GoodToScan2( ) then return end
 	
-	local codex = ArkInventory.GetPlayerCodex( )
+	local codex = ArkInventory.Codex.GetPlayer( )
 	local link, linkedPlayerName = C_TradeSkillUI.GetTradeSkillListLink( )
 	local info = ArkInventory.CrossClient.UIGetProfessionInfo( )
 	
@@ -1206,7 +1206,7 @@ function ArkInventory.Tradeskill.ScanHeaders( )
 	
 	
 	local loc_id = ArkInventory.Const.Location.Tradeskill
-	local codex = ArkInventory.GetPlayerCodex( )
+	local codex = ArkInventory.Codex.GetPlayer( )
 	
 	local p = ArkInventory.CrossClient.GetProfessions( )
 	ArkInventory.OutputDebug( "TRADESKILL: skills active = [", p, "]" )
@@ -1292,7 +1292,7 @@ end
 function ArkInventory.Tradeskill.OnEnable( )
 	
 	--ArkInventory.Output( "tradeskill on enable" )
-	local loc_id = ArkInventory.Const.Location.Tradeskill
+	local loc_id_window = ArkInventory.Const.Location.Tradeskill
 	
 	collection.isReady = false
 	collection.isInit = false
@@ -1300,7 +1300,6 @@ function ArkInventory.Tradeskill.OnEnable( )
 	ArkInventory.Tradeskill.ScanHeaders( )
 	
 	ArkInventory.ObjectCacheTooltipClear( )
-	--ArkInventory.ObjectCacheCountClear( nil, nil, loc_id )
 	
 end
 
@@ -1321,7 +1320,7 @@ function ArkInventory:EVENT_ARKINV_TRADESKILL_UPDATE_BUCKET( events )
 	
 	if events["UPDATE"] then
 		--ArkInventory.Output( "UPDATE LOCATION ", loc_id )
-		--ArkInventory.ScanLocation( loc_id )
+		--ArkInventory.ScanLocationWindow( loc_id )
 	end
 	
 	if events["QUEUE_START"] then

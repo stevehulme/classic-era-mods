@@ -84,12 +84,12 @@ local function FilterSetSource( t )
 			C_ToyBox.SetSourceTypeFilter( i, t )
 		end
 	else
-		assert( false, "parameter is not a table or boolean" )
+		ArkInventory.Util.Error( "t is [", type( t ), "], should be [table] or [boolean]" )
 	end
 end
 
 local function FilterGetSource( t )
-	assert( type( t ) == "table", "parameter is not a table" )
+	ArkInventory.Util.Assert( type( t ) == "table", "t is [", type( t ), "], should be [table]" )
 	for i = 1, FilterNumSource( ) do
 		t[i] = C_ToyBox.IsSourceTypeFilterChecked( i )
 	end
@@ -109,12 +109,12 @@ local function FilterSetExpansion( t )
 			C_ToyBox.SetExpansionTypeFilter( i, t )
 		end
 	else
-		assert( false, "parameter is not a table or boolean" )
+		ArkInventory.Util.Error( "t is [", type( t ), "], should be [table] or [boolean]" )
 	end
 end
 
 local function FilterGetExpansion( t )
-	assert( type( t ) == "table", "parameter is not a table" )
+	ArkInventory.Util.Assert( type( t ) == "table", "t is [", type( t ), "], should be [table]" )
 	for i = 1, FilterNumExpansion( ) do
 		t[i] = C_ToyBox.IsExpansionTypeFilterChecked( i )
 	end
@@ -282,9 +282,9 @@ local function Scan_Threaded( thread_id )
 				numOwned = numOwned + 1
 			end
 			
-			if c[i].owned ~= isOwned then
+			if c[i].isOwned ~= isOwned then
 				update = true
-				c[i].owned = isOwned
+				c[i].isOwned = isOwned
 			end
 			
 			if c[i].fav ~= isFavourite then
@@ -318,7 +318,7 @@ local function Scan_Threaded( thread_id )
 	collection.isReady = true
 	
 	if update then
-		ArkInventory.ScanLocation( loc_id )
+		ArkInventory.ScanLocationWindow( loc_id )
 	end
 	
 end

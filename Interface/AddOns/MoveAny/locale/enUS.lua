@@ -87,7 +87,7 @@ function MoveAny:LangenUS()
 		["LID_CHATBUTTONFRAME9"] = "Chat Buttons for Tab 9",
 		["LID_CHATBUTTONFRAME10"] = "Chat Buttons for Tab 10",
 		["LID_CHATQUICKJOIN"] = "Chat Quick Join",
-		["LID_CHATEDITBOX"] = "Chat Inputbox",
+		["LID_CHATEDITBOX"] = "Chat Inputbox %s",
 		["LID_COMPACTRAIDFRAMEMANAGER"] = "Raid Manager",
 		["LID_BNToastFrame"] = "Battlenet Friends Notifications",
 		["LID_SPELLACTIVATIONOVERLAYFRAME"] = "Spell Activation Overlay (Class Proc)",
@@ -232,6 +232,9 @@ function MoveAny:LangenUS()
 		["LID_RESETFRAMES"] = "Reset Windows",
 		["LID_ExpansionLandingPageMinimapButton"] = "ExpansionLandingPageMinimapButton",
 		["LID_MOVEANYINFO"] = "Select the things you want to modify",
+		["LID_PLEASESWITCHPROFILE1"] = "Please switch LAYOUT in Editmode (from Blizzard) to a CUSTOM LAYOUT.",
+		["LID_PLEASESWITCHPROFILE2"] = "MoveAny doesn't work with a Preset Profile, it's mostly readonly.",
+		["LID_PLEASESWITCHPROFILE3"] = "ESC -> Editmode -> Layout: [CUSTOM-LAYOUT] (no Preset Layout)",
 	}
 
 	if MoveAny:GetWoWBuild() ~= "RETAIL" then

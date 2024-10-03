@@ -127,9 +127,9 @@ local function Scan_Threaded( thread_id )
 			numOwned = numOwned + 1
 		end
 		
-		if c[i].owned ~= isOwned then
+		if c[i].isOwned ~= isOwned then
 			update = true
-			c[i].owned = isOwned
+			c[i].isOwned = isOwned
 		end
 		
 	end
@@ -144,7 +144,7 @@ local function Scan_Threaded( thread_id )
 	collection.isReady = true
 	
 	if update then
-		ArkInventory.ScanLocation( loc_id )
+		ArkInventory.ScanLocationWindow( loc_id )
 	end
 	
 end

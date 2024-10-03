@@ -71,7 +71,7 @@ ArkInventory.Const.Category = {
 			},
 			[416] = {
 				id = "SYSTEM_EQUIPMENT_SOULBOUND",
-				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BIND3"] ),
+				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BINDING3"] ),
 			},
 			[456] = {
 				id = "SYSTEM_EQUIPMENT_COSMETIC",
@@ -79,15 +79,19 @@ ArkInventory.Const.Category = {
 			},
 			[444] = {
 				id = "SYSTEM_EQUIPMENT_ACCOUNTBOUND",
-				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BIND4"] ),
+				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BINDING4"] ),
+			},
+			[469] = {
+				id = "SYSTEM_EQUIPMENT_ACCOUNTBOUND_UNTIL_EQUIPPED",
+				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BINDING5"] ),
 			},
 			[457] = {
-				id = "SYSTEM_ITEM_BIND_PARTYLOOT",
-				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BIND_PARTYLOOT"] ),
+				id = "SYSTEM_ITEM_BINDING_PARTYLOOT",
+				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BINDING_PARTYLOOT"] ),
 			},
 			[458] = {
-				id = "SYSTEM_ITEM_BIND_REFUNDABLE",
-				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BIND_REFUNDABLE"] ),
+				id = "SYSTEM_ITEM_BINDING_REFUNDABLE",
+				text = string.format( "%s (%s)", ArkInventory.Localise["EQUIPMENT"], ArkInventory.Localise["ITEM_BINDING_REFUNDABLE"] ),
 			},
 			[415] = {
 				id = "SYSTEM_MOUNT_BOUND",
@@ -165,27 +169,27 @@ ArkInventory.Const.Category = {
 				text = ArkInventory.Localise["CATEGORY_SYSTEM_OPENABLE"],
 			},
 			[464] = {
-				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				--ClientCheck = ArkInventory.Global.TimerunningSeasonID == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
 				id = "TIMERUNNING_GEM_PRISMATIC",
 				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_PRISMATIC"],
 			},
 			[465] = {
-				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				--ClientCheck = ArkInventory.Global.TimerunningSeasonID == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
 				id = "TIMERUNNING_GEM_TINKER",
 				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_TINKER"],
 			},
 			[466] = {
-				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				--ClientCheck = ArkInventory.Global.TimerunningSeasonID == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
 				id = "TIMERUNNING_GEM_COGWHEEL",
 				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_COGWHEEL"],
 			},
 			[467] = {
-				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				--ClientCheck = ArkInventory.Global.TimerunningSeasonID == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
 				id = "TIMERUNNING_GEM_META",
 				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_GEM_META"],
 			},
 			[468] = {
-				--ClientCheck = ArkInventory.CrossClient.TimerunningSeasonID( ) == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
+				--ClientCheck = ArkInventory.Global.TimerunningSeasonID == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA,
 				id = "TIMERUNNING_SCROLL",
 				text = ArkInventory.Localise["CATEGORY_TIMERUNNING_SCROLL"],
 			},
@@ -629,6 +633,11 @@ ArkInventory.Const.Category = {
 				id = "EMPTY_REAGENT",
 				text = ArkInventory.Localise["CRAFTING_REAGENT"],
 			},
+			[318] = {
+				ClientCheck = ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.WARWITHIN ),
+				id = "EMPTY_ACCOUNTBANK",
+				text = ArkInventory.Localise["ACCOUNTBANK"],
+			},
 		},
 		Other = { -- do NOT change the indicies - if you have to then see the DatabaseUpgradePostLoad( ) function to remap it
 			[901] = {
@@ -645,6 +654,7 @@ ArkInventory.Const.Category = {
 function ArkInventory.ItemCategoryGetDefaultActual( i )
 	
 	-- local debuginfo = { ["m"]=gcinfo( ), ["t"]=GetTime( ) }
+	local process = false
 	
 	-- collection - pet
 	if i.loc_id == ArkInventory.Const.Location.Pet then
@@ -733,7 +743,7 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 	
 	
 	-- setup tooltip for scanning.  it will be ready as we've already checked
-	ArkInventory.TooltipSet( ArkInventory.Global.Tooltip.Scan, i.loc_id, i.bag_id, i.slot_id, i.h, i )
+	ArkInventory.TooltipSetFromWindowItem( ArkInventory.Global.Tooltip.Scan, i.loc_id, i.bag_id, i.slot_id, i.h, i )
 	
 	-- if enabled - already known soulbound items are junk (tooltip)
 	if ArkInventory.db.option.action.vendor.soulbound.known then --and not ArkInventory.Global.Location[i.loc_id].isOffline
@@ -745,8 +755,21 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 		end
 	end
 	
-	-- misc (pets)
-	if ( info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.PARENT and info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.PET ) or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Pet" ) then
+	
+	-- pets
+	process = false
+	if info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.PARENT and info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.PET then
+		process = true
+	elseif ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Pet.Parts" ) then
+		if not info.isUseless then
+			-- pet parts that you dont have the pet for
+			process = true
+		end
+	elseif ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Pet" ) then
+		process = true
+	end
+	
+	if process then
 		if ArkInventory.IsBound( i.sb ) then
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_PET_COMPANION_BOUND" )
 		else
@@ -763,14 +786,28 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 		end
 	end
 	
-	-- misc (mount)
-	if ( info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.PARENT and info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.MOUNT ) or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Mount" ) then
+	
+	-- mounts
+	process = false
+	if info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.PARENT and info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.MISC.MOUNT then
+		process = true
+	elseif ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Mount.Parts" ) then
+		if not info.isUseless then
+			-- mount parts that you dont have the mount for
+			process = true
+		end
+	elseif ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Mount" ) then
+		process = true
+	end
+	
+	if process then	
 		if ArkInventory.IsBound( i.sb ) then
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_MOUNT_BOUND" )
 		else
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_MOUNT_TRADE" )
 		end
 	end
+	
 	
 	-- toy
 	if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Toy" ) or ArkInventory.TooltipContains( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_ITEM_TOY_ONUSE"], false, true, false, ArkInventory.Const.Tooltip.Search.Short ) then
@@ -801,15 +838,16 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 		-- shadowlands
 		if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.SHADOWLANDS ) then
 			
-			if ArkInventory.CrossClient.IsAnimaItemByID( info.id ) then
+			if ArkInventory.CrossClient.IsItemAnima( info.id ) then
 				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SHADOWLANDS_ANIMA" )
 			end
 			
 			-- conduits by item id
-			if ArkInventory.CrossClient.IsConduit( info.id ) then
+			if ArkInventory.CrossClient.IsItemConduit( info.id ) then
 				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SHADOWLANDS_CONDUIT" )
 			end
 			
+--[[
 			-- conduits by tooltip
 			if ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_CONDUIT_POTENCY"], false, true, false, 0, ArkInventory.Const.Tooltip.Search.Short ) then
 				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SHADOWLANDS_CONDUIT" )
@@ -827,6 +865,7 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Consumable.Power.Shadowlands" ) then
 				return ArkInventory.CategoryGetSystemID( "CONSUMABLE_POWER_SHADOWLANDS" )
 			end
+]]--
 			
 		end
 		
@@ -861,18 +900,20 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 	end
 	
 	-- cosmetic items (tooltip check is further down)
-	if ( info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT and info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) or ArkInventory.CrossClient.IsItemCosmetic( i.h ) or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Equipment.Cosmetic" ) then
+	if ( info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT and info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) or info.isCosmetic or ArkInventory.CrossClient.IsItemCosmetic( i.h ) or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Equipment.Cosmetic,ArkInventory.System.XREF.Transmog" ) then
+		
 		if ArkInventory.TooltipContains( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["ALREADY_KNOWN"], false, true, false, ArkInventory.Const.Tooltip.Search.Base ) then
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_JUNK" )
 		end
+		
 		return ArkInventory.CategoryGetSystemID( "SYSTEM_EQUIPMENT_COSMETIC" )
+		
 	end
-	
 	
 	
 	-- junk
 	if info.q == ArkInventory.ENUM.ITEM.QUALITY.POOR or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.System.Junk" ) then
-		--if not ArkInventory.ItemTransmogState( i.h, i.sb, i.loc_id ) then
+		--if not ArkInventory.ItemTransmogStateCharacter( i.h, i.sb, i.loc_id ) then
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_JUNK" )
 		--end
 	end
@@ -891,16 +932,20 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 	if info.equiploc ~= "" or info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.WEAPON.PARENT or info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT or ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Armor Token" ) then
 		if ArkInventory.TooltipContains( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_ITEM_COSMETIC"], false, true, false, ArkInventory.Const.Tooltip.Search.Short ) then
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_EQUIPMENT_COSMETIC" )
-		elseif i.sb == ArkInventory.ENUM.BIND.ACCOUNT then
+		elseif i.sb == ArkInventory.ENUM.ITEM.BINDING.ACCOUNTEQUIP then
+			return ArkInventory.CategoryGetSystemID( "SYSTEM_EQUIPMENT_ACCOUNTBOUND_UNTIL_EQUIPPED" )
+		elseif i.sb == ArkInventory.ENUM.ITEM.BINDING.ACCOUNT then
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_EQUIPMENT_ACCOUNTBOUND" )
-		elseif i.sb == ArkInventory.ENUM.BIND.PICKUP then
+		elseif i.sb == ArkInventory.ENUM.ITEM.BINDING.PICKUP then
 			if ArkInventory.db.option.action.vendor.soulbound.equipment then
-				if not ArkInventory.TooltipCanUse( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.db.option.action.vendor.soulbound.known, ArkInventory.db.option.action.vendor.soulbound.itemlevel ) then
+				if not ArkInventory.TooltipCanUse( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.db.option.action.vendor.soulbound.known, ArkInventory.db.option.action.vendor.soulbound.ignorelevel ) then
 					--ArkInventory.Output( i.h, " is junk" )
 					return ArkInventory.CategoryGetSystemID( "SYSTEM_JUNK" )
 				end
 			end
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_EQUIPMENT_SOULBOUND" )
+		elseif i.sb == -1 then
+			return ArkInventory.CategoryGetSystemID( "SYSTEM_UNKNOWN" )
 		else
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_EQUIPMENT" )
 		end
@@ -913,10 +958,9 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 	
 	
 	-- timerunning
---	local timeseason = ArkInventory.CrossClient.TimerunningSeasonID( )
---	if timeseason > 0 then
+--	if ArkInventory.Global.TimerunningSeasonID > 0 then
 		
---		if timeseason == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA then
+--		if ArkInventory.Global.TimerunningSeasonID == ArkInventory.ENUM.TIMERUNNINGSEASONID.PANDARIA then
 			
 			if ArkInventory.PT_ItemInSets( i.h, "ArkInventory.Timerunning.Pandaria.Gem.Prismatic" ) then
 				return ArkInventory.CategoryGetSystemID( "TIMERUNNING_GEM_PRISMATIC" )
@@ -1087,7 +1131,13 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 	
 	
 	
-	local codex = ArkInventory.GetLocationCodex( i.loc_id )
+	local codex = ArkInventory.Codex.GetLocation( i.loc_id )
+	
+	if not codex.player.data.info.tradeskill then
+		ArkInventory.OutputDebug( i.loc_id )
+		ArkInventory.OutputDebug( codex.player.data.info )
+	end
+	
 	
 	-- categorise based off characters primary professions
 	if codex.player.data.tradeskill and codex.player.data.tradeskill.priority > 0 then
@@ -1380,15 +1430,17 @@ function ArkInventory.ItemCategoryGetDefaultActual( i )
 	
 end
 
-function ArkInventory.ItemCategoryGetDefaultEmpty( loc_id, bag_id )
+function ArkInventory.ItemCategoryGetDefaultEmpty( loc_id_window, bag_id_window )
 	
-	local codex = ArkInventory.GetLocationCodex( loc_id )
+	local map = ArkInventory.Util.MapGetWindow( loc_id_window, bag_id_window )
+	
+	local codex = ArkInventory.Codex.GetLocation( loc_id_window )
 	local clump = codex.style.slot.empty.clump
 	
-	local blizzard_id = ArkInventory.InternalIdToBlizzardBagId( loc_id, bag_id )
+	local blizzard_id = map.blizzard_id
 	local bt = ArkInventory.BagType( blizzard_id )
 	
-	--ArkInventory.Output( "loc[", loc_id, "] bag[", bag_id, " / ", blizzard_id, "] type[", bt, "]" )
+	--ArkInventory.Output( "loc[", loc_id_window, "] bag[", bag_id_window, " / ", blizzard_id, "] type[", bt, "]" )
 	
 	if bt == ArkInventory.Const.Slot.Type.Bag then
 		if clump then
@@ -1478,6 +1530,14 @@ function ArkInventory.ItemCategoryGetDefaultEmpty( loc_id, bag_id )
 		end
 	end
 	
+	if bt == ArkInventory.Const.Slot.Type.AccountBank then
+		if clump then
+			return ArkInventory.CategoryGetSystemID( "EMPTY" )
+		else
+			return ArkInventory.CategoryGetSystemID( "EMPTY_ACCOUNTBANK" )
+		end
+	end
+	
 	if bt == ArkInventory.Const.Slot.Type.Projectile then
 		if clump then
 			return ArkInventory.CategoryGetSystemID( "SYSTEM_PROJECTILE" )
@@ -1527,7 +1587,7 @@ function ArkInventory.ItemCategoryGetDefault( i )
 	
 end
 
-function ArkInventory.ItemCategoryGetPrimary( i )
+function ArkInventory.ItemCategoryGetPrimary( i, isRule )
 	
 	if i.h then -- only items can have a category, empty slots can only be used by rules
 		
@@ -1549,34 +1609,38 @@ function ArkInventory.ItemCategoryGetPrimary( i )
 		
 	end
 	
-	if ArkInventory.Global.Rules.Enabled then
+	if ArkInventory.Global.Rules.Enabled and not isRule then
 		
-		-- items rule cache id
+		-- dont allow a rule function to pass through here or youll get an infinite loop
+		
+		-- get the items rule cache id
 		local cid = ArkInventory.ObjectIDRule( i )
 		
 		-- if the value has already been cached then use it
-		if ArkInventory.db.cache.rule[cid] == nil then
-			-- check for any rule that applies to the item, cache the result, use false for no match (default), true for match, nil to try again later
-			ArkInventory.db.cache.rule[cid] = ArkInventoryRules.AppliesToItem( i )
-			--ArkInventory.Output( cid, " = ", ArkInventory.db.cache.rule[cid] )
+		if ArkInventory.db.cache.rule[cid] ~= nil then
+			return ArkInventory.db.cache.rule[cid]
 		end
+		
+		-- check for any rule that applies to the item, cache the result, use false for no match (default), true for match, nil to try again later
+		ArkInventory.db.cache.rule[cid] = ArkInventoryRules.AppliesToItem( i )
 		
 		return ArkInventory.db.cache.rule[cid]
 		
 	end
 	
+	
 	return false
 	
 end
 
-function ArkInventory.ItemCategoryGet( i )
+function ArkInventory.ItemCategoryGet( i, isRule )
 	
 	local unknown = ArkInventory.CategoryGetSystemID( "SYSTEM_UNKNOWN" )
 	
 	local default = ArkInventory.CategoryGetSystemID( "SYSTEM_DEFAULT" )
 	default = ( i and ArkInventory.ItemCategoryGetDefault( i ) ) or default
 	
-	local cat = ArkInventory.ItemCategoryGetPrimary( i )
+	local cat = ArkInventory.ItemCategoryGetPrimary( i, isRule )
 	
 	return cat or default or unknown, cat, default or unknown
 	
@@ -1585,12 +1649,12 @@ end
 
 function ArkInventory.CategoryLocationSet( loc_id, cat_id, bar_id )
 	
-	assert( cat_id ~= nil , "category is nil" )
+	ArkInventory.Util.Assert( cat_id ~= nil , "category is nil" )
 	
 	local cat_def = ArkInventory.CategoryGetSystemID( "SYSTEM_DEFAULT" )
 	
 	if ( cat_id ~= cat_def ) or ( bar_id ~= nil ) then
-		local codex = ArkInventory.GetLocationCodex( loc_id )
+		local codex = ArkInventory.Codex.GetLocation( loc_id )
 		codex.layout.category[cat_id] = bar_id
 	end
 	
@@ -1603,7 +1667,7 @@ function ArkInventory.CategoryLocationGet( loc_id, cat_id )
 	
 	local cat_id = cat_id or ArkInventory.CategoryGetSystemID( "SYSTEM_UNKNOWN" )
 	
-	local codex = ArkInventory.GetLocationCodex( loc_id )
+	local codex = ArkInventory.Codex.GetLocation( loc_id )
 	local bar_id = codex.layout.category[cat_id]
 	--ArkInventory.Output( "loc=[", loc_id, "], cat=[", cat_id, "], bar=[", bar, "]" )
 	
@@ -1712,7 +1776,7 @@ function ArkInventory.CategoryGenerate( )
 					
 					cat_id = ArkInventory.CategoryIdBuild( cat_type, cat_num )
 					
-					assert( not ArkInventory.Global.Category[cat_id], string.format( "duplicate category: %s [%s] ", tn, cat_id ) )
+					ArkInventory.Util.Assert( not ArkInventory.Global.Category[cat_id], "duplicate category [", tn, "] [", cat_id, "]" )
 					
 					ArkInventory.Global.Category[cat_id] = {
 						["id"] = cat_id,
@@ -1897,7 +1961,7 @@ end
 
 local function Scan_Threaded( thread_id )
 	
-	--ArkInventory.OutputDebug( "rebuilding ", ArkInventory.Table.Elements( CategoryRebuildQueue ) )
+	--ArkInventory.OutputDebug( "rebuilding CategoryRebuildQueue [", ArkInventory.Table.Elements( CategoryRebuildQueue ), "]" )
 	
 	for k, i in pairs( CategoryRebuildQueue ) do
 		

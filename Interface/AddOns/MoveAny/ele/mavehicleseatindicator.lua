@@ -26,7 +26,10 @@ function MoveAny:InitMAVehicleSeatIndicator()
 			MAVehicleSeatIndicator,
 			"SetScale",
 			function(sel, scale)
-				VehicleSeatIndicator:SetScale(scale)
+				if InCombatLockdown() and sel:IsProtected() then return false end
+				if scale and type(scale) == "number" then
+					VehicleSeatIndicator:SetScale(scale)
+				end
 			end
 		)
 

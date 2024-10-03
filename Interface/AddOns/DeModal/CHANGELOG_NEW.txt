@@ -1,0 +1,2 @@
+- Always treat new spellbook frame as secure for closing
+- Make some delve frames movable

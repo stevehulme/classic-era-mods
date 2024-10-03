@@ -132,7 +132,10 @@ function MoveAny:InitMicroMenu()
 							MAMenuBar,
 							"SetScale",
 							function(sel, scale)
-								mb:SetScale(scale)
+								if InCombatLockdown() and sel:IsProtected() then return false end
+								if scale and type(scale) == "number" then
+									mb:SetScale(scale)
+								end
 							end
 						)
 
@@ -140,6 +143,7 @@ function MoveAny:InitMicroMenu()
 							mb,
 							"SetScale",
 							function(sel, scale)
+								if InCombatLockdown() and sel:IsProtected() then return false end
 								if sel.ma_set_s then return end
 								sel.ma_set_s = true
 								mb:SetScale(MAMenuBar:GetScale())

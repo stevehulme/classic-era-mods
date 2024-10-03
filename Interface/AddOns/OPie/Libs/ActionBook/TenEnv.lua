@@ -40,12 +40,14 @@ function env.GetSpellInfo(id, rt)
 	end
 end
 function env.GetSpellCooldown(id)
+	id = id and C_Spell.GetOverrideSpell(id)
 	local ci = id and C_Spell.GetSpellCooldown(id)
 	if ci then
 		return ci.startTime, ci.duration, ci.isEnabled and 1 or 0, ci.modRate
 	end
 end
 function env.GetSpellCharges(id)
+	id = id and C_Spell.GetOverrideSpell(id)
 	local ci = id and C_Spell.GetSpellCharges(id)
 	if ci then
 		return ci.currentCharges, ci.maxCharges, ci.cooldownStartTime, ci.cooldownDuration, ci.chargeModRate
@@ -61,14 +63,6 @@ env.GetSpellTexture = C_Spell.GetSpellTexture
 env.DoesSpellExist = C_Spell.DoesSpellExist
 env.GetSpellLink = C_Spell.GetSpellLink
 
-env.C_Minimap = {}
-function env.C_Minimap.GetTrackingInfo(idx)
-	local ti = C_Minimap.GetTrackingInfo(idx)
-	if ti then
-		return ti.name, ti.texture, ti.active, ti.type, ti.subType, ti.spellID
-	end
-end
-
 function env.GetStablePetInfo(idx)
 	local si = C_StableInfo.GetStablePetInfo(idx)
 	if si then
@@ -79,11 +73,10 @@ end
 env.Vector2DMixin = Vector2DMixin
 
 local function proxyFor(p, t)
-	setmetatable(p, {__index=t, __newindex=function(_,k,v) return rawset(t, k, v) end})
+	setmetatable(p, {__index=t, __newindex=function(_,k,v) t[k] = v end})
 end
 env._G = env
 proxyFor(env, _G)
-proxyFor(env.C_Minimap, C_Minimap)
 
 function T.TenEnv()
 	setfenv(2, env)

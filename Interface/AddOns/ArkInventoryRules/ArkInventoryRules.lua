@@ -1,4 +1,4 @@
-
+﻿
 --License: All Rights Reserved, (c) 2006-2024
 
 
@@ -218,7 +218,7 @@ function ArkInventoryRules.AppliesToItem( i )
 		return nil
 	end
 	
-	local codex = ArkInventory.GetLocationCodex( i.loc_id )
+	local codex = ArkInventory.Codex.GetLocation( i.loc_id )
 	ArkInventoryRules.Object.playerinfo = codex.player.data.info
 	
 	local cat_type = ArkInventory.Const.Category.Type.Rule
@@ -254,11 +254,10 @@ function ArkInventoryRules.AppliesToItem( i )
 					
 				else
 					
-					ArkInventory.OutputError( res )
 					ArkInventory.OutputWarning( string.format( ArkInventory.Localise["RULE_DAMAGED"], cat_num ) )
 					ArkInventory.db.option.category[cat_type].data[cat_num].damaged = true
 					
-					error( res )
+					ArkInventory.Util.Error( res )
 					
 				end
 				
@@ -310,15 +309,15 @@ function ArkInventoryRules.System.boolean_bound( ... )
 end
 
 function ArkInventoryRules.System.boolean_soulbound( )
-	return ArkInventoryRules.System.boolean_bound( ArkInventory.ENUM.BIND.PICKUP )
+	return ArkInventoryRules.System.boolean_bound( ArkInventory.ENUM.ITEM.BINDING.PICKUP )
 end
 
 function ArkInventoryRules.System.boolean_accountbound( )
-	return ArkInventoryRules.System.boolean_bound( ArkInventory.ENUM.BIND.ACCOUNT )
+	return ArkInventoryRules.System.boolean_bound( ArkInventory.ENUM.ITEM.BINDING.ACCOUNT )
 end
 
 function ArkInventoryRules.System.boolean_iscraftingreagent( )
-	return ArkInventoryRules.Object.osd.info.craft
+	return ArkInventoryRules.Object.info.craft
 end
 
 function ArkInventoryRules.System.boolean_itemstring( ... )
@@ -805,9 +804,11 @@ function ArkInventoryRules.System.boolean_itemfamily( ... )
 			
 			error( string.format( ArkInventory.Localise["RULE_FAILED_ARGUMENT_IS_NOT"], fn, ax, ArkInventory.Localise["NUMBER"] ), 0 )
 			
-		elseif ArkInventoryRules.Object.info.itemtypeid ~= ArkInventory.ENUM.ITEM.TYPE.CONTAINER.PARENT then
+		--elseif ArkInventoryRules.Object.info.itemtypeid ~= ArkInventory.ENUM.ITEM.TYPE.CONTAINER.PARENT then
+		else
 			
-			local it = GetItemFamily( ArkInventoryRules.Object.h ) or 0
+			--local it = ArkInventory.CrossClient.GetItemFamily( ArkInventoryRules.Object.h ) or 0
+			local it = ArkInventoryRules.Object.itemfamily
 			
 			if bit.band( it, arg ) > 0 then
 				return true
@@ -950,7 +951,7 @@ function ArkInventoryRules.System.boolean_outfit_outfitter( ... )
 		return
 	end
 	
-	local blizzard_id = ArkInventory.InternalIdToBlizzardBagId( ArkInventoryRules.Object.loc_id, ArkInventoryRules.Object.bag_id )
+	local blizzard_id = ArkInventory.Util.getBlizzardBagIdFromWindowId( ArkInventoryRules.Object.loc_id, ArkInventoryRules.Object.bag_id )
 	local ItemInfo = Outfitter:GetBagItemInfo( blizzard_id, ArkInventoryRules.Object.slot_id )
 	
 	if not ItemInfo then
@@ -999,24 +1000,43 @@ end
 
 function ArkInventoryRules.System.boolean_outfit_itemrack( ... )
 	
+	--if not  then return false end
+	
 	-- item rack 3.66
 	
 	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "ItemRack" ) ) then
 		return
 	end
 	
+	
+	local h_rule = ArkInventoryRules.Object.info.osd.h
+	
+	local runeId = ArkInventoryRules.Object.rune
+	if runeId then
+		h_rule = string.format( "%s:runeid:%s", h_rule, runeId )
+	end
+	--ArkInventory.Output( ArkInventoryRules.Object.h, " / ", h_rule )
+	
+	
 	local outfits = { }
 	local osd
 	
 	for setname, set in pairs( ItemRackUser.Sets ) do
 		if setname ~= nil and string.sub( setname, 1, 1 ) ~= "~" then
-			--ArkInventory.Output( "setname=[", setname, "]" )
 			for k, setitem in pairs( set.equip ) do
-				osd = ArkInventory.ObjectStringDecode( string.format( "item:%s", setitem ) )
-				--ArkInventory.Output( "pos=[", k, "], item=[", setitem, "]" )
-				if ArkInventoryRules.Object.info.osd.h_rule == osd.h_rule then
-					table.insert( outfits, string.trim( setname ) )
-					--ArkInventory.Output( "added set [", setname, "] for item [", osd.h_rule, "]" )
+				if setitem ~= 0 then
+					
+					osd = ArkInventory.ObjectStringDecode( string.format( "item:%s", setitem ) )
+					
+					local h_rule2 = osd.h
+					
+					--ArkInventory.Output( "pos=[", k, "], item=[", setitem, "] [", h_rule, "] [", h_rule2, "]" )
+					
+					if h_rule == h_rule2 then
+						table.insert( outfits, string.trim( setname ) )
+						--ArkInventory.Output( "added set [", setname, "] for item [", h_rule, "]" )
+					end
+					
 				end
 			end
 		end
@@ -1148,12 +1168,12 @@ function ArkInventoryRules.System.boolean_outfit_blizzard( ... )
 		
 		if items then
 			
-			local loc_id, bag_id, slot_id, id, player, bank, bags, void, slot, bag, voidtab, voidslot
+			local loc_id_window, bag_id_window, slot_id, id, player, bank, bags, void, slot, bag, voidtab, voidslot
 			
 			for k, location in pairs( items ) do
 				
-				loc_id = nil
-				bag_id = nil
+				loc_id_window = nil
+				bag_id_window = nil
 				slot_id = nil
 				void = nil
 				voidtab = nil
@@ -1170,33 +1190,34 @@ function ArkInventoryRules.System.boolean_outfit_blizzard( ... )
 				
 				if void and voidtab and voidslot then
 					
-					loc_id = ArkInventory.Const.Location.Void
-					bag_id = ArkInventory.Const.Offset.Void + voidtab
+					loc_id_window = ArkInventory.Const.Location.Void
+					bag_id_window = ArkInventory.Const.Offset.Void + voidtab
 					slot_id = voidslot
 					id = GetVoidItemInfo( voidtab, voidslot )
 					
-					--ArkInventory.Output( setname, ":", k, " -> [void] [", loc_id, ".", bag_id, ".", slot_id, "] [", id, "] = ", location )
+					--ArkInventory.Output( setname, ":", k, " -> [void] [", loc_id_window, ".", bag_id_window, ".", slot_id, "] [", id, "] = ", location )
 					
 				elseif ( not bags ) and slot then
 					
-					loc_id = ArkInventory.Const.Location.Wearing
-					bag_id = ArkInventory.Const.Offset.Wearing + 1
+					loc_id_window = ArkInventory.Const.Location.Wearing
+					bag_id_window = ArkInventory.Const.Offset.Wearing + 1
 					slot_id = slot
 					id = GetInventoryItemID( "player", slot )
 					
-					--ArkInventory.Output( setname, ":", k, " -> [player] [", loc_id, ".", bag_id, ".", slot_id, "] [", id, "] = ", location )
+					--ArkInventory.Output( setname, ":", k, " -> [player] [", loc_id_window, ".", bag_id_window, ".", slot_id, "] [", id, "] = ", location )
 					
 				elseif bag and slot then
 					
-					loc_id, bag_id = ArkInventory.BlizzardBagIdToInternalId( bag )
+					loc_id_window, bag_id_window = ArkInventory.Util.getWindowIdFromBlizzardBagId( bag )
+					
 					slot_id = slot
 					id = ArkInventory.CrossClient.GetContainerItemID( bag, slot )
 					
-					--ArkInventory.Output( setname, ":", k, " -> [bag] [", loc_id, ".", bag_id, ".", slot_id, "] [", id, "] = ", location )
+					--ArkInventory.Output( setname, ":", k, " -> [bag] [", loc_id_window, ".", bag_id_window, ".", slot_id, "] [", id, "] = ", location )
 					
 				end
 				
-				if loc_id and bag_id and slot_id and id and ArkInventoryRules.Object.info.id and ArkInventoryRules.Object.loc_id == loc_id and ArkInventoryRules.Object.bag_id == bag_id and ArkInventoryRules.Object.slot_id == slot_id and id == ArkInventoryRules.Object.info.id then
+				if loc_id_window and bag_id_window and slot_id and id and ArkInventoryRules.Object.info.id and ArkInventoryRules.Object.loc_id == loc_id_window and ArkInventoryRules.Object.bag_id == bag_id_window and ArkInventoryRules.Object.slot_id == slot_id and id == ArkInventoryRules.Object.info.id then
 					--ArkInventory.Output( setname, ":", k, " -> [", ArkInventoryRules.Object.h, " / ", id )
 					table.insert( outfits, setname )
 					--ArkInventory.Output( "found ", ArkInventoryRules.Object.h, " in set [", setname, ":", k, "] [", ArkInventoryRules.Object.loc_id, ".", ArkInventoryRules.Object.bag_id, ".", ArkInventoryRules.Object.slot_id, "]" )
@@ -1456,7 +1477,7 @@ function ArkInventoryRules.System.boolean_usable( ignore_known, ignore_level )
 	local ignore_known = not not ignore_known
 	local ignore_level = not not ignore_level
 	
-	ArkInventory.TooltipSet( ArkInventoryRules.Tooltip, nil, nil, nil, ArkInventoryRules.Object.h )
+	ArkInventory.TooltipSetFromHyperlink( ArkInventoryRules.Tooltip, ArkInventoryRules.Object.h )
 	return ArkInventory.TooltipCanUse( ArkInventoryRules.Tooltip, nil, ignore_known, ignore_level )
 	
 end
@@ -1600,8 +1621,12 @@ function ArkInventoryRules.System.boolean_junk( )
 		return false
 	end
 	
-	local blizzard_id = ArkInventory.InternalIdToBlizzardBagId( ArkInventoryRules.Object.loc_id, ArkInventoryRules.Object.bag_id )
-	return ArkInventory.Action.Vendor.Check( blizzard_id, ArkInventoryRules.Object.slot_id, nil, true )
+	local cat = ArkInventory.ItemCategoryGet( ArkInventoryRules.Object, true )
+	if cat == ArkInventory.CategoryGetSystemID( "SYSTEM_JUNK" ) then
+		return true
+	end
+	
+	return false
 	
 end
 
@@ -1771,7 +1796,7 @@ function ArkInventoryRules.System.boolean_transmog( ... )
 		rule_secondary = not not select( 1, ... )
 	end
 	
-	return not not ArkInventory.ItemTransmogState( ArkInventoryRules.Object.h, ArkInventoryRules.Object.sb, ArkInventoryRules.Object.loc_id, rule_primary, rule_secondary )
+	return not not ArkInventory.ItemTransmogStateCharacter( ArkInventoryRules.Object.h, ArkInventoryRules.Object.sb, ArkInventoryRules.Object.loc_id, rule_primary, rule_secondary )
 	
 end
 
@@ -2910,7 +2935,7 @@ function ArkInventoryRules.EntryIsValid( rid, data )
 		
 	else
 		
-		ArkInventoryRules.SetObject( { test_rule=true, class="item", loc_id=ArkInventory.Const.Location.Bag, bag_id=1, slot_id=1, count=1, q=1, sb=ArkInventory.ENUM.BIND.PICKUP, h=string.format("item:%s:::::::", HEARTHSTONE_ITEM_ID ) } )
+		ArkInventoryRules.SetObject( { test_rule=true, class="item", loc_id=ArkInventory.Const.Location.Bag, bag_id=1, slot_id=1, count=1, q=1, sb=ArkInventory.ENUM.ITEM.BINDING.PICKUP, h=string.format("item:%s:::::::", HEARTHSTONE_ITEM_ID ) } )
 		
 		local p, pem = loadstring( string.format( "return( %s )", data.formula ) )
 		
@@ -3154,7 +3179,8 @@ function ArkInventoryRules.SetObject( tbl )
 	ArkInventory.Table.Wipe( i )
 	ArkInventory.Table.Merge( tbl, i )
 	
-	local codex = ArkInventory.GetLocationCodex( i.loc_id )
+	local codex = ArkInventory.Codex.GetLocation( i.loc_id )
+	
 	i.playerinfo = codex.player.data.info
 	
 	i.info = ArkInventory.GetObjectInfo( i.h )
@@ -3169,9 +3195,9 @@ function ArkInventoryRules.SetObject( tbl )
 	if i.h then
 		
 		if i.test_rule then
-			ArkInventory.TooltipSet( ArkInventoryRules.Tooltip, nil, nil, nil, i.h )
+			ArkInventory.TooltipSetFromHyperlink( ArkInventoryRules.Tooltip, i.h )
 		else
-			ArkInventory.TooltipSet( ArkInventoryRules.Tooltip, i.loc_id, i.bag_id, i.slot_id, i.h, i )
+			ArkInventory.TooltipSetFromWindowItem( ArkInventoryRules.Tooltip, i.loc_id, i.bag_id, i.slot_id, i.h, i )
 		end
 		
 		if not ArkInventory.TooltipIsReady( ArkInventoryRules.Tooltip ) then

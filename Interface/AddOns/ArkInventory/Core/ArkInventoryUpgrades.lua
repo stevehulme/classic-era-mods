@@ -778,7 +778,7 @@ local function helper_UpgradeProfile( profile, profile_name )
 			
 			for k1, v1 in pairs( ARKINVDB.profileKeys ) do
 				if v1 == profile_name then
-					local player = ArkInventory.GetPlayerStorage( k1 )
+					local player = ArkInventory.Codex.GetStorage( k1 )
 					player.data.profile = id
 				end
 			end
@@ -1507,7 +1507,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 						local player
 						for k1, v1 in pairs( ARKINVDB.profileKeys ) do
 							if v1 == profile_name then
-								player = ArkInventory.GetPlayerStorage( k1 )
+								player = ArkInventory.Codex.GetStorage( k1 )
 								player.data.profile = id
 							end
 						end
@@ -1548,7 +1548,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 		end
 		
 		
-		ArkInventory.acedb.global.version = upgrade_version
+		ArkInventory.acedb.global.option.version = upgrade_version
 		
 	end
 	
@@ -1558,7 +1558,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 		
 		ArkInventory.Output( string.format( ArkInventory.Localise["UPGRADE_GLOBAL"], "option", upgrade_version ) )
 		
-		if ArkInventory.acedb.global.option.restack.cleanup ~= nil then
+		if ArkInventory.acedb.global.option.restack.cleanup then
 			ArkInventory.acedb.global.option.restack.blizzard = ArkInventory.acedb.global.option.restack.cleanup
 			ArkInventory.acedb.global.option.restack.cleanup = nil
 		end
@@ -1573,7 +1573,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 		end
 		
 		
-		ArkInventory.acedb.global.version = upgrade_version
+		ArkInventory.acedb.global.option.version = upgrade_version
 		
 	end
 	
@@ -1598,7 +1598,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 		end
 		
 		
-		ArkInventory.acedb.global.version = upgrade_version
+		ArkInventory.acedb.global.option.version = upgrade_version
 		
 	end
 	
@@ -1618,7 +1618,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 		end
 		
 		
-		ArkInventory.acedb.global.version = upgrade_version
+		ArkInventory.acedb.global.option.version = upgrade_version
 		
 	end
 	
@@ -1626,10 +1626,10 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 	upgrade_version = 30708
 	if ArkInventory.acedb.global.player.version < upgrade_version then
 		
-		ArkInventory.EraseSavedData( )
+		ArkInventory.EraseSavedData( nil, nil, true )
 		
 		
-		ArkInventory.acedb.global.version = upgrade_version
+		ArkInventory.acedb.global.player.version = upgrade_version
 		
 	end
 	
@@ -2151,7 +2151,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 	
 	upgrade_version = 31021.02
 	if ArkInventory.acedb.global.player.version < upgrade_version then
-		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Reputation, false )
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Reputation, true )
 	end
 	
 	
@@ -2173,7 +2173,7 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 		end
 		
 		
-		ArkInventory.acedb.global.version = upgrade_version
+		ArkInventory.acedb.global.option.version = upgrade_version
 		
 	end
 	
@@ -2218,9 +2218,141 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 		end
 		
 		
-		ArkInventory.acedb.global.version = upgrade_version
+		ArkInventory.acedb.global.option.version = upgrade_version
 		
 	end
+	
+	
+	upgrade_version = 31033.06
+	if ArkInventory.acedb.global.player.version < upgrade_version then
+		
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Bag, true )
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Bank, true )
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Reputation, true )
+		
+		ArkInventory.acedb.global.player.version = upgrade_version
+		
+	end
+	
+	
+	upgrade_version = 31033.07
+	if ArkInventory.acedb.global.player.version < upgrade_version then
+		
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Currency, true )
+		
+		ArkInventory.acedb.global.player.version = upgrade_version
+		
+	end
+	
+	
+	upgrade_version = 31033.24
+	if ArkInventory.acedb.global.player.version < upgrade_version then
+		
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Bag )
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Bank )
+		
+		ArkInventory.acedb.global.player.version = upgrade_version
+		
+	end
+	
+	
+	upgrade_version = 31033.28
+	if ArkInventory.acedb.global.player.version < upgrade_version then
+		
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Reputation )
+		ArkInventory.EraseSavedData( nil, ArkInventory.Const.Location.Currency )
+		
+		ArkInventory.acedb.global.player.version = upgrade_version
+		
+	end
+	
+	
+	upgrade_version = 31033.30
+	if ArkInventory.acedb.global.player.version < upgrade_version then
+		
+		for pk, pv in pairs( ArkInventory.acedb.global.player.data ) do
+			for lk, lv in pairs( pv.option ) do
+				for ok, ov in pairs( lv ) do
+					for bk, bv in pairs( lv.bag ) do
+						bv.display = true
+					end
+				end
+			end
+		end
+		
+		ArkInventory.acedb.global.player.version = upgrade_version
+		
+	end
+	
+	
+	upgrade_version = 31033.34
+	if ArkInventory.acedb.global.option.version < upgrade_version then
+		
+		ArkInventory.acedb.global.option.panel = nil
+		ArkInventory.acedb.global.version = nil
+		
+		ArkInventory.acedb.global.option.version = upgrade_version
+		
+	end
+	
+	
+	upgrade_version = 31100.05
+	if ArkInventory.acedb.global.option.version < upgrade_version then
+		
+		if ArkInventory.db.option.restack.blizzard then
+			ArkInventory.db.option.cleanup.enable = true
+			ArkInventory.db.option.restack.blizzard = nil
+		end
+		
+		if ArkInventory.db.option.restack.deposit then
+			ArkInventory.db.option.restack.deposit = nil
+		end
+		
+		if ArkInventory.db.option.restack.reverse then
+			ArkInventory.db.option.cleanup.reverse = true
+			ArkInventory.db.option.restack.reverse = nil
+		end
+		
+		if ArkInventory.db.option.restack.priority then
+			ArkInventory.db.option.restack.priority = nil
+		end
+		
+		if ArkInventory.db.option.restack.bank then
+			ArkInventory.db.option.restack.bank = nil
+		end
+		
+		if ArkInventory.db.option.restack.topup then
+			ArkInventory.db.option.restack.topup = nil
+		end
+		
+		ArkInventory.acedb.global.option.version = upgrade_version
+		
+	end
+	
+	
+	upgrade_version = 31101.02
+	if ArkInventory.acedb.global.option.version < upgrade_version then
+		
+		if ArkInventory.acedb.global.option.action then
+			if ArkInventory.acedb.global.option.action.vendor then
+				if ArkInventory.acedb.global.option.action.vendor.soulbound then
+					if ArkInventory.acedb.global.option.action.vendor.soulbound then
+						if ArkInventory.acedb.global.option.action.vendor.soulbound.itemlevel == false then
+							ArkInventory.acedb.global.option.action.vendor.soulbound.ignorelevel = false
+							ArkInventory.acedb.global.option.action.vendor.soulbound.itemlevel = nil
+						end
+					end
+				end
+			end
+		end
+		
+		
+		ArkInventory.acedb.global.option.version = upgrade_version
+		
+	end
+	
+	
+	
 	
 	
 	if ArkInventory.acedb.global.vendor then
@@ -2228,12 +2360,13 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 	end
 	
 	
+	
 	-- check sort keys
 	ArkInventory.ConfigInternalSortMethodCheck( )
 	
 	
 	-- check for character rename and move old data to new name
-	local info = ArkInventory.GetPlayerInfo( )
+	local info = ArkInventory.PlayerInfoGet( )
 	info.renamecheck = true
 	for k, v in pairs( ArkInventory.acedb.global.player.data ) do
 		if info.guid and info.guid == v.info.guid and not v.info.renamecheck then
@@ -2249,11 +2382,10 @@ function ArkInventory.DatabaseUpgradePostLoad( )
 	
 	
 	-- set versions to current mod version
-	ArkInventory.acedb.global.version = ArkInventory.Const.Program.Version
 	ArkInventory.acedb.global.option.version = ArkInventory.Const.Program.Version
 	ArkInventory.acedb.global.player.version = ArkInventory.Const.Program.Version
 	ArkInventory.acedb.global.cache.version = ArkInventory.Const.Program.Version
 	
-	ArkInventory.CodexReset( )
+	ArkInventory.Codex.Reset( )
 	
 end

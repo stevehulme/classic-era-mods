@@ -160,7 +160,7 @@ end
 function ArkInventory.Collection.Reputation.LevelText( ... )
 	
 	if not ArkInventory.Collection.Reputation.IsReady( ) then
-		return "data not ready"  -- !!!fix me
+		return ArkInventory.Localise["DATA_NOT_READY"]
 	end
 	
 	local id, style, standingText, barValue, barMin, barMax, isCapped, paragonLevel, hasReward, rankValue, rankMax = ...
@@ -208,26 +208,25 @@ function ArkInventory.Collection.Reputation.LevelText( ... )
 	local rewardIcon = string.format( "|T%s:0|t", [[Interface\ICONS\INV_Misc_Coin_01]] ) -- [[Interface\MINIMAP\TRACKING\Banker]]
 	local result = string.lower( style or ArkInventory.Const.Reputation.Style.OneLine )
 	
-	if barValue > 0 then
+	if barValue > 0 and barMax > 0 and barValue < barMax then
+		
+		--ArkInventory.Output( "bar [", barValue, "] [", barMax, "] ", name )
 		
 		result = string.gsub( result, "%*bv%*", FormatLargeNumber( barValue ) )
+		result = string.gsub( result, "%*bm%*", FormatLargeNumber( barMax ) )
 		
-		if barMax > 0 then
-			
-			result = string.gsub( result, "%*bm%*", FormatLargeNumber( barMax ) )
-			
-			if barValue < barMax then
-				result = string.gsub( result, "%*bp1%*", string.format( "%.1f", barValue / barMax * 100 ) .. "%%" )
-				result = string.gsub( result, "%*bp2%*", string.format( "%.2f", barValue / barMax * 100 ) .. "%%" )
-				result = string.gsub( result, "%*bp%d*%*", string.format( "%.0f", barValue / barMax * 100 ) .. "%%" )
-				result = string.gsub( result, "%*br%*", FormatLargeNumber( barMax - barValue ) )
-			end
-			
+		if barValue < barMax then
+			result = string.gsub( result, "%*bp1%*", string.format( "%.1f", barValue / barMax * 100 ) .. "%%" )
+			result = string.gsub( result, "%*bp2%*", string.format( "%.2f", barValue / barMax * 100 ) .. "%%" )
+			result = string.gsub( result, "%*bp%d*%*", string.format( "%.0f", barValue / barMax * 100 ) .. "%%" )
+			result = string.gsub( result, "%*br%*", FormatLargeNumber( barMax - barValue ) )
 		end
 		
 	end
 	
-	if rankValue > 0 and rankValue ~= rankMax then
+	if rankValue > 0 and rankMax >0 and rankValue < rankMax then
+		
+		--ArkInventory.Output( "rank [", rankValue, "] [", rankMax, "] ", name )
 		
 		result = string.gsub( result, "%*rv%*", FormatLargeNumber( rankValue ) )
 		
@@ -332,12 +331,12 @@ function ArkInventory.Collection.Reputation.ListSetActive( index, state, bulk )
 		if state then
 			if not entry.active then
 				--ArkInventory.Output( "Active: INDEX=[", entry.index, "] NAME=[", entry.name, "]" )
-				SetFactionActive( entry.index )
+				ArkInventory.CrossClient.SetFactionActive( entry.index )
 			end
 		else
 			if entry.active then
 				--ArkInventory.Output( "Inactive: INDEX=[", entry.index, "] NAME=[", entry.name, "]" )
-				SetFactionInactive( entry.index )
+				ArkInventory.CrossClient.SetFactionInactive( entry.index )
 			end
 		end
 		
@@ -359,11 +358,11 @@ function ArkInventory.Collection.Reputation.ToggleShowAsExperienceBar( id )
 		local object = ArkInventory.Collection.Reputation.GetByID( id )
 		if object then
 			if object.isWatched then
-				--ArkInventory.OutputDebug( "SetWatchedFactionIndex( 0 )" )
-				SetWatchedFactionIndex( 0 )
+				--ArkInventory.OutputDebug( "SetWatchedFactionByIndex( 0 )" )
+				ArkInventory.CrossClient.SetWatchedFactionByIndex( 0 )
 			else
-				--ArkInventory.OutputDebug( "SetWatchedFactionIndex( ", object.index, " )" )
-				SetWatchedFactionIndex( object.index )
+				--ArkInventory.OutputDebug( "SetWatchedFactionByIndex( ", object.index, " )" )
+				ArkInventory.CrossClient.SetWatchedFactionByIndex( object.index )
 			end
 		end
 		
@@ -406,9 +405,9 @@ local function ScanBase( id )
 		
 		if id > 0 then
 			
-			local factionInfo = ArkInventory.CrossClient.GetFactionInfo( id )
+			local factionInfo = ArkInventory.CrossClient.GetFactionInfoByID( id )
 			if factionInfo then
-			
+				
 				if factionInfo.name and factionInfoname ~= "" then
 					
 					cache[id] = {
@@ -416,9 +415,10 @@ local function ScanBase( id )
 						link = string.format( "reputation:%s", id ),
 						name = factionInfo.name,
 						description = factionInfo.description,
-						hasRep = factionInfo.hasRep,
+						isHeaderWithRep = factionInfo.isHeaderWithRep,
 						canToggleAtWar = factionInfo.canToggleAtWar,
 						canSetInactive = factionInfo.canSetInactive,
+						isAccountWide = factionInfo.isAccountWide,
 					}
 					
 					collection.numTotal = collection.numTotal + 1
@@ -426,7 +426,7 @@ local function ScanBase( id )
 					ArkInventory.db.cache.reputation[id] = {
 						n = factionInfo.name,
 						d = factionInfo.description,
-						r = factionInfo.hasRep,
+						r = factionInfo.isHeaderWithRep,
 						w = factionInfo.canToggleAtWar,
 						i = factionInfo.canSetInactive,
 					}
@@ -440,7 +440,7 @@ local function ScanBase( id )
 							link = string.format( "reputation:%s", id ),
 							name = cr.n,
 							description = cr.d,
-							hasRep = cr.r,
+							isHeaderWithRep = cr.r,
 							canToggleAtWar = cr.w,
 							canSetInactive = cr.i,
 							icon = ArkInventory.Global.Location[ArkInventory.Const.Location.Reputation].Texture
@@ -466,17 +466,23 @@ local function ScanBase( id )
 	
 end
 
-local function ScanInit( )
+local function ScanInit( thread_id )
 	
 	--ArkInventory.Output( "Reputation Init: Start Scan @ ", time( ) )
 	
 	for id = 1, 5000 do
+		
 		ScanBase( id )
+		
+		if id % 200 == 0 then
+			ArkInventory.ThreadYield_Scan( thread_id )
+		end
+		
 	end
 	
-	if collection.numTotal > 0 then
+--	if collection.numTotal > 0 then
 		collection.isInit = true
-	end
+--	end
 	
 	--ArkInventory.Output( "Reputation Init: End Scan @ ", time( ), " [", collection.numTotal, "]" )
 	
@@ -492,8 +498,7 @@ local function Scan_Threaded( thread_id )
 	--ArkInventory.Output( "Reputation: Start Scan @ ", time( ) )
 	
 	if not collection.isInit then
-		ScanInit( )
-		ArkInventory.ThreadYield_Scan( thread_id )
+		ScanInit( thread_id )
 	end
 	
 	FilterActionBackup( )
@@ -501,6 +506,7 @@ local function Scan_Threaded( thread_id )
 	-- scan the reuptation frame (now fully expanded) for known factions
 	
 	ArkInventory.Table.Wipe( collection.list )
+	
 	local cache = collection.cache
 	local list = collection.list
 	local active = true
@@ -509,6 +515,8 @@ local function Scan_Threaded( thread_id )
 	local childIndex
 	
 	for index = 1, ArkInventory.CrossClient.GetNumFactions( ) do
+		
+		--ArkInventory.Output( "faction: ", index )
 		
 		if ReputationFrame:IsVisible( ) then
 			ArkInventory.OutputDebug( "REPUTATION: ABORTED (REPUTATION FRAME WAS OPENED)" )
@@ -536,15 +544,14 @@ local function Scan_Threaded( thread_id )
 		local factionInfo = ArkInventory.CrossClient.GetFactionInfo( index )
 		if factionInfo then
 			
-			--ArkInventory.OutputDebug( index, " = ", factionInfo )
-			
-			if factionInfo.factionID then
-				factionID = factionInfo.factionID
-			else
+			local factionID = factionInfo.factionID
+			if not factionID then
 				-- cater for list headers like other and inactive that dont have a faction id assigned to them
 				fakeID = fakeID - 1
 				factionID = fakeID
 			end
+			
+			--ArkInventory.Output( index, " = ", factionID )
 			
 			if not list[index] then
 				list[index] = {
@@ -553,10 +560,11 @@ local function Scan_Threaded( thread_id )
 					name = factionInfo.name,
 					description = factionInfo.description,
 					isHeader = factionInfo.isHeader,
-					hasRep = factionInfo.hasRep,
+					isHeaderWithRep = factionInfo.isHeaderWithRep,
 					isChild = factionInfo.isChild,
 					parentIndex = nil,
-					data = nil, -- will eventually point to a cache entry
+					isAccountWide = factionInfo.isAccountWide,
+					data = nil, -- will eventually point to the correct cache entry
 				}
 			end
 			
@@ -581,7 +589,7 @@ local function Scan_Threaded( thread_id )
 				
 			end
 			
-			if (not factionInfo.isHeader) or factionInfo.hasRep then
+			if ( not factionInfo.isHeader ) or factionInfo.isHeaderWithRep then
 				
 				local id = factionInfo.name and factionInfo.name ~= "" and factionID
 				if id then
@@ -613,8 +621,8 @@ local function Scan_Threaded( thread_id )
 							update = true
 						end
 						
-						if cache[id].owned ~= true then
-							cache[id].owned = true
+						if cache[id].isOwned ~= true then
+							cache[id].isOwned = true
 							update = true
 						end
 						
@@ -638,8 +646,14 @@ local function Scan_Threaded( thread_id )
 							update = true
 						end
 						
-						if cache[id].hasRep ~= factionInfo.hasRep then
-							cache[id].hasRep = factionInfo.hasRep
+						if cache[id].isHeaderWithRep ~= factionInfo.isHeaderWithRep then
+							cache[id].isHeaderWithRep = factionInfo.isHeaderWithRep
+							update = true
+						end
+						
+						local isAccountWide = not not factionInfo.isAccountWide -- needs to be boolean, not nil (lower game clients that dont have this will return nil)
+						if cache[id].isAccountWide ~= isAccountWide then
+							cache[id].isAccountWide = isAccountWide
 							update = true
 						end
 						
@@ -656,8 +670,6 @@ local function Scan_Threaded( thread_id )
 						local isCapped = 0
 						local paragonLevel = 0
 						local paragonRewardPending = 0
-						
-						local isMajorFaction = ArkInventory.CrossClient.IsMajorFaction( id )
 						
 						local isMajorFaction = ArkInventory.CrossClient.IsMajorFaction( id )
 						if isMajorFaction then
@@ -714,14 +726,15 @@ local function Scan_Threaded( thread_id )
 								-- original rank levels (hated to exalted)
 								
 								--ArkInventory.OutputDebug( id, " = ", factionInfo.name, " = normal" )
+								--ArkInventory.Output( id, "/", index, " = ", factionInfo )
 								
-								barValue = factionInfo.barValue
-								barMin = factionInfo.barMin
-								barMax = factionInfo.barMax
+								barValue = factionInfo.currentStanding
+								barMin = factionInfo.barMin or 0
+								barMax = factionInfo.nextReactionThreshold
 								
-								rankValue = factionInfo.standingID
+								rankValue = factionInfo.reaction
+								
 								rankMax = MAX_REPUTATION_REACTION or 8
-								
 								standingText = _G["FACTION_STANDING_LABEL" .. rankValue] or ArkInventory.Localise["UNKNOWN"]
 								
 							end
@@ -798,7 +811,7 @@ local function Scan_Threaded( thread_id )
 						
 						if cache[id].barValue ~= barValue then
 							
-							cache[id].icon = icon or ""
+							cache[id].icon = icon or ArkInventory.Const.Texture.Missing
 							cache[id].standingText = standingText
 							cache[id].barValue = barValue
 							cache[id].barMin = barMin
@@ -815,6 +828,10 @@ local function Scan_Threaded( thread_id )
 							update = true
 							
 						end
+						
+					else
+						
+						--ArkInventory.Output( "not cached: ", index, " / ", id )
 						
 					end
 					
@@ -847,8 +864,8 @@ local function Scan_Threaded( thread_id )
 	end
 	
 	if update then
-		--ArkInventory.Output( "UPDATING" )
-		ArkInventory.ScanLocation( loc_id )
+		--ArkInventory.Output( "REQUESTING LOCATION SCAN - REPUTATION" )
+		ArkInventory.ScanLocationWindow( loc_id )
 	else
 		--ArkInventory.Output( "IGNORED (NO UPDATES FOUND)" )
 	end
@@ -856,6 +873,8 @@ local function Scan_Threaded( thread_id )
 end
 
 local function Scan( )
+	
+--	if true then return end -- disable reputation scanning
 	
 	local thread_id = string.format( ArkInventory.Global.Thread.Format.Collection, "reputation" )
 	
@@ -873,7 +892,9 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_REPUTATION_UPDATE_BUCKET( events )
 	
 	if not ArkInventory:IsEnabled( ) then return end
 	
-	if not ArkInventory.isLocationMonitored( loc_id ) then
+	local loc_id_window = ArkInventory.Const.Location.Reputation
+	
+	if not ArkInventory.isLocationMonitored( loc_id_window ) then
 		--ArkInventory.Output( "IGNORED (REPUTATION NOT MONITORED)" )
 		return
 	end
@@ -884,12 +905,14 @@ function ArkInventory:EVENT_ARKINV_COLLECTION_REPUTATION_UPDATE_BUCKET( events )
 	end
 	
 	if ArkInventory.Global.Mode.Combat then
-		ArkInventory.Global.ScanAfterCombat[loc_id] = true
+		--ArkInventory.Output( "IGNORED (IN COMBAT)" )
+		ArkInventory.Global.ScanAfterCombat[loc_id_window] = true
 		return
 	end
 	
 	if ArkInventory.Global.Mode.DragonRace then
-		ArkInventory.Global.ScanAfterDragonRace[loc_id] = true
+		--ArkInventory.Output( "IGNORED (DRAGON RACING)" )
+		ArkInventory.Global.ScanAfterDragonRace[loc_id_window] = true
 		return
 	end
 	

@@ -1,9 +1,4 @@
 local AddonName, MoveAny = ...
-local MAMMBTN = nil
-function MoveAny:GetMinimapButton()
-	return MAMMBTN
-end
-
 local PREFIX = "MOAN"
 local MASendProfiles = {}
 local MAWantProfiles = {}
@@ -266,7 +261,7 @@ local function AddCheckBox(x, key, val, func, id, editModeEnum, showReload, requ
 				local ele = MoveAny:GetSelectEleName("LID_" .. key)
 				if ele then
 					MoveAny:SelectEle(_G[ele .. "_MA_DRAG"])
-					cb:UpdateText()
+					cb:UpdateText(cb:GetChecked())
 				end
 			end
 		)
@@ -313,9 +308,31 @@ end
 local function AddSlider(x, key, val, func, vmin, vmax, steps, tab)
 	if sls[key] == nil then
 		posy = posy - 10
-		sls[key] = CreateFrame("Slider", "sls[" .. key .. "]", MALock.SC, "OptionsSliderTemplate")
-		sls[key]:SetWidth(MALock.SC:GetWidth() - 30 - x)
+		local name = "sls[" .. key .. "]"
+		sls[key] = CreateFrame("Slider", name, MALock.SC, "UISliderTemplate")
 		sls[key]:SetPoint("TOPLEFT", MALock.SC, "TOPLEFT", x + 5, posy)
+		sls[key]:SetSize(MALock.SC:GetWidth() - 30 - x, 16)
+		if sls[key].Low == nil then
+			sls[key].Low = sls[key]:CreateFontString(nil, nil, "GameFontNormal")
+			sls[key].Low:SetPoint("BOTTOMLEFT", sls[key], "BOTTOMLEFT", 0, -12)
+			sls[key].Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+			sls[key].Low:SetTextColor(1, 1, 1)
+		end
+
+		if sls[key].High == nil then
+			sls[key].High = sls[key]:CreateFontString(nil, nil, "GameFontNormal")
+			sls[key].High:SetPoint("BOTTOMRIGHT", sls[key], "BOTTOMRIGHT", 0, -12)
+			sls[key].High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+			sls[key].High:SetTextColor(1, 1, 1)
+		end
+
+		if sls[key].Text == nil then
+			sls[key].Text = sls[key]:CreateFontString(nil, nil, "GameFontNormal")
+			sls[key].Text:SetPoint("TOP", sls[key], "TOP", 0, 16)
+			sls[key].Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+			sls[key].Text:SetTextColor(1, 1, 1)
+		end
+
 		sls[key].Low:SetText(vmin)
 		sls[key].High:SetText(vmax)
 		if tab and tab[MoveAny:MAGV(key, val)] then
@@ -361,30 +378,28 @@ local function AddSlider(x, key, val, func, vmin, vmax, steps, tab)
 	end
 end
 
-local saved = false
+local needReload = false
 local est = {}
 function MoveAny:EnableSave(from, key, val, oldVal, ignoreReload)
 	ignoreReload = ignoreReload or false
 	if MALock == nil then return end
 	if not MALock:IsVisible() then return end
-	if ignoreReload then
+	if not ignoreReload then
 		if est[key] == nil then
 			est[key] = oldVal
 		elseif est[key] == val then
 			est[key] = nil
 		end
-	end
 
-	local c = 0
-	for i, v in pairs(est) do
-		if v ~= nil then
-			c = c + 1
+		local c = 0
+		for i, v in pairs(est) do
+			if v ~= nil then
+				c = c + 1
+			end
 		end
-	end
 
-	if ignoreReload then
 		if c ~= 0 then
-			saved = true
+			needReload = true
 			if MALock.save then
 				MALock.save:Enable()
 			end
@@ -393,7 +408,7 @@ function MoveAny:EnableSave(from, key, val, oldVal, ignoreReload)
 				MALock.CloseButton:Disable()
 			end
 		else
-			saved = false
+			needReload = false
 			if MALock.save then
 				MALock.save:Disable()
 			end
@@ -471,13 +486,13 @@ function MoveAny:InitMALock()
 		end
 	)
 
-	MoveAny:SetVersion(AddonName, 135994, "1.7.4")
-	MALock.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.7.4"))
+	MoveAny:SetVersion(AddonName, 135994, "1.7.32")
+	MALock.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.7.32"))
 	MALock.CloseButton:SetScript(
 		"OnClick",
 		function()
 			MoveAny:ToggleMALock()
-			if saved and needReload then
+			if needReload then
 				C_UI.Reload()
 			end
 		end
@@ -533,10 +548,6 @@ function MoveAny:InitMALock()
 		local posx = 4
 		AddCheckBox(posx, "PLAYERFRAME", false)
 		AddCheckBox(posx, "TARGETFRAME", false, nil, nil, "ShowTargetAndFocus", nil, nil, "TARGETFRAMESPELLBAR")
-		if ComboFrame then
-			AddCheckBox(posx, "COMBOFRAME", false)
-		end
-
 		if MoveAny:GetWoWBuild() ~= "RETAIL" then
 			AddCheckBox(posx, "TARGETFRAMEBUFF1", false, nil, nil, "ShowTargetAndFocus")
 			AddCheckBox(posx, "TARGETFRAMEDEBUFF1", false, nil, nil, "ShowTargetAndFocus")
@@ -736,6 +747,8 @@ function MoveAny:InitMALock()
 
 		if (MoveAny:IsValidFrame(RogueComboPointBarFrame) or MoveAny:IsValidFrame(DruidComboPointBarFrame)) and (class == "ROGUE" or class == "DRUID") then
 			AddCheckBox(4, "COMBOPOINTPLAYERFRAME", false)
+		elseif ComboFrame then
+			AddCheckBox(posx, "COMBOFRAME", false)
 		end
 
 		if class == "DRUID" and MoveAny:IsValidFrame(EclipseBarFrame) then
@@ -826,7 +839,7 @@ function MoveAny:InitMALock()
 			end
 		end
 
-		AddCheckBox(4, "CHATEDITBOX", false)
+		AddCheckBox(4, "CHATEDITBOX", false, nil, "")
 		if BNToastFrame then
 			AddCheckBox(4, "BNToastFrame", false)
 		end
@@ -1084,7 +1097,7 @@ function MoveAny:ShowProfiles()
 			end
 		)
 
-		MAProfiles.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.7.4"))
+		MAProfiles.TitleText:SetText(format("MoveAny |T135994:16:16:0:0|t v|cff3FC7EB%s", "1.7.32"))
 		MAProfiles.CloseButton:SetScript(
 			"OnClick",
 			function()
@@ -1192,9 +1205,30 @@ function MoveAny:ShowProfiles()
 						tinsert(profileNames, name)
 					end
 
-					local sliderProfiles = CreateFrame("Slider", nil, MAAddProfile, "OptionsSliderTemplate")
+					local sliderProfiles = CreateFrame("Slider", nil, MAAddProfile, "UISliderTemplate")
 					sliderProfiles:SetWidth(MAAddProfile:GetWidth() - 20)
 					sliderProfiles:SetPoint("TOPLEFT", MAAddProfile, "TOPLEFT", 10, -26 - 30 - br)
+					if sliderProfiles.Low == nil then
+						sliderProfiles.Low = sliderProfiles:CreateFontString(nil, nil, "GameFontNormal")
+						sliderProfiles.Low:SetPoint("BOTTOMLEFT", sliderProfiles, "BOTTOMLEFT", 0, -12)
+						sliderProfiles.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+						sliderProfiles.Low:SetTextColor(1, 1, 1)
+					end
+
+					if sliderProfiles.High == nil then
+						sliderProfiles.High = sliderProfiles:CreateFontString(nil, nil, "GameFontNormal")
+						sliderProfiles.High:SetPoint("BOTTOMRIGHT", sliderProfiles, "BOTTOMRIGHT", 0, -12)
+						sliderProfiles.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+						sliderProfiles.High:SetTextColor(1, 1, 1)
+					end
+
+					if sliderProfiles.Text == nil then
+						sliderProfiles.Text = sliderProfiles:CreateFontString(nil, nil, "GameFontNormal")
+						sliderProfiles.Text:SetPoint("TOP", sliderProfiles, "TOP", 0, 16)
+						sliderProfiles.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+						sliderProfiles.Text:SetTextColor(1, 1, 1)
+					end
+
 					sliderProfiles.Low:SetText("")
 					sliderProfiles.High:SetText("")
 					sliderProfiles.Text:SetText(MoveAny:GT("LID_INHERITFROM") .. ": " .. MAAddProfile.inheritFrom)
@@ -2169,6 +2203,29 @@ function MoveAny:LoadAddon()
 				}
 			)
 		end
+	elseif ComboFrame and MoveAny:IsEnabled("COMBOFRAME", false) then
+		local cpsw, cpsh = 12, 12
+		for i = 1, 5 do
+			local cp = _G["ComboPoint" .. i]
+			if cp then
+				cpsw, cpsh = cp:GetSize()
+				cp:ClearAllPoints()
+				if i == 1 then
+					cp:SetPoint("LEFT", ComboFrame, "LEFT", 0, 0)
+				else
+					cp:SetPoint("LEFT", _G["ComboPoint" .. (i - 1)], "RIGHT", 0, 0)
+				end
+			end
+		end
+
+		ComboFrame:SetSize(cpsw * 5, cpsh)
+		MoveAny:RegisterWidget(
+			{
+				["name"] = "ComboFrame",
+				["lstr"] = "LID_COMBOFRAME",
+				["userplaced"] = true
+			}
+		)
 	end
 
 	if EclipseBarFrame and MoveAny:IsEnabled("EclipseBarFrame", false) then
@@ -2338,6 +2395,7 @@ function MoveAny:LoadAddon()
 						frame,
 						"SetScale",
 						function(sel)
+							if InCombatLockdown() and sel:IsProtected() then return false end
 							if sel.ma_bb_set_scale then return end
 							sel.ma_bb_set_scale = true
 							frame:UpdateBuffScaleAlpha()
@@ -2393,6 +2451,7 @@ function MoveAny:LoadAddon()
 						frame,
 						"SetScale",
 						function(sel)
+							if InCombatLockdown() and sel:IsProtected() then return false end
 							if sel.ma_db_set_scale then return end
 							sel.ma_db_set_scale = true
 							frame:UpdateDebuffScaleAlpha()
@@ -2448,6 +2507,7 @@ function MoveAny:LoadAddon()
 						frame,
 						"SetScale",
 						function(sel)
+							if InCombatLockdown() and sel:IsProtected() then return false end
 							if sel.ma_db_set_scale then return end
 							sel.ma_db_set_scale = true
 							frame:UpdateBuffScaleAlpha()
@@ -2503,6 +2563,7 @@ function MoveAny:LoadAddon()
 						frame,
 						"SetScale",
 						function(sel)
+							if InCombatLockdown() and sel:IsProtected() then return false end
 							if sel.ma_db_set_scale then return end
 							sel.ma_db_set_scale = true
 							frame:UpdateDebuffScaleAlpha()
@@ -2522,7 +2583,10 @@ function MoveAny:LoadAddon()
 				TargetFrame,
 				"SetScale",
 				function(sel, scale)
-					ComboFrame:SetScale(scale)
+					if InCombatLockdown() and sel:IsProtected() then return false end
+					if scale and type(scale) == "number" then
+						ComboFrame:SetScale(scale)
+					end
 				end
 			)
 
@@ -2542,31 +2606,6 @@ function MoveAny:LoadAddon()
 			{
 				["name"] = "TargetFrame",
 				["lstr"] = "LID_TARGETFRAME",
-				["userplaced"] = true
-			}
-		)
-	end
-
-	if MoveAny:IsEnabled("COMBOFRAME", false) then
-		local cpsw, cpsh = 12, 12
-		for i = 1, 5 do
-			local cp = _G["ComboPoint" .. i]
-			if cp then
-				cpsw, cpsh = cp:GetSize()
-				cp:ClearAllPoints()
-				if i == 1 then
-					cp:SetPoint("LEFT", ComboFrame, "LEFT", 0, 0)
-				else
-					cp:SetPoint("LEFT", _G["ComboPoint" .. (i - 1)], "RIGHT", 0, 0)
-				end
-			end
-		end
-
-		ComboFrame:SetSize(cpsw * 5, cpsh)
-		MoveAny:RegisterWidget(
-			{
-				["name"] = "ComboFrame",
-				["lstr"] = "LID_COMBOFRAME",
 				["userplaced"] = true
 			}
 		)
@@ -2614,6 +2653,7 @@ function MoveAny:LoadAddon()
 						frame,
 						"SetScale",
 						function(sel)
+							if InCombatLockdown() and sel:IsProtected() then return false end
 							if sel.ma_db_set_scale then return end
 							sel.ma_db_set_scale = true
 							frame:UpdateBuffScaleAlpha()
@@ -2669,6 +2709,7 @@ function MoveAny:LoadAddon()
 						frame,
 						"SetScale",
 						function(sel)
+							if InCombatLockdown() and sel:IsProtected() then return false end
 							if sel.ma_db_set_scale then return end
 							sel.ma_db_set_scale = true
 							frame:UpdateDebuffScaleAlpha()
@@ -2868,6 +2909,7 @@ function MoveAny:LoadAddon()
 						bar,
 						"SetSize",
 						function(sel, ...)
+							if InCombatLockdown() and sel:IsProtected() then return false end
 							if sel.ma_uab_setsize then return end
 							sel.ma_uab_setsize = true
 							MoveAny:UpdateActionBar(bar)
@@ -3043,28 +3085,35 @@ function MoveAny:LoadAddon()
 	end
 
 	if MoveAny:IsEnabled("CHATEDITBOX", false) then
-		local ceb = _G["ChatFrame" .. 1 .. "EditBox"]
-		if ceb then
-			hooksecurefunc(
-				ceb,
-				"SetClampRectInsets",
-				function(sel)
-					if sel.setclamprectinsets_ma then return end
-					sel.setclamprectinsets_ma = true
-					sel:SetClampRectInsets(2, 2, 2, 2)
-					sel.setclamprectinsets_ma = false
-				end
-			)
+		for i = 1, 12 do
+			local ceb = _G["ChatFrame" .. i .. "EditBox"]
+			if ceb then
+				hooksecurefunc(
+					ceb,
+					"SetClampRectInsets",
+					function(sel)
+						if sel.setclamprectinsets_ma then return end
+						sel.setclamprectinsets_ma = true
+						sel:SetClampRectInsets(2, 2, 2, 2)
+						sel.setclamprectinsets_ma = false
+					end
+				)
 
-			ceb:SetClampRectInsets(2, 2, 2, 2)
+				ceb:SetClampRectInsets(2, 2, 2, 2)
+			end
 		end
 
-		MoveAny:RegisterWidget(
-			{
-				["name"] = "ChatFrame" .. 1 .. "EditBox",
-				["lstr"] = "LID_CHATEDITBOX",
-			}
-		)
+		for i = 1, 12 do
+			if _G["ChatFrame" .. i .. "Tab"] and _G["ChatFrame" .. i .. "Tab"]:IsShown() then
+				MoveAny:RegisterWidget(
+					{
+						["name"] = "ChatFrame" .. i .. "EditBox",
+						["lstr"] = "LID_CHATEDITBOX",
+						["lstri"] = i,
+					}
+				)
+			end
+		end
 	end
 
 	if MoveAny:IsEnabled("CHATQUICKJOIN", false) then
@@ -3151,82 +3200,89 @@ function MoveAny:LoadAddon()
 		C_Timer.After(
 			0,
 			function()
-				if ObjectiveTrackerFrame == nil then
-					ObjectiveTrackerFrame = CreateFrame("Frame", "ObjectiveTrackerFrame", MoveAny:GetMainPanel())
-					ObjectiveTrackerFrame:SetSize(224, 600)
-					ObjectiveTrackerFrame:SetPoint("TOPRIGHT", MoveAny:GetMainPanel(), "TOPRIGHT", -85, -180)
-					if QuestWatchFrame then
-						hooksecurefunc(
-							QuestWatchFrame,
-							"SetPoint",
-							function(sel, ...)
-								if sel.qwfsetpoint then return end
-								sel.qwfsetpoint = true
-								sel:SetMovable(true)
-								if sel.SetUserPlaced and sel:IsMovable() then
-									sel:SetUserPlaced(false)
+				if MoveAny:IsAddOnLoaded("Questie") then
+					MoveAny:RegisterWidget(
+						{
+							["name"] = "Questie_BaseFrame",
+							["lstr"] = "LID_QUESTTRACKER",
+							["userplaced"] = true,
+							["secure"] = true,
+							["sh"] = 600,
+						}
+					)
+				else
+					if ObjectiveTrackerFrame == nil then
+						ObjectiveTrackerFrame = CreateFrame("Frame", "ObjectiveTrackerFrame", MoveAny:GetMainPanel())
+						ObjectiveTrackerFrame:SetSize(224, 600)
+						ObjectiveTrackerFrame:SetPoint("TOPRIGHT", MoveAny:GetMainPanel(), "TOPRIGHT", -85, -180)
+						if QuestWatchFrame then
+							hooksecurefunc(
+								QuestWatchFrame,
+								"SetPoint",
+								function(sel, ...)
+									if sel.qwfsetpoint then return end
+									sel.qwfsetpoint = true
+									sel:SetMovable(true)
+									if sel.SetUserPlaced and sel:IsMovable() then
+										sel:SetUserPlaced(false)
+									end
+
+									sel:SetParent(ObjectiveTrackerFrame)
+									MoveAny:SetPoint(sel, "TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+									sel.qwfsetpoint = false
 								end
+							)
 
-								sel:SetParent(ObjectiveTrackerFrame)
-								MoveAny:SetPoint(sel, "TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
-								sel.qwfsetpoint = false
+							QuestWatchFrame:SetMovable(true)
+							if QuestWatchFrame.SetUserPlaced and QuestWatchFrame:IsMovable() then
+								QuestWatchFrame:SetUserPlaced(false)
 							end
-						)
 
-						QuestWatchFrame:SetMovable(true)
-						if QuestWatchFrame.SetUserPlaced and QuestWatchFrame:IsMovable() then
-							QuestWatchFrame:SetUserPlaced(false)
+							QuestWatchFrame:SetParent(ObjectiveTrackerFrame)
+							QuestWatchFrame:ClearAllPoints()
+							QuestWatchFrame:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+							QuestWatchFrame:SetSize(ObjectiveTrackerFrame:GetSize())
 						end
 
-						QuestWatchFrame:SetParent(ObjectiveTrackerFrame)
-						QuestWatchFrame:ClearAllPoints()
-						QuestWatchFrame:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
-						QuestWatchFrame:SetSize(ObjectiveTrackerFrame:GetSize())
-					end
+						if WatchFrame then
+							hooksecurefunc(
+								WatchFrame,
+								"SetPoint",
+								function(sel, ...)
+									if sel.wfsetpoint then return end
+									sel.wfsetpoint = true
+									sel:SetMovable(true)
+									if sel.SetUserPlaced and sel:IsMovable() then
+										sel:SetUserPlaced(false)
+									end
 
-					if WatchFrame then
-						hooksecurefunc(
-							WatchFrame,
-							"SetPoint",
-							function(sel, ...)
-								if sel.wfsetpoint then return end
-								sel.wfsetpoint = true
-								sel:SetMovable(true)
-								if sel.SetUserPlaced and sel:IsMovable() then
-									sel:SetUserPlaced(false)
+									sel:SetParent(ObjectiveTrackerFrame)
+									MoveAny:SetPoint(sel, "TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+									sel.wfsetpoint = false
 								end
+							)
 
-								sel:SetParent(ObjectiveTrackerFrame)
-								MoveAny:SetPoint(sel, "TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
-								sel.wfsetpoint = false
+							WatchFrame:SetMovable(true)
+							if WatchFrame.SetUserPlaced and WatchFrame:IsMovable() then
+								WatchFrame:SetUserPlaced(false)
 							end
-						)
 
-						WatchFrame:SetMovable(true)
-						if WatchFrame.SetUserPlaced and WatchFrame:IsMovable() then
-							WatchFrame:SetUserPlaced(false)
+							WatchFrame:SetParent(ObjectiveTrackerFrame)
+							WatchFrame:ClearAllPoints()
+							WatchFrame:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+							WatchFrame:SetSize(ObjectiveTrackerFrame:GetSize())
 						end
-
-						WatchFrame:SetParent(ObjectiveTrackerFrame)
-						WatchFrame:ClearAllPoints()
-						WatchFrame:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
-						WatchFrame:SetSize(ObjectiveTrackerFrame:GetSize())
 					end
+
+					MoveAny:RegisterWidget(
+						{
+							["name"] = "ObjectiveTrackerFrame",
+							["lstr"] = "LID_QUESTTRACKER",
+							["userplaced"] = true,
+							["secure"] = true,
+						}
+					)
 				end
-			end
-		)
-
-		C_Timer.After(
-			0,
-			function()
-				MoveAny:RegisterWidget(
-					{
-						["name"] = "ObjectiveTrackerFrame",
-						["lstr"] = "LID_QUESTTRACKER",
-						["userplaced"] = true,
-						["secure"] = true,
-					}
-				)
 			end
 		)
 	end
@@ -3289,7 +3345,7 @@ function MoveAny:LoadAddon()
 			end
 		)
 
-		PetFrame:SetParent(MAPetFrame)
+		--PetFrame:SetParent(MAPetFrame)
 		MoveAny:SetPoint(PetFrame, "CENTER", MAPetFrame, "CENTER", 0, 0)
 		MoveAny:RegisterWidget(
 			{
@@ -3436,7 +3492,7 @@ function MoveAny:LoadAddon()
 
 	if MoveAny:IsAddOnLoaded("!KalielsTracker") and MoveAny:IsEnabled("!KalielsTrackerButtons", false) then
 		C_Timer.After(
-			1,
+			2,
 			function()
 				local ktb = _G["!KalielsTrackerButtons"]
 				if ktb then
@@ -4041,6 +4097,15 @@ function MoveAny:LoadAddon()
 	GameTooltip:SetMovable(true)
 	GameTooltip:SetUserPlaced(false)
 	if MoveAny:IsEnabled("GAMETOOLTIP", false) or MoveAny:IsEnabled("GAMETOOLTIP_ONCURSOR", false) then
+		hooksecurefunc(
+			GameTooltip,
+			"FadeOut",
+			function(sel)
+				sel:SetAlpha(0)
+				sel:Hide()
+			end
+		)
+
 		local MAGameTooltip = CreateFrame("Frame", "MAGameTooltip", MoveAny:GetMainPanel())
 		MAGameTooltip:SetSize(100, 100)
 		MAGameTooltip:SetPoint("BOTTOMRIGHT", MoveAny:GetMainPanel(), "BOTTOMRIGHT", -100, 100)
@@ -4048,6 +4113,7 @@ function MoveAny:LoadAddon()
 			GameTooltip,
 			"SetScale",
 			function(sel, ...)
+				if InCombatLockdown() and sel:IsProtected() then return false end
 				if sel.gtsetscale then return end
 				sel.gtsetscale = true
 				sel:SetScale(MAGameTooltip:GetScale())
@@ -4059,6 +4125,7 @@ function MoveAny:LoadAddon()
 			MAGameTooltip,
 			"SetScale",
 			function(sel, ...)
+				if InCombatLockdown() and sel:IsProtected() then return false end
 				if sel.gtsetscale2 then return end
 				sel.gtsetscale2 = true
 				GameTooltip:SetScale(sel:GetScale())
@@ -4278,7 +4345,10 @@ function MoveAny:LoadAddon()
 						GroupLootFrame1,
 						"SetScale",
 						function(sel, scale)
-							glf:SetScale(scale)
+							if InCombatLockdown() and sel:IsProtected() then return false end
+							if scale and type(scale) == "number" then
+								glf:SetScale(scale)
+							end
 						end
 					)
 
@@ -4559,7 +4629,10 @@ function MoveAny:LoadAddon()
 							AlertFrame,
 							"SetScale",
 							function(sel, scale)
-								frame:SetScale(scale)
+								if InCombatLockdown() and sel:IsProtected() then return false end
+								if scale and type(scale) == "number" then
+									frame:SetScale(scale)
+								end
 							end
 						)
 
@@ -4785,8 +4858,8 @@ function MoveAny:LoadAddon()
 					{
 						["name"] = "MoveAny",
 						["icon"] = 135994,
-						["dbtab"] = CVTAB,
-						["vTT"] = {{"MoveAny |T135994:16:16:0:0|t", "v|cff3FC7EB1.7.4"}, {MoveAny:GT("LID_LEFTCLICK"), MoveAny:GT("LID_MMBTNLEFT")}, {MoveAny:GT("LID_RIGHTCLICK"), MoveAny:GT("LID_MMBTNRIGHT")}},
+						["dbtab"] = MATAB,
+						["vTT"] = {{"MoveAny |T135994:16:16:0:0|t", "v|cff3FC7EB1.7.32"}, {MoveAny:GT("LID_LEFTCLICK"), MoveAny:GT("LID_MMBTNLEFT")}, {MoveAny:GT("LID_RIGHTCLICK"), MoveAny:GT("LID_MMBTNRIGHT")}},
 						["funcL"] = function()
 							MoveAny:ToggleMALock()
 						end,

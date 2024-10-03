@@ -1,6 +1,6 @@
-## Interface: 11503
+## Interface: 11504
 
-## Version: 1.7.4
+## Version: 1.7.32
 ## Title: MoveAny by |cff3FC7EBD4KiR |T132115:16:16:0:0|t 
 ## Notes: Move Any Ui or Frame
 ## Author: D4KiR

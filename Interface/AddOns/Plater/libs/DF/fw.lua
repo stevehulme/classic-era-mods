@@ -1,6 +1,6 @@
 
 
-local dversion = 561
+local dversion = 571
 local major, minor = "DetailsFramework-1.0", dversion
 local DF, oldminor = LibStub:NewLibrary(major, minor)
 
@@ -1840,12 +1840,14 @@ function DF:GetAllTalents()
 						local borderTypes = Enum.TraitNodeEntryType
 						if (traitEntryInfo.type) then -- == borderTypes.SpendCircle
 							local definitionId = traitEntryInfo.definitionID
-							local traitDefinitionInfo = C_Traits.GetDefinitionInfo(definitionId)
-							local spellId = traitDefinitionInfo.overriddenSpellID or traitDefinitionInfo.spellID
-							local spellName, _, spellTexture = GetSpellInfo(spellId)
-							if (spellName) then
-								local talentInfo = {Name = spellName, ID = spellId, Texture = spellTexture, IsSelected = (activeEntry and activeEntry.rank and activeEntry.rank > 0) or false}
-								allTalents[#allTalents+1] = talentInfo
+							if definitionId then
+								local traitDefinitionInfo = C_Traits.GetDefinitionInfo(definitionId)
+								local spellId = traitDefinitionInfo.overriddenSpellID or traitDefinitionInfo.spellID
+								local spellName, _, spellTexture = GetSpellInfo(spellId)
+								if (spellName) then
+									local talentInfo = {Name = spellName, ID = spellId, Texture = spellTexture, IsSelected = (activeEntry and activeEntry.rank and activeEntry.rank > 0) or false}
+									allTalents[#allTalents+1] = talentInfo
+								end
 							end
 						end
 					end
@@ -3054,7 +3056,13 @@ DF.button_templates["STANDARD_GRAY"] = {
 	backdropcolor = {0.2, 0.2, 0.2, 0.502},
 	backdropbordercolor = {0, 0, 0, 0.5},
 	onentercolor = {0.4, 0.4, 0.4, 0.502},
+}
 
+DF.button_templates["OPAQUE_DARK"] = {
+	backdrop = {edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1, bgFile = [[Interface\Buttons\WHITE8X8]], tileSize = 8, tile = true},
+	backdropcolor = {0.2, 0.2, 0.2, 1},
+	backdropbordercolor = {0, 0, 0, 1},
+	onentercolor = {0.4, 0.4, 0.4, 1},
 }
 
 --sliders
@@ -4883,16 +4891,18 @@ function DF:GetCharacterTalents(bOnlySelected, bOnlySelectedHash)
 
 							if (traitEntryInfo.type) then -- == borderTypes.SpendCircle
 								local definitionId = traitEntryInfo.definitionID
-								local traitDefinitionInfo = C_Traits.GetDefinitionInfo(definitionId)
-								local spellId = traitDefinitionInfo.overriddenSpellID or traitDefinitionInfo.spellID
-								local spellName, _, spellTexture = GetSpellInfo(spellId)
-								local bIsSelected = (activeEntry and activeEntry.rank and activeEntry.rank > 0) or false
-								if (spellName and bIsSelected) then
-									local talentInfo = {Name = spellName, ID = spellId, Texture = spellTexture, IsSelected = true}
-									if (bOnlySelectedHash) then
-										talentList[spellId] = talentInfo
-									else
-										table.insert(talentList, talentInfo)
+								if definitionId then
+									local traitDefinitionInfo = C_Traits.GetDefinitionInfo(definitionId)
+									local spellId = traitDefinitionInfo.overriddenSpellID or traitDefinitionInfo.spellID
+									local spellName, _, spellTexture = GetSpellInfo(spellId)
+									local bIsSelected = (activeEntry and activeEntry.rank and activeEntry.rank > 0) or false
+									if (spellName and bIsSelected) then
+										local talentInfo = {Name = spellName, ID = spellId, Texture = spellTexture, IsSelected = true}
+										if (bOnlySelectedHash) then
+											talentList[spellId] = talentInfo
+										else
+											table.insert(talentList, talentInfo)
+										end
 									end
 								end
 							end
@@ -4989,11 +4999,12 @@ end
 
 function DF:AddRoleIconToText(text, role, size)
 	if (role and type(role) == "string") then
-		local coords = GetTexCoordsForRole(role)
+		local coords = roleTexcoord2[role]
 		if (coords) then
 			if (type(text) == "string" and role ~= "NONE") then
 				size = size or 14
-				text = "|TInterface\\LFGFRAME\\UI-LFG-ICON-ROLES:" .. size .. ":" .. size .. ":0:0:256:256:" .. roleTexcoord[role] .. "|t " .. text
+				local coordsToString = floor(coords[1]*256) .. ":" .. floor(coords[2]*256) .. ":" .. floor(coords[3]*256) .. ":" .. floor(coords[4]*256)
+				text = "|TInterface\\LFGFRAME\\UI-LFG-ICON-ROLES:" .. size .. ":" .. size .. ":0:0:256:256:" .. coordsToString .. "|t " .. text
 				return text
 			end
 		end
@@ -5445,6 +5456,7 @@ do
             --need to create the new object
             local newObject = self.newObjectFunc(self, unpack(self.payload))
             if (newObject) then
+				self.objectsCreated = self.objectsCreated + 0
 				table.insert(self.inUse, newObject)
 				if (self.onAcquire) then
 					DF:QuickDispatch(self.onAcquire, newObject)
@@ -5502,6 +5514,32 @@ do
 			return #self.notUse + #self.inUse, #self.notUse, #self.inUse
 		end
 
+	---@class df_pool : table
+	---@field objectsCreated number --amount of objects created
+	---@field inUse table[] --objects in use
+	---@field notUse table[] --objects not in use
+	---@field payload table --payload to be sent to the newObjectFunc
+	---@field onRelease fun(object:table) --function to be called when an object is released
+	---@field onReset fun(object:table) --function to be called when the pool is reset
+	---@field onAcquire fun(object:table) --function to be called when an object is acquired
+	---@field newObjectFunc fun(self:df_pool, ...):table --function to create a new object, it passes the pool and the payload
+	---@field PoolConstructor fun(self:df_pool, func:fun(object:table), ...:any) --constructor, in case to use an existing object to behave like a pool
+	---@field Get fun(self:df_pool):table --return an object from the pool
+	---@field Acquire fun(self:df_pool):table --alias for :Get()
+	---@field GetAllInUse fun(self:df_pool):table[] --return all objects in use
+	---@field Release fun(self:df_pool, object:table) --release a single object
+	---@field Reset fun(self:df_pool) --release all objects and calls OnReset function if any
+	---@field ReleaseAll fun(self:df_pool) --alias for :Reset()
+	---@field Hide fun(self:df_pool) --hide all objects in use by calling object:Hide()
+	---@field Show fun(self:df_pool) --show all objects in use by calling object:Show()
+	---@field GetAmount fun(self:df_pool):number, number, number --return the amount of objects in the pool in use + not in use, not in use, in use
+	---@field SetOnRelease fun(self:df_pool, func:fun(object:table)) --set a function to be called when an object is released
+	---@field SetCallbackOnRelease fun(self:df_pool, func:fun(object:table)) --set a function to be called when an object is released
+	---@field SetOnReset fun(self:df_pool, func:fun(object:table)) --set a function to be called when the pool is reset
+	---@field SetCallbackOnReleaseAll fun(self:df_pool, func:fun(object:table)) --alias for :SetOnReset()
+	---@field SetOnAcquire fun(self:df_pool, func:fun(object:table)) --set a function to be called when an object is acquired
+	---@field SetCallbackOnGet fun(self:df_pool, func:fun(object:table)) --alias for :SetOnAcquire()
+	---@field RunForInUse fun(self:df_pool, func:fun(object:table)) --run a function for each object in use
     local poolMixin = {
 		Get = get,
 		GetAllInUse = get_all_inuse,
@@ -5512,6 +5550,10 @@ do
 		Hide = hide,
 		Show = show,
 		GetAmount = getamount,
+
+		SetOnRelease = function(self, func)
+			self.onRelease = func
+		end,
 
 		SetCallbackOnRelease = function(self, func)
 			self.onRelease = func
@@ -5530,18 +5572,29 @@ do
 		SetCallbackOnGet = function(self, func)
 			self.onAcquire = func
 		end,
+
+		RunForInUse = function(self, func)
+			for i = 1, #self.inUse do
+				func(self.inUse[i])
+			end
+		end,
+
+		PoolConstructor = function(self, func, ...)
+			self.objectsCreated = 0
+			self.inUse = {}
+			self.notUse = {}
+			self.payload = {...}
+			self.newObjectFunc = func
+		end,
     }
 
+	DF.PoolMixin = poolMixin
+
     function DF:CreatePool(func, ...)
-        local t = {}
-        DetailsFramework:Mixin(t, poolMixin)
-
-        t.inUse = {}
-        t.notUse = {}
-        t.newObjectFunc = func
-        t.payload = {...}
-
-        return t
+        local newPool = {}
+        DetailsFramework:Mixin(newPool, poolMixin)
+		newPool:PoolConstructor(func, ...)
+        return newPool
 	end
 
 	--alias
@@ -5713,6 +5766,10 @@ function _G.__benchmark(bNotPrintResult)
 		print("Elapsed Time:", elapsed)
 		return elapsed
 	end
+end
+
+function DF:DebugTexture(texture, left, right, top, bottom)
+	return DF:PreviewTexture(texture, left, right, top, bottom)
 end
 
 function DF:PreviewTexture(texture, left, right, top, bottom)

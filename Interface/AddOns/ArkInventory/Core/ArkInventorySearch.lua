@@ -87,7 +87,7 @@ function ArkInventory.Search.GetContent( h )
 		if info.class == "item" or info.class == "keystone" then
 			
 			local s
-			ArkInventory.TooltipSet( ArkInventory.Global.Tooltip.Scan, nil, nil, nil, search_id )
+			ArkInventory.TooltipSetFromHyperlink( ArkInventory.Global.Tooltip.Scan, search_id )
 			
 			local leftText, rightText, leftTextClean, rightTextClean, leftColor, rightColor = ArkInventory.TooltipGetLine( ArkInventory.Global.Tooltip.Scan, 1 )
 			-- check for no response??
@@ -103,8 +103,8 @@ function ArkInventory.Search.GetContent( h )
 				txt = string.gsub( txt, s, "" )
 			end
 			
-			for _, z in pairs( ArkInventory.Const.BindingText.All ) do
-				s = string.format( "#%s#", z )
+			for _, binding in pairs( ArkInventory.Const.BindingText ) do
+				s = string.format( "#%s#", binding.text or "")
 				txt = string.gsub( txt, s, "" )
 			end
 			
@@ -116,7 +116,12 @@ function ArkInventory.Search.GetContent( h )
 				equiploc = _G[equiploc]
 			end
 			
-			txt = string.format( "%s #%s# #%s# #%s#", txt, equiploc, info.itemtype, info.itemsubtype )
+			local expansion = info.expansion
+			if type( expansion ) == "number" and _G[string.format( "EXPANSION_NAME%d", expansion )] then
+				expansion = _G[string.format( "EXPANSION_NAME%d", expansion )]
+			end
+			
+			txt = string.format( "%s #%s# #%s# #%s# #%s#", txt, equiploc, info.itemtype, info.itemsubtype, expansion )
 			
 		elseif info.class == "battlepet" then
 			
@@ -126,7 +131,7 @@ function ArkInventory.Search.GetContent( h )
 			
 		elseif info.class == "currency" then
 			
-			--ArkInventory.TooltipSet( ArkInventory.Global.Tooltip.Scan, nil, nil, nil, search_id )
+			--ArkInventory.TooltipSetFromHyperlink( ArkInventory.Global.Tooltip.Scan, search_id )
 			
 			--txt1 = ArkInventory.TooltipGetLine( tooltip, 2 )
 			--txt = string.format( "#%s#", info.description or "" )

@@ -13,8 +13,6 @@ local TooltipStockCapture2 = ".- (%d?%d?%d?" .. TooltipStockCaptureSeperator .. 
 local TooltipStockCapture3 = ".-(%d?%d?%d?" .. TooltipStockCaptureSeperator .. "%d?%d?%d)"
 
 
-local maxRetry = 5
-
 local objectCorrections = {
 	["item"] = {
 		[86592] = { -- Hozen Peace Pipe
@@ -61,6 +59,7 @@ helper_ResetItemDataTypes( 208831, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, Ark
 helper_ResetItemDataTypes( 211383, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.PARENT, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.FOOD_AND_DRINK ) -- Luvkip
 helper_ResetItemDataTypes( 211446, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, ArkInventory.ENUM.ITEM.TYPE.ARMOR.COSMETIC ) -- Ensemble: Heritage of the Darkspear
 helper_ResetItemDataTypes( 224298, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.PARENT, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.OTHER ) -- Dilated Eon Canister
+helper_ResetItemDataTypes( 228228, ArkInventory.ENUM.ITEM.TYPE.QUEST.PARENT, ArkInventory.ENUM.ITEM.TYPE.QUEST.QUEST ) -- Strange Lump of Wax
 
 
 local function helper_CorrectData( info, tmp )
@@ -76,8 +75,8 @@ local function helper_CorrectData( info, tmp )
 	end
 end
 
-local Queue = { }
-local scanning = false
+local scanQueue = { }
+local scanActive = false
 
 local function helper_QueueAdd( hs )
 	
@@ -86,7 +85,7 @@ local function helper_QueueAdd( hs )
 		C_Item.RequestLoadItemDataByID( hs )
 	end
 	
-	Queue[hs] = true
+	scanQueue[hs] = true
 	
 	ArkInventory:SendMessage( "EVENT_ARKINV_GETOBJECTINFO_QUEUE_UPDATE_BUCKET", "QUEUE_ADD" )
 	
@@ -94,7 +93,10 @@ end
 
 local function helper_UpdateObjectInfo( info, thread_id )
 	
+	ArkInventory.Util.Assert( type( info ) == "table", "info is [", type( info ), "], should be [table]" )
+	
 	local tmp
+	
 	
 	if info.class == "item" or info.class == "keystone" then
 		
@@ -128,15 +130,8 @@ local function helper_UpdateObjectInfo( info, thread_id )
 		if info.class == "keystone" then
 			key = info.osd.id
 		end
-		
-		info.retry = ( info.retry or 0 ) + 1
-		if info.retry >= ArkInventory.Const.ObjectDataMaxAttempts then
-			info.ready = true
-			info.dead = true
-			return
-		else
-			info.ready = C_Item.IsItemDataCachedByID( key )
-		end
+	
+		info.ready = C_Item.IsItemDataCachedByID( key )
 		
 		--ArkInventory.Output( "attempt #", info.retry, " ", info.hs )
 		
@@ -181,7 +176,7 @@ local function helper_UpdateObjectInfo( info, thread_id )
 		info.itemsubtype = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SUBTYPE] or info.itemsubtype
 		info.stacksize = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.STACKSIZE] or info.stacksize
 		info.equiploc = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.EQUIP] or info.equiploc
-		info.texture = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TEXTURE] or GetItemIcon( info.hs ) or info.texture
+		info.texture = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TEXTURE] or ArkInventory.CrossClient.GetItemIcon( info.hs ) or info.texture
 		info.vendorprice = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.VENDORPRICE] or info.vendorprice
 		info.itemtypeid = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.TYPEID] or info.itemtypeid
 		info.itemsubtypeid = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SUBTYPEID] or info.itemsubtypeid
@@ -189,7 +184,7 @@ local function helper_UpdateObjectInfo( info, thread_id )
 		info.expansion = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.EXPANSION] or info.expansion
 		info.setid = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.SETID]
 		info.craft = tmp[ArkInventory.Const.BLIZZARD.FUNCTION.GETITEMINFO.CRAFT]
-		
+		info.invtypeid = 0
 		
 		if info.class == "keystone" then
 			info.ilvl_base = info.osd.level or info.ilvl_base
@@ -204,17 +199,97 @@ local function helper_UpdateObjectInfo( info, thread_id )
 
 		--ArkInventory.OutputDebug( "name is [", info.name, "] for ", key, " / ", info.ready )
 		if info.name == ArkInventory.Localise["DATA_NOT_READY"] then
-			--ArkInventory.OutputDebug( "name is [", info.name, "] for ", key, " / ", info.ready )
+			ArkInventory.OutputDebug( "name is [", info.name, "] for ", key, " / ", info.ready )
 			info.ready = false
 		end
 		
 		if info.ready then
 			
-			info.ilvl = GetDetailedItemLevelInfo( info.hs ) or info.ilvl_base
-			info.spell_name, info.spell_id = GetItemSpell( info.id )
+			info.itemfamily = 0
+			if info.itemtypeid ~= ArkInventory.ENUM.ITEM.TYPE.CONTAINER.PARENT then
+				info.itemfamily = ArkInventory.CrossClient.GetItemFamily( info.h ) or 0
+			end
+			
+			local value = ArkInventory.PT_GetSetItemValue( info.osd.id, "ArkInventory.System.Pet.Parts" )
+			if not value then
+				-- not a pet part
+			else
+				
+				-- this is a pet part
+				value = tonumber( value )
+				if value then
+					
+					--ArkInventory.Output( "item [", info.osd.id, "] is a pet part for [", value, "]" )
+					
+					if ArkInventory.Collection.Pet.IsReady( ) then
+						
+						--local value = 374247
+						--local md = ArkInventory.Collection.Pet.GetMountBySpell( value )
+						--ArkInventory.Output( "[", value, "] = [", md, "]" )
+						
+						if ArkInventory.Collection.Pet.isOwnedBySpecies( value ) then
+							--ArkInventory.Output( "you own pet [", value, "] making item [", info.osd.id, "] useless" )
+							info.isUseless = true
+						else
+							--ArkInventory.Output( "you do not own pet [", value, "]" )
+						end
+						
+					else
+						
+						ArkInventory.OutputDebug( "pet data not ready" )
+						info.ready = false
+						
+					end
+					
+				end
+				
+			end
+			
+			
+			local value = ArkInventory.PT_GetSetItemValue( info.osd.id, "ArkInventory.System.Mount.Parts" )
+			if not value then
+				-- not a mount part
+			else
+				
+				-- this is a mount part
+				value = tonumber( value )
+				if value then
+					
+					--ArkInventory.Output( "item [", info.osd.id, "] is a mount part for [", value, "]" )
+					
+					if ArkInventory.Collection.Mount.IsReady( ) then
+						
+						--local value = 374247
+						--local md = ArkInventory.Collection.Mount.GetMountBySpell( value )
+						--ArkInventory.Output( "[", value, "] = [", md, "]" )
+						
+						if ArkInventory.Collection.Mount.isOwnedBySpell( value ) then
+							--ArkInventory.Output( "you own mount [", value, "] making item [", info.osd.id, "] useless" )
+							info.isUseless = true
+						else
+							--ArkInventory.Output( "you do not own mount [", value, "]" )
+						end
+						
+					else
+						
+						ArkInventory.OutputDebug( "mount data not ready" )
+						info.ready = false
+						
+					end
+					
+				end
+				
+			end
+			
+			if ArkInventory.CrossClient.GetItemLearnTransmogSet( info.id ) then
+				info.isCosmetic = true
+			end
+			
+			info.ilvl = ArkInventory.CrossClient.GetDetailedItemLevelInfo( info.hs ) or info.ilvl_base
+			info.spell_name, info.spell_id = ArkInventory.CrossClient.GetItemSpell( info.id )
 			info.rank = ArkInventory.CrossClient.GetItemReagentQuality( info.hs ) or ArkInventory.CrossClient.GetItemCraftedQuality( info.hs )
 			
-			ArkInventory.TooltipSet( ArkInventory.Global.Tooltip.Scan, nil, nil, nil, info.hs )
+			ArkInventory.TooltipSetFromHyperlink( ArkInventory.Global.Tooltip.Scan, info.hs )
 			
 			if not ArkInventory.TooltipIsReady( ArkInventory.Global.Tooltip.Scan ) then
 				
@@ -227,6 +302,17 @@ local function helper_UpdateObjectInfo( info, thread_id )
 				local stock = -1
 				
 				
+				info.itemunique = ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_ITEM_UNIQUE_MULTIPLE"], false, true, true, 0, ArkInventory.Const.Tooltip.Search.Short )
+				if info.itemunique then
+					info.itemunique = tonumber( info.itemunique )
+					if info.itemunique < info.stacksize then
+						ArkInventory.OutputDebug( "corrected stack count from [", info.stacksize, "] to [", info.itemunique, "] for ", info.h )
+						info.stacksize = info.itemunique
+					end
+				end
+				
+				
+				info.invtypeid = C_Item.GetItemInventoryTypeByID( info.h )
 				if ArkInventory.Const.Slot.INVTYPE_SortOrder[info.equiploc] then
 					if ArkInventory.Const.Slot.INVTYPE_SortOrder[info.equiploc] <= 0 then
 						-- clear unwanted equipment types so they arent seen as equipable
@@ -243,6 +329,7 @@ local function helper_UpdateObjectInfo( info, thread_id )
 					end
 				end
 				
+				
 				if info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.CONTAINER.PARENT then
 					
 					local stock1, stock2 = ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_ITEM_CONTAINER_SLOTS"], false, true, true )
@@ -251,12 +338,9 @@ local function helper_UpdateObjectInfo( info, thread_id )
 						stock = ArkInventory.TooltipTextToNumber( stock2 )
 					end
 					
-				elseif info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.GEM.ARTIFACTRELIC then
-					
-					ilvl = ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_RELIC_LEVEL"], false, true, true, 0, ArkInventory.Const.Tooltip.Search.Short )
-					ilvl = ArkInventory.TooltipTextToNumber( ilvl )
-					
-				elseif ArkInventory.CrossClient.IsAnimaItemByID( info.id ) or ArkInventory.PT_ItemInSets( info.id, "ArkInventory.Internal.ItemsWithStockValues" ) then
+				end
+				
+				if ArkInventory.CrossClient.IsItemAnima( info.id ) or ( ArkInventory.PT_ItemInSets( info.id, "ArkInventory.Internal.ItemsWithStockValues" ) and not ArkInventory.PT_ItemInSets( info.id, "ArkInventory.Internal.ExcludeFromItemsWithStockValues" ) ) then
 					
 					stock = ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, TooltipStockCapture1, false, true, false, 0, ArkInventory.Const.Tooltip.Search.Short )
 					stock = ArkInventory.TooltipTextToNumber( stock )
@@ -275,6 +359,21 @@ local function helper_UpdateObjectInfo( info, thread_id )
 						
 					end
 					
+				end
+				
+				if not stock then
+					ArkInventory.OutputDebug( "stock is nil for ", info.name, " / ", key, " / ", info.ready )
+					info.ready = false
+				end
+				
+				info.stock = stock or info.stock
+				
+				
+				if info.itemsubtypeid == ArkInventory.ENUM.ITEM.TYPE.GEM.ARTIFACTRELIC then
+					
+					ilvl = ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_RELIC_LEVEL"], false, true, true, 0, ArkInventory.Const.Tooltip.Search.Short )
+					ilvl = ArkInventory.TooltipTextToNumber( ilvl )
+					
 				else
 					
 					ilvl = ArkInventory.TooltipMatch( ArkInventory.Global.Tooltip.Scan, nil, ArkInventory.Localise["WOW_TOOLTIP_ITEM_LEVEL"], false, true, true, 4, ArkInventory.Const.Tooltip.Search.Short )
@@ -282,16 +381,8 @@ local function helper_UpdateObjectInfo( info, thread_id )
 					
 				end
 				
-				if not stock then
-					ArkInventory.OutputDebug( "stock is nil for ", info.name, " / ", key, " / ", info.ready )
-					info.ready = false
-				elseif stock ~= -1 then
-					--ilvl = ilvl or stock
-					--ArkInventory.Output( info.h, " = ", stock )
-				end
-				info.stock = stock or info.stock
-				
 				info.ilvl = ilvl or info.ilvl
+				
 				
 			end
 			
@@ -328,12 +419,12 @@ local function helper_UpdateObjectInfo( info, thread_id )
 		
 		helper_CorrectData( info, tmp )
 		
-		info.h = GetSpellLink( info.id ) or info.hs
+		info.h = ArkInventory.CrossClient.GetSpellLink( info.id ) or info.hs
 		info.name = tmp.name or info.name
 		if info.name == ArkInventory.Localise["DATA_NOT_READY"] then
 			info.ready = false
 		end
-		info.texture = tmp.icon or ArkInventory.Const.Texture.Missing
+		info.texture = tmp.iconID or ArkInventory.Const.Texture.Missing
 		info.q = ArkInventory.ENUM.ITEM.QUALITY.STANDARD
 		
 	elseif info.class == "battlepet" then
@@ -393,41 +484,82 @@ local function helper_UpdateObjectInfo( info, thread_id )
 		
 	end
 	
+	
+	info.retry = ( info.retry or 0 ) + 1
+	
+	if info.retry > 1 then
+		--ArkInventory.Output( "retry #", info.retry, " ", info.h )
+	end
+	
+	--if info.retry > ArkInventory.Const.ObjectInfoMaxRetry then
+	if info.dead == 2 then
+		info.ready = true
+		return
+	elseif info.dead == 1 then
+		info.ready = true
+		if info.retry >= 10 then
+			--ArkInventory.Output( "retry>10 = dead #2 ", info.h )
+			info.dead = 2
+			return
+		end
+	elseif info.retry >= 3 then
+		info.ready = true
+		--ArkInventory.Output( "retry>3 = dead #1 ", info.h )
+		info.dead = 1
+		--info.name = ArkInventory.Localise["DATA_NOT_FOUND"]
+		return
+	end
+	
 end
 
 local function helper_Scan_Threaded( thread_id )
 	
-	ArkInventory.OutputDebug( "object queue size ", ArkInventory.Table.Elements( Queue ) )
+	ArkInventory.OutputDebug( "object queue size ", ArkInventory.Table.Elements( scanQueue ) )
 	
 	local redo = { }
-	local clear = false
+	local clear = { }
 	
-	for hs in pairs( Queue ) do
-		
-		--ArkInventory.Output( "getting object data for ", hs )
+	for hs in pairs( scanQueue ) do
 		
 		local info = cacheGetObjectInfo[hs]
-		helper_UpdateObjectInfo( info )
+		if info then
+			helper_UpdateObjectInfo( info )
+		else
+			return ArkInventory.GetObjectInfo( hs )
+		end
+		
+		--ArkInventory.Output( "queue ", hs )
 		
 		ArkInventory.ThreadYield( thread_id )
 		
-		if info.ready or info.dead then
-			Queue[hs] = nil
-			clear = true
+		if info.ready then
+			if info.dead == 1 then
+				ArkInventory.OutputDebug( "dead - retry (attempt ", info.retry, ") ", hs )
+				redo[hs] = true
+			else
+				ArkInventory.OutputDebug( "ready (attempt ", info.retry, ") ", hs )
+				scanQueue[hs] = nil
+				clear[hs] = true
+			end
 		else
-			redo[hs] = true
+			if info.dead == 2 then
+				ArkInventory.OutputDebug( "very dead (attempt ", info.retry, ") ", hs )
+				scanQueue[hs] = nil
+				clear[hs] = true
+			else
+				ArkInventory.OutputDebug( "retry - not ready (attempt ", info.retry, ") ", hs )
+				--redo[hs] = true
+			end
 		end
 		
 	end
 	
-	if clear then
-		ArkInventory.ItemCacheClear( )
+	for hs in pairs( clear ) do
+		ArkInventory.ItemCacheClear( hs )
 	end
 	
-	if #redo then
-		for hs in pairs( redo ) do
-			helper_QueueAdd( hs )
-		end
+	for hs in pairs( redo ) do
+		helper_QueueAdd( hs )
 	end
 	
 end
@@ -444,10 +576,9 @@ local function helper_Scan( )
 	
 end
 
-function ArkInventory:EVENT_ARKINV_GETOBJECTINFO_QUEUE_UPDATE_BUCKET( ... )
+function ArkInventory:EVENT_ARKINV_GETOBJECTINFO_QUEUE_UPDATE_BUCKET( bucket )
 	
-	local event = ...
-	ArkInventory.OutputDebug( "EVENT: QUEUE_UPDATE - ", event )
+	ArkInventory.OutputDebug( "EVENT: QUEUE_UPDATE - ", bucket )
 	
 	if not ArkInventory:IsEnabled( ) then return end
 	
@@ -456,10 +587,10 @@ function ArkInventory:EVENT_ARKINV_GETOBJECTINFO_QUEUE_UPDATE_BUCKET( ... )
 		return
 	end
 	
-	if not scanning then
-		scanning = true
+	if not scanActive then
+		scanActive = true
 		helper_Scan( )
-		scanning = false
+		scanActive = false
 	else
 		ArkInventory:SendMessage( "EVENT_ARKINV_GETOBJECTINFO_QUEUE_UPDATE_BUCKET", "BUSY" )
 	end
@@ -488,7 +619,9 @@ function ArkInventory.ObjectStringDecode( h, i )
 		if i.h then
 			h1 = i.h
 		else
-			local blizzard_id = ArkInventory.InternalIdToBlizzardBagId( i.loc_id, i.bag_id )
+			-- empty slot
+			--ArkInventory.Output( h, " = ", i )
+			local blizzard_id = ArkInventory.Util.getBlizzardBagIdFromWindowId( i.loc_id, i.bag_id )
 			bt = ArkInventory.BagType( blizzard_id )
 			h1 = string.format( "empty:0:%s", bt )
 		end
@@ -845,8 +978,7 @@ function ArkInventory.GetObjectInfo( h, i )
 	local osd = ArkInventory.ObjectStringDecode( h, i )
 	
 	if not osd.class or not osd.id then
-		ArkInventory.OutputError( "code failure: invalid class [", osd.class, ":", osd.id, "]" )
-		error( "code failure" )
+		ArkInventory.Util.Error( "invalid class [", osd.class, ":", osd.id, "]" )
 	end
 	
 	chs = osd.hs and cacheObjectStringStandard[osd.hs]
@@ -901,25 +1033,18 @@ function ArkInventory.GetObjectInfo( h, i )
 	else
 		
 		if h and h ~= "" then
-			
 			cacheObjectStringStandard[h] = info.osd.hs
 			cacheGetObjectInfo[h] = info
-			
-			if info.ready then
-				ArkInventory.ItemCacheClear( h )
-			end
-			
 		end
 		
 		cacheGetObjectInfo[info.osd.hs] = info
 		cacheGetObjectInfo[info.osd.h1] = info
 		cacheGetObjectInfo[info.osd.h2] = info
 		
-		
 	end
 	
 	if not info.ready then
-		--ArkInventory.Output( "debug: object not ready ", info.h )
+		ArkInventory.OutputDebug( "object not ready, re-queue ", info.h )
 		helper_QueueAdd( info.osd.hs )
 	end
 	
@@ -1067,7 +1192,7 @@ function ArkInventory.ObjectIDCategory( i, isRule )
 	
 	-- if you change these values then you need to upgrade the savedvariable data as well
 	
-	local soulbound = ArkInventory.ENUM.BIND.NEVER
+	local soulbound = ArkInventory.ENUM.ITEM.BINDING.NEVER
 	if ArkInventory.IsBound( i.sb ) then
 		soulbound = 1
 	end
@@ -1083,7 +1208,7 @@ function ArkInventory.ObjectIDCategory( i, isRule )
 			r = string.format( "%s:%s", r, osd.exrid )
 		end
 	elseif osd.class == "empty" then
-		local blizzard_id = ArkInventory.InternalIdToBlizzardBagId( i.loc_id, i.bag_id )
+		local blizzard_id = ArkInventory.Util.getBlizzardBagIdFromWindowId( i.loc_id, i.bag_id )
 		soulbound = ArkInventory.BagType( blizzard_id ) -- allows for unique codes per bag type
 		r = string.format( "%s:%i:%i", osd.class, osd.id, soulbound )
 	elseif osd.class == "spell" or osd.class == "currency" or osd.class == "copper" or osd.class == "reputation" or osd.class == "enchant" then
@@ -1097,7 +1222,7 @@ function ArkInventory.ObjectIDCategory( i, isRule )
 		r = string.format( "%s:%i:%i", osd.class, osd.id, soulbound )
 	end
 	
-	local codex = ArkInventory.GetLocationCodex( i.loc_id )
+	local codex = ArkInventory.Codex.GetLocation( i.loc_id )
 	local cr = string.format( "%i:%s", codex.catset_id, r )
 	
 	return cr, r, codex
@@ -1107,7 +1232,7 @@ end
 function ArkInventory.ObjectIDRule( i )
 	-- not saved, cached only, can be changed at any time
 	local id, _, codex = ArkInventory.ObjectIDCategory( i, true )
-	local rid = string.format( "%i:%i:%i:%i:%s", i.loc_id or 0, i.bag_id or 0, i.slot_id or 0, i.sb or ArkInventory.ENUM.BIND.NEVER, id )
+	local rid = string.format( "%i:%i:%i:%i:%s", i.loc_id or 0, i.bag_id or 0, i.slot_id or 0, i.sb or ArkInventory.ENUM.ITEM.BINDING.NEVER, id )
 	return rid, id, codex
 end
 

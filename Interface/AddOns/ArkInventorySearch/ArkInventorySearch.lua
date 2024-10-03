@@ -175,7 +175,8 @@ end
 
 function ArkInventorySearch.Frame_Table_Reset( f )
 	
-	assert( f and type( f ) == "string" and _G[f], "CODE ERROR: Invalid parameter passed to Search.Frame_Table_Reset( )" )
+	ArkInventory.Util.Assert( type( f ) == "string", "f is [", type( f ), "], should be [string]" )
+	ArkInventory.Util.Assert( _G[f], "xml element [", f, "] does not exist" )
 	
 	-- hide and reset all rows
 	
@@ -230,7 +231,7 @@ function ArkInventorySearch.Frame_Table_Refresh_Threaded( frame, thread_id )
 	
 	local id, name, txt, info
 	local item_not_ready = string.format( " %s", ArkInventory.Localise["ITEM_NOT_READY"] )
-	local me = ArkInventory.GetPlayerCodex( )
+	local me = ArkInventory.Codex.GetPlayer( )
 	ArkInventorySearch.rebuild = 0
 	
 	ArkInventory.OutputDebug( "search - building cache - start" )

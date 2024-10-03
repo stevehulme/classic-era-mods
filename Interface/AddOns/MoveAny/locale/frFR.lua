@@ -50,7 +50,7 @@ function MoveAny:LangfrFR()
 		["LID_CHAT"] = "Cadre de chat %d",
 		["LID_CHATBUTTONFRAME"] = "Boutons de chat",
 		["LID_CHATQUICKJOIN"] = "Participation rapide au chat",
-		["LID_CHATEDITBOX"] = "Boîte de saisie du chat",
+		["LID_CHATEDITBOX"] = "Boîte de saisie du chat %s",
 		["LID_COMPACTRAIDFRAMEMANAGER"] = "Raid Manager",
 		["LID_BNToastFrame"] = "Notifications des amis Battlenet",
 		["LID_ZONETEXTFRAME"] = "Texte de la zone",
@@ -117,6 +117,9 @@ function MoveAny:LangfrFR()
 		["LID_LOSSOFCONTROLFRAME"] = "Cadre de perte de contrôle",
 		["LID_TargetFrameNumericalThreat"] = "Pourcentage de menace",
 		["LID_RESETELEMENT"] = "Reset Element",
+		["LID_PLEASESWITCHPROFILE1"] = "S'il vous plaît, changez le LAYOUT en Editmode (de Blizzard) pour un CUSTOM LAYOUT.",
+		["LID_PLEASESWITCHPROFILE2"] = "MoveAny ne fonctionne pas avec un Preset Profile, il est principalement en lecture seule.",
+		["LID_PLEASESWITCHPROFILE3"] = "ESC -> Editmode -> Layout : [CUSTOM-LAYOUT] (pas de Preset Layout)",
 	}
 
 	if MoveAny:GetWoWBuild() ~= "RETAIL" then

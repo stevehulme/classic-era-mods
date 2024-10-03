@@ -1,4 +1,14 @@
-# 20 August 204
+# 20 September 2024
+- Fixed bug with identifying spells by spell ID.
+
+# 19 September 2024
+- Fixed a bug with empty spellbook tabs.
+- Fixed a bug where spell list entries with just integers caused the spell list to become inaccessible. 
+
+# 12 September 2024
+- Fixed the mounted condition not recognizing druids' flight and travel forms.
+
+# 20 August 2024
 - Fixed an error in aura cancellation (thanks Road-Block for providing the fix!)
 
 # 15 August 2024

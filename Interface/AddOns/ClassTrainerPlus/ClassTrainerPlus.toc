@@ -1,6 +1,6 @@
-## Interface: 30402
+## Interface: 11504
 ## Title: Class Trainer Plus
-## Version: 1.0.0
+## Version: 1.1.0
 ## Author: Sveng
 ## Notes: Lets you hide abilities from class trainers that you don't care about
 ## SavedVariables: TRAINER_FILTER_AVAILABLE, TRAINER_FILTER_UNAVAILABLE, TRAINER_FILTER_USED
@@ -11,16 +11,15 @@
 libs\LibStub.lua
 libs\FusionIgnoreStore\IgnoreStore.lua
 
-Classes\WotLK\DeathKnight.lua
-Classes\WotLK\Druid.lua
-Classes\WotLK\Hunter.lua
-Classes\WotLK\Mage.lua
-Classes\WotLK\Paladin.lua
-Classes\WotLK\Priest.lua
-Classes\WotLK\Rogue.lua
-Classes\WotLK\Shaman.lua
-Classes\WotLK\Warlock.lua
-Classes\WotLK\Warrior.lua
+Classes\Druid.lua
+Classes\Hunter.lua
+Classes\Mage.lua
+Classes\Paladin.lua
+Classes\Priest.lua
+Classes\Rogue.lua
+Classes\Shaman.lua
+Classes\Warlock.lua
+Classes\Warrior.lua
 
 Localization.lua
 AbilityStorage.lua

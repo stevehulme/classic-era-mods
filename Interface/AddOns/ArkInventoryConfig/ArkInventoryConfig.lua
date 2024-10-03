@@ -16,7 +16,7 @@ local table = _G.table
 local ItemStringPattern = "(|h%[.-%]|h)"
 
 local config = {
-	me = ArkInventory.GetPlayerCodex( ),
+	me = ArkInventory.Codex.GetPlayer( ),
 	catset = {
 		sort = ArkInventory.ENUM.LIST.SORTBY.NAME,
 		show = ArkInventory.ENUM.LIST.SHOW.ACTIVE,
@@ -104,7 +104,7 @@ function ArkInventory.ConfigRefreshFull( )
 	--ArkInventory.Frame_Main_Hide( )
 	--ArkInventory.Frame_Rules_Hide( )
 	
-	ArkInventory.CodexReset( )
+	ArkInventory.Codex.Reset( )
 	
 	ArkInventory.PlayerInfoSet( )
 	ArkInventory.DatabaseUpgradePostLoad( )
@@ -159,33 +159,33 @@ local function ConfigGetNodeArg( info, level )
 	
 end
 
-local function helperColourGet( v )
+local function helperColourGet( t )
 	
-	assert( v, "bad code: missing parameter" )
-	assert( type( v ) == "table", "bad code: parameter is not a table" )
+	ArkInventory.Util.Assert( t, "t is nil" )
+	ArkInventory.Util.Assert( type( t ) == "table", "t is [", type( t ), "], should be [table]" )
 	
 	local f = "%.3f"
 	
-	local r = tonumber( string.format( f, v.r or 1 ) )
-	local g = tonumber( string.format( f, v.g or 1 ) )
-	local b = tonumber( string.format( f, v.b or 1 ) )
-	local a = tonumber( string.format( f, v.a or 1 ) )
+	local r = tonumber( string.format( f, t.r or 1 ) )
+	local g = tonumber( string.format( f, t.g or 1 ) )
+	local b = tonumber( string.format( f, t.b or 1 ) )
+	local a = tonumber( string.format( f, t.a or 1 ) )
 	return r, g, b, a
 	
 end
 
-local function helperColourSet( v, r, g, b, a )
+local function helperColourSet( t, r, g, b, a )
 	
-	assert( v, "bad code: missing parameter" )
-	assert( type( v ) == "table", "bad code: parameter is not a table" )
+	ArkInventory.Util.Assert( t, "t is nil" )
+	ArkInventory.Util.Assert( type( t ) == "table", "t is [", type( t ), "], should be [table]" )
 	
 	local f = "%.3f"
 	
-	v.r = tonumber( string.format( f, r or 1 ) )
-	v.g = tonumber( string.format( f, g or 1 ) )
-	v.b = tonumber( string.format( f, b or 1 ) )
+	t.r = tonumber( string.format( f, r or 1 ) )
+	t.g = tonumber( string.format( f, g or 1 ) )
+	t.b = tonumber( string.format( f, b or 1 ) )
 	if a then
-		v.a = tonumber( string.format( f, a or 1 ) )
+		t.a = tonumber( string.format( f, a or 1 ) )
 	end
 	
 end
@@ -241,6 +241,18 @@ local anchorpoints6 = {
 	[ArkInventory.ENUM.ANCHOR.BOTTOM] = ArkInventory.Localise["BOTTOM"],
 }
 
+local fillpriorityoptions = {
+	[ArkInventory.ENUM.RESTACK.ORDER.NORMAL] = ArkInventory.Localise["RESTACK_BAG_PRIORITY_NORMAL"],
+	[ArkInventory.ENUM.RESTACK.ORDER.PROFESSION] = ArkInventory.Localise["RESTACK_BAG_PRIORITY_PROFESSION"],
+	[ArkInventory.ENUM.RESTACK.ORDER.REAGENT] = ArkInventory.Localise["RESTACK_BAG_PRIORITY_REAGENT"],
+	[ArkInventory.ENUM.RESTACK.ORDER.ACCOUNT] = ArkInventory.Localise["RESTACK_BAG_PRIORITY_ACCOUNT"],
+}
+
+local flightmodeoptions = {
+	[ArkInventory.ENUM.FLIGHT.MODE.ALL] = ArkInventory.Localise["LDB_MOUNTS_FLYING_MODE_ALL"],
+	[ArkInventory.ENUM.FLIGHT.MODE.STEADY] = ArkInventory.Localise["LDB_MOUNTS_FLYING_MODE_STEADY"],
+	[ArkInventory.ENUM.FLIGHT.MODE.DRAGON] = ArkInventory.Localise["LDB_MOUNTS_FLYING_MODE_DRAGON"],
+}
 
 function ArkInventory.ConfigInternal( )
 	
@@ -358,39 +370,6 @@ function ArkInventory.ConfigInternal( )
 						end
 					end,
 				},
-				restack = {
-					order = 130,
-					name = ArkInventory.Localise["RESTACK"],
-					desc = ArkInventory.Localise["RESTACK_TYPE"],
-					type = "select",
-					values = function( )
-						local t = { }
-						if ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Client then
-							t[1] = string.format( "%s: %s", ArkInventory.Localise["BLIZZARD"], ArkInventory.Localise["CLEANUP"] )
-						end
-						t[2] = string.format( "%s: %s", ArkInventory.Const.Program.Name, ArkInventory.Localise["RESTACK"] )
-						
-						return t
-					end,
-					get = function( info )
-						if ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].ClientCheck ) then
-							if ArkInventory.db.option.restack.blizzard then
-								return 1
-							else
-								return 2
-							end
-						else
-							return 2
-						end
-					end,
-					set = function( info, v )
-						if v == 1 then
-							ArkInventory.db.option.restack.blizzard = true
-						else
-							ArkInventory.db.option.restack.blizzard = false
-						end
-					end,
-				},
 				reposition = {
 					order = 140,
 					name = ArkInventory.Localise["CONFIG_GENERAL_REPOSITION_ONSHOW"],
@@ -425,7 +404,7 @@ function ArkInventory.ConfigInternal( )
 							args = {
 								header = {
 									order = 10,
-									name = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN"], ArkInventory.Const.Program.Name, ArkInventory.Localise["BACKPACK"] ),
+									name = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN"], ArkInventory.Const.Program.Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
 									type = "header",
 									width = "full",
 								},
@@ -433,7 +412,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["BANK"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["BANK"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -451,7 +430,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["VAULT"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].ClientCheck ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["VAULT"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -468,7 +447,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["MAILBOX"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["MAILBOX"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Mailbox].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -485,7 +464,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["MERCHANT"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["MERCHANT"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["MERCHANT"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -502,7 +481,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["TRADE"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["TRADE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["TRADE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -519,7 +498,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["AUCTION_HOUSE"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["AUCTION_HOUSE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["AUCTION_HOUSE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -537,7 +516,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["VOID_STORAGE"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Void].ClientCheck ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["VOID_STORAGE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Void].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -555,7 +534,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["OBLITERUM_FORGE"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.LEGION ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["OBLITERUM_FORGE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["OBLITERUM_FORGE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [2] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -573,7 +552,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["CONFIG_AUTO_SCRAP"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.BFA ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["CONFIG_AUTO_SCRAP"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["CONFIG_AUTO_SCRAP"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -591,7 +570,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["TRANSMOGRIFIER"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.CATACLYSM ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["TRANSMOGRIFIER"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["TRANSMOGRIFIER"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -609,7 +588,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["ENGRAVE"],
 									disabled = not ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.CLASSIC ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["ENGRAVE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_OPEN_DESC"], ArkInventory.Localise["ENGRAVE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -632,7 +611,7 @@ function ArkInventory.ConfigInternal( )
 							args = {
 								header = {
 									order = 10,
-									name = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE"], ArkInventory.Const.Program.Name, ArkInventory.Localise["BACKPACK"] ),
+									name = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE"], ArkInventory.Const.Program.Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
 									type = "header",
 									width = "full",
 								},
@@ -640,7 +619,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["BANK"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["BANK"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -658,7 +637,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["VAULT"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].ClientCheck ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["VAULT"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -675,7 +654,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["MAILBOX"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["MAILBOX"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Mailbox].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -692,7 +671,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["MERCHANT"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["MERCHANT"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["MERCHANT"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -709,7 +688,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["TRADE"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["TRADE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["TRADE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -726,7 +705,7 @@ function ArkInventory.ConfigInternal( )
 									order = 100,
 									name = ArkInventory.Localise["AUCTION_HOUSE"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["AUCTION_HOUSE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["AUCTION_HOUSE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -744,7 +723,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["VOID_STORAGE"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Void].ClientCheck ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["VOID_STORAGE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Void].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -762,7 +741,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["OBLITERUM_FORGE"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.LEGION ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["OBLITERUM_FORGE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["OBLITERUM_FORGE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -780,7 +759,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["CONFIG_AUTO_SCRAP"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.BFA ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["CONFIG_AUTO_SCRAP"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["CONFIG_AUTO_SCRAP"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -798,7 +777,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["TRANSMOGRIFIER"],
 									disabled = not ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.CATACLYSM ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["TRANSMOGRIFIER"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["TRANSMOGRIFIER"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -816,7 +795,7 @@ function ArkInventory.ConfigInternal( )
 									name = ArkInventory.Localise["ENGRAVE"],
 									disabled = not ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.CLASSIC ),
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["ENGRAVE"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_DESC"], ArkInventory.Localise["ENGRAVE"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"], ArkInventory.Localise["ALWAYS"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"], [ArkInventory.ENUM.BAG.OPENCLOSE.ALWAYS] = ArkInventory.Localise["ALWAYS"] }
 										return t
@@ -833,7 +812,7 @@ function ArkInventory.ConfigInternal( )
 									order = 999,
 									name = ArkInventory.Localise["CONFIG_AUTO_COMBAT"],
 									type = "select",
-									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_COMBAT_DESC"], ArkInventory.Localise["CONFIG_AUTO_COMBAT"], ArkInventory.Localise["BACKPACK"], ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
+									desc = string.format( ArkInventory.Localise["CONFIG_AUTO_CLOSE_COMBAT_DESC"], ArkInventory.Localise["CONFIG_AUTO_COMBAT"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name, ArkInventory.Localise["NO"], ArkInventory.Localise["YES"] ),
 									values = function( )
 										local t = { [ArkInventory.ENUM.BAG.OPENCLOSE.NO] = ArkInventory.Localise["NO"], [ArkInventory.ENUM.BAG.OPENCLOSE.YES] = ArkInventory.Localise["YES"] }
 										return t
@@ -1490,6 +1469,58 @@ function ArkInventory.ConfigInternal( )
 								},
 							},
 						},
+						transmog = {
+							order = 300,
+							name = ArkInventory.Localise["TRANSMOGRIFICATION"],
+							type = "group",
+							disabled = function( info )
+								return not ArkInventory.db.option.tooltip.show
+							end,
+							args = {
+								enabled = {
+									order = 100,
+									name = ArkInventory.Localise["ENABLED"],
+									desc = ArkInventory.Localise["CONFIG_GENERAL_TOOLTIP_TRANSMOG_ENABLE_DESC"],
+									type = "toggle",
+									get = function( info )
+										return ArkInventory.db.option.tooltip.transmog.enable
+									end,
+									set = function( info, v )
+										ArkInventory.db.option.tooltip.transmog.enable = v
+									end,
+								},
+								sets = {
+									order = 100,
+									name = ArkInventory.Localise["TOOLTIP_APPEARANCE_SET"],
+									desc = ArkInventory.Localise["CONFIG_GENERAL_TOOLTIP_TRANSMOG_SET_ENABLE_DESC"],
+									type = "toggle",
+									disabled = function( info )
+										return not ArkInventory.db.option.tooltip.show or not ArkInventory.db.option.tooltip.transmog.enable
+									end,
+									get = function( info )
+										return ArkInventory.db.option.tooltip.transmog.set
+									end,
+									set = function( info, v )
+										ArkInventory.db.option.tooltip.transmog.set = v
+									end,
+								},
+								items = {
+									order = 100,
+									name = ArkInventory.Localise["ITEM"],
+									desc = ArkInventory.Localise["CONFIG_GENERAL_TOOLTIP_TRANSMOG_ITEM_ENABLE_DESC"],
+									type = "toggle",
+									disabled = function( info )
+										return not ArkInventory.db.option.tooltip.show or not ArkInventory.db.option.tooltip.transmog.enable
+									end,
+									get = function( info )
+										return ArkInventory.db.option.tooltip.transmog.item
+									end,
+									set = function( info, v )
+										ArkInventory.db.option.tooltip.transmog.item = v
+									end,
+								},
+							},
+						},
 					},
 				},
 				actions = {
@@ -1635,8 +1666,8 @@ function ArkInventory.ConfigInternal( )
 --[[
 								partyloot = {
 									order = 600,
-									name = ArkInventory.Localise["ITEM_BIND_PARTYLOOT"],
-									desc = string.format( ArkInventory.Localise["CONFIG_ACTION_INCLUDE_DESC"], ArkInventory.Localise["ITEM_BIND_PARTYLOOT"] ),
+									name = ArkInventory.Localise["ITEM_BINDING_PARTYLOOT"],
+									desc = string.format( ArkInventory.Localise["CONFIG_ACTION_INCLUDE_DESC"], ArkInventory.Localise["ITEM_BINDING_PARTYLOOT"] ),
 									type = "toggle",
 									disabled = function( )
 										return ArkInventory.Action.Vendor.data.conflict or not ArkInventory.db.option.action.vendor.enable
@@ -1740,19 +1771,20 @@ function ArkInventory.ConfigInternal( )
 												ArkInventory.Frame_Main_Generate( nil, ArkInventory.Const.Window.Draw.Recalculate )
 											end,
 										},
-										itemlevel = {
+										ignorelevel = {
 											order = 300,
-											name = ArkInventory.Localise["ITEM_LEVEL"],
-											desc = ArkInventory.Localise["CONFIG_ACTION_VENDOR_SOULBOUND_ITEMLEVEL_DESC"],
+											name = ArkInventory.Localise["CONFIG_ACTION_VENDOR_SOULBOUND_IGNORELEVEL"],
+											desc = ArkInventory.Localise["CONFIG_ACTION_VENDOR_SOULBOUND_IGNORELEVEL_DESC"],
 											type = "toggle",
+											width = "double",
 											disabled = function( )
 												return ArkInventory.Action.Vendor.data.conflict or not ArkInventory.db.option.action.vendor.soulbound.equipment
 											end,
 											get = function( info )
-												return ArkInventory.db.option.action.vendor.soulbound.itemlevel
+												return ArkInventory.db.option.action.vendor.soulbound.ignorelevel
 											end,
 											set = function( info, v )
-												ArkInventory.db.option.action.vendor.soulbound.itemlevel = not ArkInventory.db.option.action.vendor.soulbound.itemlevel
+												ArkInventory.db.option.action.vendor.soulbound.ignorelevel = not ArkInventory.db.option.action.vendor.soulbound.ignorelevel
 												ArkInventory.ItemCacheClear( )
 												ArkInventory.Frame_Main_Generate( nil, ArkInventory.Const.Window.Draw.Recalculate )
 											end,
@@ -1906,7 +1938,7 @@ function ArkInventory.ConfigInternal( )
 							name = ArkInventory.Action.Use.data.name,
 							type = "group",
 							hidden = function( )
-								return ArkInventory.CrossClient.TimerunningSeasonID( ) == 0
+								return ArkInventory.Global.TimerunningSeasonID == 0
 							end,
 							args = {
 								conflict = {
@@ -2111,7 +2143,9 @@ function ArkInventory.ConfigInternal( )
 							order = 1000,
 							name = ArkInventory.Action.Scrap.data.name,
 							type = "group",
-							--hidden = true,
+							hidden = function( )
+								return not ArkInventory.Action.Scrap.data.ClientCheck
+							end,
 							args = {
 								conflict = {
 									order = 1,
@@ -2470,7 +2504,7 @@ function ArkInventory.ConfigInternal( )
 							type = "select",
 							width = "double",
 							dialogControl = "LSM30_Background",
-							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.Transmog.SharedMediaType ),
+							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.SharedMedia.Type.Transmog ),
 --							hidden = function( info )
 --								return not ArkInventory.db.option.transmog.enable
 --							end,
@@ -2514,7 +2548,7 @@ function ArkInventory.ConfigInternal( )
 							type = "select",
 							width = "double",
 							dialogControl = "LSM30_Background",
-							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.Transmog.SharedMediaType ),
+							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.SharedMedia.Type.Transmog ),
 ---							hidden = function( info )
 --								return not ArkInventory.db.option.transmog.enable or not ArkInventory.db.option.transmog.secondary
 --							end,
@@ -2567,7 +2601,7 @@ function ArkInventory.ConfigInternal( )
 							type = "select",
 							width = "double",
 							dialogControl = "LSM30_Background",
-							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.Transmog.SharedMediaType ),
+							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.SharedMedia.Type.Transmog ),
 --							hidden = function( info )
 --								return not ArkInventory.db.option.transmog.enable
 --							end,
@@ -2611,7 +2645,7 @@ function ArkInventory.ConfigInternal( )
 							type = "select",
 							width = "double",
 							dialogControl = "LSM30_Background",
-							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.Transmog.SharedMediaType ),
+							values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.SharedMedia.Type.Transmog ),
 --							hidden = function( info )
 --								return not ArkInventory.db.option.transmog.enable or not ArkInventory.db.option.transmog.secondary
 --							end,
@@ -2685,6 +2719,820 @@ function ArkInventory.ConfigInternal( )
 									set = function( info, v )
 										ArkInventory.db.option.conflict.tsm.merchant = not ArkInventory.db.option.conflict.tsm.merchant
 									end,
+								},
+							},
+						},
+					},
+				},
+				restack = {
+					order = 1000,
+					name = ArkInventory.Localise["RESTACK"],
+					type = "group",
+					childGroups = "tab",
+					args = {
+--						general = {
+--							order = 100,
+--							name = ArkInventory.Localise["GENERAL"],
+--							type = "group",
+--							args = {
+								style = {
+									order = 10,
+									name = ArkInventory.Localise["RESTACK"],
+									desc = ArkInventory.Localise["RESTACK_TYPE"],
+									type = "select",
+									width = "double",
+									values = function( )
+										local t = { }
+										if ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].ClientCheck then
+											t[1] = string.format( "%s: %s", ArkInventory.Localise["BLIZZARD"], ArkInventory.Localise["CLEANUP"] )
+										end
+										t[2] = string.format( "%s: %s", ArkInventory.Const.Program.Name, ArkInventory.Localise["RESTACK"] )
+										
+										return t
+									end,
+									get = function( info )
+										if ArkInventory.ClientCheck( ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].ClientCheck ) then
+											if ArkInventory.db.option.cleanup.enable then
+												return 1
+											else
+												return 2
+											end
+										else
+											return 2
+										end
+									end,
+									set = function( info, v )
+										if v == 1 then
+											ArkInventory.db.option.cleanup.enable = true
+										else
+											ArkInventory.db.option.cleanup.enable = false
+										end
+									end,
+								},
+								enable = {
+									order = 20,
+									name = ArkInventory.Localise["ENABLE"],
+									type = "toggle",
+									get = function( )
+										return ArkInventory.db.option.restack.enable
+									end,
+									set = function( info, v )
+										ArkInventory.db.option.restack.enable = not ArkInventory.db.option.restack.enable
+									end,
+								},
+								priority = {
+									order = 30,
+									name = ArkInventory.Localise["RESTACK_BAG_PRIORITY"],
+									type = "group",
+									--inline = true,
+									hidden = function( )
+										return ArkInventory.db.option.cleanup.enable
+									end,
+									args = {
+										bag1 = {
+											order = 10,
+											name = string.format( "%s %s (highest)", ArkInventory.Localise["CONFIG_GENERAL_TRADESKILL_PRIORITY"], 1 ),
+											type = "select",
+											values = function( )
+												return fillpriorityoptions
+											end,
+											get = function( info )
+												return ArkInventory.db.option.restack.bagorder[1]
+											end,
+											set = function( info, v )
+												
+												local ok
+												local ov = ArkInventory.db.option.restack.bagorder[1]
+												
+												for k1, v1 in ipairs( ArkInventory.db.option.restack.bagorder ) do
+													if v1 == v then
+														ok = k1
+														break
+													end
+												end
+												
+												ArkInventory.db.option.restack.bagorder[1] = v
+												ArkInventory.db.option.restack.bagorder[ok] = ov
+												
+											end,
+										},
+										bag2 = {
+											order = 20,
+											name = string.format( "%s %s", ArkInventory.Localise["CONFIG_GENERAL_TRADESKILL_PRIORITY"], 2 ),
+											type = "select",
+											values = function( )
+												return fillpriorityoptions
+											end,
+											get = function( info )
+												return ArkInventory.db.option.restack.bagorder[2]
+											end,
+											set = function( info, v )
+												
+												local ok
+												local ov = ArkInventory.db.option.restack.bagorder[2]
+												
+												for k1, v1 in ipairs( ArkInventory.db.option.restack.bagorder ) do
+													if v1 == v then
+														ok = k1
+														break
+													end
+												end
+												
+												ArkInventory.db.option.restack.bagorder[2] = v
+												ArkInventory.db.option.restack.bagorder[ok] = ov
+												
+											end,
+										},
+										bag3 = {
+											order = 30,
+											name = string.format( "%s %s", ArkInventory.Localise["CONFIG_GENERAL_TRADESKILL_PRIORITY"], 3 ),
+											type = "select",
+											values = function( )
+												return fillpriorityoptions
+											end,
+											get = function( info )
+												return ArkInventory.db.option.restack.bagorder[3]
+											end,
+											set = function( info, v )
+												
+												local ok
+												local ov = ArkInventory.db.option.restack.bagorder[3]
+												
+												for k1, v1 in ipairs( ArkInventory.db.option.restack.bagorder ) do
+													if v1 == v then
+														ok = k1
+														break
+													end
+												end
+												
+												ArkInventory.db.option.restack.bagorder[3] = v
+												ArkInventory.db.option.restack.bagorder[ok] = ov
+												
+											end,
+										},
+										bag4 = {
+											order = 40,
+											name = string.format( "%s %s (lowest)", ArkInventory.Localise["CONFIG_GENERAL_TRADESKILL_PRIORITY"], 4 ),
+											type = "select",
+											values = function( )
+												return fillpriorityoptions
+											end,
+											get = function( info )
+												return ArkInventory.db.option.restack.bagorder[4]
+											end,
+											set = function( info, v )
+												
+												local ok
+												local ov = ArkInventory.db.option.restack.bagorder[4]
+												
+												for k1, v1 in ipairs( ArkInventory.db.option.restack.bagorder ) do
+													if v1 == v then
+														ok = k1
+														break
+													end
+												end
+												
+												ArkInventory.db.option.restack.bagorder[4] = v
+												ArkInventory.db.option.restack.bagorder[ok] = ov
+												
+											end,
+										},
+									},
+								},
+--							},
+--						},
+						cleanup_bag = {
+							order = 1000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name,
+							type = "group",
+							hidden = function( )
+								return not ArkInventory.db.option.cleanup.enable
+							end,
+							args = {
+								reversesort = {
+									order = 110,
+									name = ArkInventory.Localise["REVERSE_CLEAN_UP_BAGS_TEXT"],
+									type = "toggle",
+									width = "full",
+									get = function( )
+										return ArkInventory.db.option.cleanup.reverse
+									end,
+									set = function( info, v )
+										ArkInventory.db.option.cleanup.reverse = not ArkInventory.db.option.cleanup.reverse
+										ArkInventory.CrossClient.SetSortBagsRightToLeft( ArkInventory.db.option.cleanup.reverse )
+									end,
+								},
+							},
+						},
+						cleanup_reagentbank = {
+							order = 3000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBank].Name,
+							type = "group",
+							hidden = function( )
+								return ( not ArkInventory.db.option.cleanup.enable ) or ( not ArkInventory.Util.MapCheckStorage( ArkInventory.Const.Location.ReagentBank ) )
+							end,
+							args = {
+								deposit = {
+									order = 310,
+									name = ArkInventory.Localise["REAGENTBANK_DEPOSIT"],
+									desc = string.format( ArkInventory.Localise["RESTACK_CLEANUP_DEPOSIT_DESC"], ArkInventory.Localise["REAGENTBANK_DEPOSIT"] ),
+									type = "toggle",
+									width = "full",
+									get = function( )
+										return ArkInventory.db.option.cleanup.deposit[ArkInventory.Const.Location.ReagentBank]
+									end,
+									set = function( info, v )
+										ArkInventory.db.option.cleanup.deposit[ArkInventory.Const.Location.ReagentBank] = not ArkInventory.db.option.cleanup.deposit[ArkInventory.Const.Location.ReagentBank]
+									end,
+								},
+							},
+						},
+						cleanup_accountbank = {
+							order = 4000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.AccountBank].Name,
+							type = "group",
+							hidden = function( )
+								return ( not ArkInventory.db.option.cleanup.enable ) or ( not ArkInventory.Util.MapCheckStorage( ArkInventory.Const.Location.AccountBank ) )
+							end,
+							args = {
+								deposit = {
+									order = 10,
+									name = ArkInventory.Localise["ACCOUNT_BANK_DEPOSIT_BUTTON_LABEL"],
+									desc = string.format( ArkInventory.Localise["RESTACK_CLEANUP_DEPOSIT_DESC"], ArkInventory.Localise["ACCOUNT_BANK_DEPOSIT_BUTTON_LABEL"] ),
+									type = "toggle",
+									width = "full",
+									get = function( )
+										return ArkInventory.db.option.cleanup.deposit[ArkInventory.Const.Location.AccountBank]
+									end,
+									set = function( info, v )
+										ArkInventory.db.option.cleanup.deposit[ArkInventory.Const.Location.AccountBank] = not ArkInventory.db.option.cleanup.deposit[ArkInventory.Const.Location.AccountBank]
+									end,
+								},
+								reagents = {
+									order = 20,
+									name = ArkInventory.Localise["BANK_DEPOSIT_INCLUDE_REAGENTS_CHECKBOX_LABEL"],
+									desc = ArkInventory.Localise["RESTACK_CLEANUP_DEPOSIT_ACCOUNT_REAGENT"],
+									type = "toggle",
+									width = "full",
+									disabled = function( )
+										return not ArkInventory.db.option.cleanup.deposit[ArkInventory.Const.Location.AccountBank]
+									end,
+									get = function( )
+										local cv_name = "bankAutoDepositReagents"
+										return ArkInventory.CrossClient.GetCVarBool( cv_name )
+									end,
+									set = function( info, v )
+										local cv_name = "bankAutoDepositReagents"
+										local cv_value = ArkInventory.CrossClient.GetCVarBool( cv_name )
+										ArkInventory.CrossClient.SetCVarBool( cv_name, not cv_value )
+									end,
+								},
+							},
+						},
+						bag = {
+							order = 1000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name,
+							type = "group",
+							hidden = function( )
+								return ArkInventory.db.option.cleanup.enable
+							end,
+							args = {
+								stack = {
+									order = 100,
+									name = ArkInventory.Localise["RESTACK_STACK"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_STACK_ENABLE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bag].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bag].enable = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bag].enable
+											end,
+										},
+									},
+								},
+								consolidate = {
+									order = 200,
+									name = ArkInventory.Localise["RESTACK_CONSOLIDATE"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_CONSOLIDATE_DESC_PROFESSION"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bag].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bag].enable = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bag].enable
+											end,
+										},
+									},
+								},
+								compact = {
+									order = 300,
+									name = ArkInventory.Localise["RESTACK_COMPACT"],
+									type = "group",
+									inline = true,
+									disabled = true, -- currently diabled for code cleanup
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_COMPACT_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Bag].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Bag].enable = not ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Bag].enable
+											end,
+										},
+									},
+								},
+							},
+						},
+						reagentbag = {
+							order = 2000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBag].Name,
+							type = "group",
+							hidden = function( )
+								return ArkInventory.db.option.cleanup.enable
+							end,
+							args = {
+								stack = {
+									order = 100,
+									name = ArkInventory.Localise["RESTACK_STACK"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_STACK_ENABLE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBag].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBag].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBag].enable = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBag].enable
+											end,
+										},
+									},
+								},
+								consolidate = {
+									order = 200,
+									name = ArkInventory.Localise["RESTACK_CONSOLIDATE"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_CONSOLIDATE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBag].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBag].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBag].enable = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBag].enable
+											end,
+										},
+									},
+								},
+								compact = {
+									order = 300,
+									name = ArkInventory.Localise["RESTACK_COMPACT"],
+									type = "group",
+									inline = true,
+									disabled = true, -- currently diabled for code cleanup
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_COMPACT_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBag].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.ReagentBag].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.ReagentBag].enable = not ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.ReagentBag].enable
+											end,
+										},
+									},
+								},
+							},
+						},
+						bank = {
+							order = 3000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name,
+							type = "group",
+							hidden = function( )
+								return ArkInventory.db.option.cleanup.enable
+							end,
+							args = {
+								stack = {
+									order = 100,
+									name = ArkInventory.Localise["RESTACK_STACK"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_STACK_ENABLE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bank].enable = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bank].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bank].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bank].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bank].checkbag = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Bank].checkbag
+											end,
+										},
+									},
+								},
+								consolidate = {
+									order = 200,
+									name = ArkInventory.Localise["RESTACK_CONSOLIDATE"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_CONSOLIDATE_DESC_PROFESSION"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bank].enable = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bank].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bank].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bank].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bank].checkbag = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Bank].checkbag
+											end,
+										},
+									},
+								},
+								compact = {
+									order = 300,
+									name = ArkInventory.Localise["RESTACK_COMPACT"],
+									type = "group",
+									inline = true,
+									disabled = true, -- currently diabled for code cleanup
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_COMPACT_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Bank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Bank].enable = not ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Bank].enable
+											end,
+										},
+									},
+								},
+							},
+						},
+						reagentbank = {
+							order = 4000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBank].Name,
+							type = "group",
+							hidden = function( )
+								return ( ArkInventory.db.option.cleanup.enable ) or ( not ArkInventory.Util.MapCheckStorage( ArkInventory.Const.Location.ReagentBank ) )
+							end,
+							args = {
+								stack = {
+									order = 100,
+									name = ArkInventory.Localise["RESTACK_STACK"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_STACK_ENABLE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBank].enable = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBank].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBank].checkbag = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.ReagentBank].checkbag
+											end,
+										},
+									},
+								},
+								consolidate = {
+									order = 200,
+									name = ArkInventory.Localise["RESTACK_CONSOLIDATE"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_CONSOLIDATE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBank].enable = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBank].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBank].checkbag = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.ReagentBank].checkbag
+											end,
+										},
+									},
+								},
+								compact = {
+									order = 300,
+									name = ArkInventory.Localise["RESTACK_COMPACT"],
+									type = "group",
+									inline = true,
+									disabled = true, -- currently diabled for code cleanup
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_COMPACT_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.ReagentBank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.ReagentBank].enable = not ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.ReagentBank].enable
+											end,
+										},
+									},
+								},
+							},
+						},
+						accountbank = {
+							order = 5000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.AccountBank].Name,
+							type = "group",
+							hidden = function( )
+								return ( ArkInventory.db.option.cleanup.enable ) or ( not ArkInventory.Util.MapCheckStorage( ArkInventory.Const.Location.AccountBank ) )
+							end,
+							args = {
+								stack = {
+									order = 100,
+									name = ArkInventory.Localise["RESTACK_STACK"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_STACK_ENABLE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.AccountBank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.AccountBank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.AccountBank].enable = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.AccountBank].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.AccountBank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.AccountBank].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.AccountBank].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.AccountBank].checkbag = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.AccountBank].checkbag
+											end,
+										},
+									},
+								},
+								consolidate = {
+									order = 200,
+									name = ArkInventory.Localise["RESTACK_CONSOLIDATE"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_CONSOLIDATE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.AccountBank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.AccountBank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.AccountBank].enable = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.AccountBank].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.AccountBank].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.AccountBank].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.AccountBank].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.AccountBank].checkbag = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.AccountBank].checkbag
+											end,
+										},
+									},
+								},
+								compact = {
+									order = 300,
+									name = ArkInventory.Localise["RESTACK_COMPACT"],
+									type = "group",
+									inline = true,
+									disabled = true, -- currently diabled for code cleanup
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_COMPACT_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.AccountBank].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.AccountBank].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.AccountBank].enable = not ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.AccountBank].enable
+											end,
+										},
+									},
+								},
+							},
+						},
+						vault = {
+							order = 9000,
+							name = ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name,
+							type = "group",
+							hidden = function( )
+								return ( ArkInventory.db.option.cleanup.enable ) or ( not ArkInventory.Util.MapCheckStorage( ArkInventory.Const.Location.Vault ) )
+							end,
+							args = {
+								stack = {
+									order = 100,
+									name = ArkInventory.Localise["RESTACK_STACK"],
+									type = "group",
+									inline = true,
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_STACK_ENABLE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Vault].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Vault].enable = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Vault].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Vault].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Vault].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Vault].checkbag = not ArkInventory.db.option.restack.stack[ArkInventory.Const.Location.Vault].checkbag
+											end,
+										},
+									},
+								},
+								consolidate = {
+									order = 200,
+									name = ArkInventory.Localise["RESTACK_CONSOLIDATE"],
+									type = "group",
+									inline = true,
+									disabled = true, -- no code yet
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_CONSOLIDATE_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Vault].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Vault].enable = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Vault].enable
+											end,
+										},
+										checkbag = {
+											order = 20,
+											name = string.format( ArkInventory.Localise["RESTACK_CHECKBAG"], ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											desc = string.format( ArkInventory.Localise["RESTACK_CHECKBAG_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name, ArkInventory.Global.Location[ArkInventory.Const.Location.Bag].Name ),
+											type = "toggle",
+											disabled = function( )
+												return not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Vault].enable
+											end,
+											get = function( )
+												return ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Vault].checkbag
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Vault].checkbag = not ArkInventory.db.option.restack.consolidate[ArkInventory.Const.Location.Vault].checkbag
+											end,
+										},
+									},
+								},
+								compact = {
+									order = 300,
+									name = ArkInventory.Localise["RESTACK_COMPACT"],
+									type = "group",
+									inline = true,
+									disabled = true, -- no code yet
+									args = {
+										enable = {
+											order = 10,
+											name = ArkInventory.Localise["ENABLE"],
+											desc = string.format( ArkInventory.Localise["RESTACK_COMPACT_DESC"], ArkInventory.Global.Location[ArkInventory.Const.Location.Vault].Name ),
+											type = "toggle",
+											get = function( )
+												return ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Vault].enable
+											end,
+											set = function( info, v )
+												ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Vault].enable = not ArkInventory.db.option.restack.compact[ArkInventory.Const.Location.Vault].enable
+											end,
+										},
+									},
 								},
 							},
 						},
@@ -6241,7 +7089,7 @@ function ArkInventory.ConfigInternalCategoryCustomListItem( path )
 		action_add = {
 			order = 100,
 			name = ArkInventory.Localise["ADD"],
-			desc = string.format( "%s\n\nformat is either\n<itemid>\nor\nitem:<itemid>:<soulbound>\n\n<itemid> is the items numeric id, most web sites will have this\n<soubound> is either 0 (unbound) or 1 (bound)\n\n\nexample item:6948:1 = hearthstone", string.format( ArkInventory.Localise["CONFIG_LIST_ADD_DESC"], ArkInventory.Localise["ITEM"] ) ),
+			desc = string.format( "%s\n\nformat is either <itemid> or item:<itemid>:<soulbound>\n\n<itemid> is the items numeric id, most web sites will have this\n<soubound> is either 0 (unbound) or 1 (bound)\n\nyou can enter multiple values separated by a comma\n\n\nexample item:6948:1 = hearthstone", string.format( ArkInventory.Localise["CONFIG_LIST_ADD_DESC"], ArkInventory.Localise["ITEM"] ) ),
 			type = "input",
 			get = function( )
 				return ""
@@ -6250,28 +7098,34 @@ function ArkInventory.ConfigInternalCategoryCustomListItem( path )
 				
 				ArkInventory.Lib.Dewdrop:Close( )
 				
-				local v = string.trim( v )
+				local ran = false
 				
-				if string.match( v, "^(item:%d+:%d+)$" ) then
-					v = v
-				elseif string.match( v, "^(%d+)$" ) then
-					v = string.format( "item:%s:0", v )
-				else
-					local m = string.match( v, "item:(%d+)" )
-					if m then
-						v = string.format( "item:%s:0", m )
+				for v2 in string.gmatch( v, "[^,]+" ) do
+					
+					local id = string.trim( v2 )
+					
+					if string.match( id, "^(item:%d+:%d+)$" ) then
+						-- its fine as is
+					elseif string.match( id, "^(%d+)$" ) then
+						id = string.format( "item:%s:0", id )
+					elseif string.match( id, "^(item:%d+)$" ) then
+						id = string.format( "%s:0", id )
 					else
-						return
+						ArkInventory.OutputWarning( "unable to parse input [", id, "]" )
+						id = nil
 					end
+					
+					--ArkInventory.Output( "id = [", id, "]" )
+					if id and ArkInventory.ConfigInternalCategoryCustomItemCategorySet( id, config.category.custom.selected ) then
+						ran = true
+					end
+					
 				end
 				
-				if ArkInventory.ConfigInternalCategoryCustomItemCategorySet( v, config.category.custom.selected ) then
-					
+				if ran then
 					ArkInventory.ItemCacheClear( )
 					ArkInventory.Frame_Main_Generate( nil, ArkInventory.Const.Window.Draw.Recalculate )
-					
 					ArkInventory.ConfigRefresh( )
-					
 				end
 				
 			end,
@@ -6595,7 +7449,7 @@ function ArkInventory.ConfigInternalDesignData( path )
 			disabled = function( info )
 				local id = ConfigGetNodeArg( info, #info - 5 )
 				local style = ArkInventory.ConfigInternalDesignGet( id )
-				return style.slot.background.icon
+				return style.slot.background.icon ~= ArkInventory.Const.SharedMedia.Name.Solid
 			end,
 			func = function( info )
 				local id = ConfigGetNodeArg( info, #info - 5 )
@@ -6653,7 +7507,7 @@ function ArkInventory.ConfigInternalDesignData( path )
 					disabled = function( info )
 						local id = ConfigGetNodeArg( info, #info - 5 )
 						local style = ArkInventory.ConfigInternalDesignGet( id )
-						return style.slot.background.icon
+						return style.slot.background.icon ~= ArkInventory.Const.SharedMedia.Name.Solid
 					end,
 					get = function( info )
 						local id = ConfigGetNodeArg( info, #info - 5 )
@@ -6894,7 +7748,9 @@ function ArkInventory.ConfigInternalDesignData( path )
 										style.window.strata = v
 										
 										for loc_id, loc_data in pairs( ArkInventory.Global.Location ) do
-											ArkInventory.Frame_Main_Hide( loc_id )
+											if loc_data.isMapped and loc_data.canView then
+												ArkInventory.Frame_Main_Hide( loc_id )
+											end
 										end
 										
 									end,
@@ -9143,17 +9999,21 @@ function ArkInventory.ConfigInternalDesignData( path )
 									order = 100,
 									name = ArkInventory.Localise["ICON"],
 									desc = ArkInventory.Localise["CONFIG_DESIGN_ITEM_EMPTY_ICON_DESC"],
-									type = "toggle",
+									type = "select",
+									dialogControl = "LSM30_Background",
+									values = ArkInventory.Lib.SharedMedia:HashTable( ArkInventory.Const.SharedMedia.Type.EmptySlot ),
 									get = function( info )
 										local id = ConfigGetNodeArg( info, #info - 4 )
 										local style = ArkInventory.ConfigInternalDesignGet( id )
-										return style.slot.background.icon
+										return style.slot.background.icon or ArkInventory.Const.SharedMedia.Default.EmptySlot
 									end,
 									set = function( info, v )
 										local id = ConfigGetNodeArg( info, #info - 4 )
 										local style = ArkInventory.ConfigInternalDesignGet( id )
-										style.slot.background.icon = v
-										ArkInventory.Frame_Item_Empty_Paint_All( )
+										if style.slot.background.icon ~= v then
+											style.slot.background.icon = v
+											ArkInventory.Frame_Item_Empty_Paint_All( )
+										end
 									end,
 								},
 								alpha = {
@@ -9168,7 +10028,7 @@ function ArkInventory.ConfigInternalDesignData( path )
 									disabled = function( info )
 										local id = ConfigGetNodeArg( info, #info - 4 )
 										local style = ArkInventory.ConfigInternalDesignGet( id )
-										return style.slot.background.icon
+										return style.slot.background.icon == "None"
 									end,
 									get = function( info )
 										local id = ConfigGetNodeArg( info, #info - 4 )
@@ -9464,14 +10324,14 @@ function ArkInventory.ConfigInternalDesignData( path )
 								},
 								partyloot = {
 									order = 1000,
-									name = ArkInventory.Localise["ITEM_BIND_PARTYLOOT"],
+									name = ArkInventory.Localise["ITEM_BINDING_PARTYLOOT"],
 									type = "group",
 									args = {
 										show = {
 											order = 100,
 											name = ArkInventory.Localise["ENABLED"],
 											desc = function( )
-												local cat_id = ArkInventory.CategoryGetSystemID( "SYSTEM_ITEM_BIND_PARTYLOOT" )
+												local cat_id = ArkInventory.CategoryGetSystemID( "SYSTEM_ITEM_BINDING_PARTYLOOT" )
 												local cat = ArkInventory.Global.Category[cat_id]
 												return string.format( ArkInventory.Localise["CONFIG_DESIGN_ITEM_OVERRIDE_PARTYLOOT_ENABLED_DESC"], cat.fullname )
 											end,
@@ -9492,14 +10352,14 @@ function ArkInventory.ConfigInternalDesignData( path )
 								},
 								refundable = {
 									order = 1000,
-									name = ArkInventory.Localise["ITEM_BIND_REFUNDABLE"],
+									name = ArkInventory.Localise["ITEM_BINDING_REFUNDABLE"],
 									type = "group",
 									args = {
 										show = {
 											order = 100,
 											name = ArkInventory.Localise["ENABLED"],
 											desc = function( )
-												local cat_id = ArkInventory.CategoryGetSystemID( "SYSTEM_ITEM_BIND_REFUNDABLE" )
+												local cat_id = ArkInventory.CategoryGetSystemID( "SYSTEM_ITEM_BINDING_REFUNDABLE" )
 												local cat = ArkInventory.Global.Category[cat_id]
 												return string.format( ArkInventory.Localise["CONFIG_DESIGN_ITEM_OVERRIDE_REFUNDABLE_ENABLED_DESC"], cat.fullname )
 											end,
@@ -11722,7 +12582,7 @@ function ArkInventory.ConfigInternalProfileControl( path )
 								if loc_id == ArkInventory.Const.Location.Bag then
 									CloseAllBags( )
 								elseif loc_id == ArkInventory.Const.Location.Bank and ArkInventory.Global.Mode.Bank then
-									CloseBankFrame( )
+									ArkInventory.CrossClient.CloseBankFrame( )
 								elseif loc_id == ArkInventory.Const.Location.Vault and ArkInventory.Global.Mode.Vault then
 									CloseGuildBankFrame( )
 								end
@@ -11973,7 +12833,7 @@ function ArkInventory.ConfigInternalProfileControl( path )
 	
 	
 	for loc_id, loc_data in pairs( ArkInventory.Global.Location ) do
-		if loc_data.canView and ArkInventory.ClientCheck( loc_data.ClientCheck ) then
+		if loc_data.isMapped and loc_data.canView then
 			path[string.format( "%i", loc_id )] = {
 				order = ArkInventory.db.option.ui.sortalpha and 1 or loc_id,
 				arg = loc_id,
@@ -12245,7 +13105,7 @@ function ArkInventory.ConfigInternalAccountDataCharacter( path )
 			desc = function( info )
 				local loc_id = ConfigGetNodeArg( info, #info - 1 )
 				local player_id = ConfigGetNodeArg( info, #info - 3 )
-				local info = ArkInventory.GetPlayerInfo( player_id )
+				local info = ArkInventory.PlayerInfoGet( player_id )
 				return string.format( "%s%s", RED_FONT_COLOR_CODE, string.format( ArkInventory.Localise["MENU_CHARACTER_SWITCH_ERASE_DESC"], ArkInventory.Global.Location[loc_id].Name, ArkInventory.DisplayName1( info ) ) )
 			end,
 			hidden = false,
@@ -12265,7 +13125,7 @@ function ArkInventory.ConfigInternalAccountDataCharacter( path )
 			name = string.format( ArkInventory.Localise["MENU_CHARACTER_SWITCH_ERASE"], ArkInventory.Localise["ALL"] ),
 			desc = function( info )
 				local player_id = ConfigGetNodeArg( info, #info - 1 )
-				local info = ArkInventory.GetPlayerInfo( player_id )
+				local info = ArkInventory.PlayerInfoGet( player_id )
 				return string.format( "%s%s", RED_FONT_COLOR_CODE, string.format( ArkInventory.Localise["MENU_CHARACTER_SWITCH_ERASE_DESC"], ArkInventory.Localise["ALL"], ArkInventory.DisplayName1( info ) ) )
 			end,
 			type = "execute",
@@ -12287,7 +13147,7 @@ function ArkInventory.ConfigInternalAccountDataCharacter( path )
 	}
 	
 	for k, v in pairs( ArkInventory.Global.Location ) do
-		if v.isActive then
+		if v.isMapped and v.canView then
 			args1.location.args[string.format( "%i", k )] = {
 				order = k,
 				name = v.Name,
@@ -12407,23 +13267,30 @@ function ArkInventory.ConfigInternalLDBMounts( )
 			local index = ConfigGetNodeArg( info, #info - 2 )
 			local md = ArkInventory.Collection.Mount.GetMount( index )
 			
-			--ArkInventory.Output( "new mount correction for ", string.format( "%.12f", md.spellID ), ": ", v )
-			
-			ArkInventory.db.option.mount.correction[md.spellID] = v
-			
-			ArkInventory.Collection.Mount.ApplyUserCorrections( )
-			
-			ArkInventory:SendMessage( "EVENT_ARKINV_LDB_MOUNT_UPDATE_BUCKET" )
-			
-			local args2 = ConfigGetNodeArg( info, #info - 1 )
-			ArkInventory.ConfigInternalLDBMountsUpdate( path, args2 )
+			if ArkInventory.db.option.mount.correction[md.spellID] ~= v then
+				
+				ArkInventory.db.option.mount.correction[md.spellID] = v
+				ArkInventory.Collection.Mount.ApplyUserCorrections( )
+				ArkInventory:SendMessage( "EVENT_ARKINV_LDB_MOUNT_UPDATE_BUCKET" )
+				ArkInventory.ConfigInternalLDBMounts( )
+				
+			end
 			
 		end,
 	}
+	
 	args3["status"] = {
 		order = 2,
 		type = "select",
 		name = ArkInventory.Localise["STATUS"],
+		hidden = function( info )
+			
+			local mountType = ConfigGetNodeArg( info, #info - 3 )
+			if mountType == "x" then
+				return true
+			end
+			
+		end,
 		values = function( )
 			local t = { ArkInventory.Localise["UNSELECTED"], ArkInventory.Localise["SELECTED"], ArkInventory.Localise["IGNORED"] }
 			return t
@@ -12467,6 +13334,75 @@ function ArkInventory.ConfigInternalLDBMounts( )
 			
 		end,
 	}
+	
+	args3["mode"] = {
+		order = 3,
+		type = "select",
+		name = ArkInventory.Localise["MODE"],
+		hidden = function( info )
+			
+			if ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.SHADOWLANDS ) then
+				return true
+			end
+			
+			local mountType = ConfigGetNodeArg( info, #info - 3 )
+			if mountType ~= "a" then
+				return true
+			end
+			
+		end,
+		disabled = function( info )
+			
+			local mountType = ConfigGetNodeArg( info, #info - 3 )
+			
+			local index = ConfigGetNodeArg( info, #info - 2 )
+			local md = ArkInventory.Collection.Mount.GetMount( index )
+			
+			if md.isSteadyFlight then
+				return true
+			end
+			
+			local selected = config.me.player.data.ldb.mounts.type[mountType].selected[md.spellID]
+			if selected ~= true then
+				return true
+			end
+			
+		end,
+		values = function( )
+			return flightmodeoptions
+		end,
+		get = function( info )
+			
+			local mountType = ConfigGetNodeArg( info, #info - 3 )
+			
+			local index = ConfigGetNodeArg( info, #info - 2 )
+			local md = ArkInventory.Collection.Mount.GetMount( index )
+			
+			
+			if md.isSteadyFlight then
+				return ArkInventory.ENUM.FLIGHT.MODE.STEADY
+			end
+			
+			local mode = config.me.player.data.ldb.mounts.type[mountType].mode
+			return mode[md.spellID]
+			
+		end,
+		set = function( info, v )
+			
+			local mountType = ConfigGetNodeArg( info, #info - 3 )
+			
+			local index = ConfigGetNodeArg( info, #info - 2 )
+			local md = ArkInventory.Collection.Mount.GetMount( index )
+			
+			local mode = config.me.player.data.ldb.mounts.type[mountType].mode
+			if mode[md.spellID] ~= v then
+				mode[md.spellID] = v
+				ArkInventory.ConfigInternalLDBMounts( )
+			end
+			
+		end,
+	}
+	
 	args3["summon"] = {
 		order = 9,
 		type = "execute",
@@ -12476,18 +13412,18 @@ function ArkInventory.ConfigInternalLDBMounts( )
 			ArkInventory.Collection.Mount.Summon( index )
 		end,
 	}
+	
 	args3["description"] = {
-		order = 999,
+		order = 9000,
 		name = function( info )
 			local index = ConfigGetNodeArg( info, #info - 2 )
 			local md = ArkInventory.Collection.Mount.GetMount( index )
-			return "\n" .. md.description
+			return string.format( "\n%s\n\nindex = %s\nspell = %s\ntype = %s", md.description, index, md.spellID, md.mountTypeID )
 		end,
 		type = "description",
 		fontSize = "medium",
 		width = "full",
 	}
-	
 	
 	
 	local args2 = { }
@@ -12496,17 +13432,18 @@ function ArkInventory.ConfigInternalLDBMounts( )
 		name = function( info ) 
 			local index = ConfigGetNodeArg( info, #info - 1 )
 			local md = ArkInventory.Collection.Mount.GetMount( index )
-			return string.format( "%s (%s)", md.name, md.spellID )
+			return string.format( "%s (id=%s) (type=%s)", md.name, md.spellID, md.mountTypeID )
 		end,
 		type = "description",
+		width = "full",
 		fontSize = "large"
 	}
-	args2["capabilities"] = {
-		order = 10,
+	
+	args2["options"] = {
+		order = 100,
 		type = "group",
 		name = "",
 		inline = true,
-		arg = args2,  -- check what this was needed for
 		args = args3,
 	}
 	
@@ -12619,24 +13556,13 @@ function ArkInventory.ConfigInternalLDBMountsUpdate( path, args2 )
 					config.me.player.data.ldb.mounts.type.a.dismount = not config.me.player.data.ldb.mounts.type.a.dismount
 				end,
 			}
-			mountList["dragonriding"] = {
-				order = 4,
-				name = ArkInventory.Localise["DRAGONRIDING"],
-				desc = ArkInventory.Localise["LDB_MOUNTS_FLYING_DRAGONRIDING_DESC"],
-				type = "toggle",
-				hidden = function( info )
-					return not ( mountType == "a" and ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) )
-				end,
-				get = function( info )
-					return config.me.player.data.ldb.mounts.dragonriding
-				end,
-				set = function( info )
-					config.me.player.data.ldb.mounts.dragonriding = not config.me.player.data.ldb.mounts.dragonriding
-					--ArkInventory.SetMountMacro( )
-				end,
-			}
 			
-			for _, md in ArkInventory.Collection.Mount.Iterate( mountType ) do
+			local mType = mountType
+			if mType == "x" then
+				mType = nil
+			end
+			
+			for _, md in ArkInventory.Collection.Mount.Iterate( mType ) do
 				
 				local icon = ""
 				if selected[md.spellID] == true then
@@ -12652,8 +13578,8 @@ function ArkInventory.ConfigInternalLDBMountsUpdate( path, args2 )
 					ok = true
 				end
 				
-				if not ok and mountType == "x" and md.mt ~= md.mto then
-					-- show anything that has been changed on the custom tab as well
+				if not ok and mountType == "x" and ArkInventory.db.option.mount.correction[md.spellID] then
+					-- show anything that has been corrected by the user on the custom tab as well
 					ok = true
 				end
 				

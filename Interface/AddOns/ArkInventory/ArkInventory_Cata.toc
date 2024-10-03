@@ -4,7 +4,7 @@
 ## Notes: Allows you to view all items from all your characters on the same account, when ever and where ever you want.
 ## Author: Arkayenro - Khaz'goroth
 ## Email: arkayenro at gmail dot com
-## Version: 31033
+## Version: 31102
 ## X-ReleaseType: 
 ## SavedVariables: ARKINVDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_07_Green
@@ -38,6 +38,7 @@ Core\ArkInventoryExternals.lua
 
 Core\ArkInventoryConst.lua
 Core\ArkInventoryClient.lua
+Core\ArkInventoryUtil.lua
 
 Core\ArkInventoryPT.lua
 Core\ArkInventoryCPU.lua
@@ -72,6 +73,7 @@ Core\ArkInventoryMoney.lua
 Core\ArkInventoryMedia.lua
 
 Core\ArkInventoryAction.lua
+Core\ArkInventoryIconSelector.lua
 
 Core\ArkInventory.xml
 

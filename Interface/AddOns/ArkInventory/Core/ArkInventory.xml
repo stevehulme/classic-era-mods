@@ -375,7 +375,7 @@
       </PreClick>
       
       <PostClick>
-        ArkInventory.Frame_Item_PostClick( self, button )
+        ArkInventory.Frame_Item_PostClick( self, button, down )
       </PostClick>
       
     </Scripts>
@@ -494,7 +494,7 @@
       </PreClick>
       
       <PostClick>
-        ArkInventory.Frame_Item_PostClick( self, button )
+        ArkInventory.Frame_Item_PostClick( self, button, down )
       </PostClick>
       
     </Scripts>
@@ -800,7 +800,6 @@
     </Scripts>
     
   </Button>
-  
   
   <ItemButton virtual="true" name="ARKINV_TemplateButtonItem1Tainted" inherits="ContainerFrameItemButtonTemplate" hidden="true">
     
@@ -1222,75 +1221,17 @@
   </Button>
   
   
-  <ItemButton virtual="true" name="ARKINV_TemplateChangerVaultTab1" inherits="ARKINV_TemplateChangerPlayerMain1">
-  
-    <Scripts>
-  
-      <OnLoad>
-        ArkInventory.Frame_Changer_Vault_Tab_OnLoad( self )
-      </OnLoad>
-      
-      <OnClick>
-        ArkInventory.Frame_Changer_Vault_Tab_OnClick( self, button )
-      </OnClick>
-
-          <OnReceiveDrag>
-              ArkInventory.Frame_Changer_Vault_Tab_OnClick( self )
-          </OnReceiveDrag>
-      
-      <OnEnter>
-        ArkInventory.Frame_Changer_Vault_Tab_OnEnter( self )
-      </OnEnter>
-      
-    </Scripts>
-      
-  </ItemButton>
-  
-  <Button virtual="true" name="ARKINV_TemplateChangerVaultTab2" inherits="ARKINV_TemplateChangerPlayerMain2">
-    
-    <Scripts>
-      
-      <OnLoad>
-        ArkInventory.Frame_Changer_Vault_Tab_OnLoad( self )
-      </OnLoad>
-      
-      <OnClick>
-        ArkInventory.Frame_Changer_Vault_Tab_OnClick( self, button )
-      </OnClick>
-      
-      <OnReceiveDrag>
-          ArkInventory.Frame_Changer_Vault_Tab_OnClick( self )
-      </OnReceiveDrag>
-      
-      <OnEnter>
-        ArkInventory.Frame_Changer_Vault_Tab_OnEnter( self )
-      </OnEnter>
-      
-    </Scripts>
-    
-  </Button>
-  
-  
-  <Button virtual="true" name="ARKINV_TemplateChangerVaultAction" inherits="ARKINV_TemplateButton" hidden="true">
-    <Size x="30" y="30" />
+  <Button virtual="true" name="ARKINV_TemplateButtonStatusAction" inherits="ARKINV_TemplateButton" hidden="true">
+    <Size x="20" y="20" />
     <NormalTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Up" />
     <PushedTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Down" />
     <Scripts>
-      <OnLoad>
-        ArkInventory.Frame_Changer_Vault_Action_OnLoad( self )
-      </OnLoad>
       <OnClick>
-        ArkInventory.Frame_Changer_Vault_Action_OnClick( self, button, down )
+        ArkInventory.Frame_Status_Action_OnClick( self, button, down )
       </OnClick>
-      <OnReceiveDrag>
-          -- do nothing
-      </OnReceiveDrag>
-      <OnEnter>
-        ArkInventory.Frame_Changer_Vault_Action_OnEnter( self )
-      </OnEnter>
     </Scripts>
   </Button>
-  
+
   
   <ItemButton virtual="true" name="ARKINV_TemplateChangerGenericExtra1" inherits="ARKINV_TemplateChangerPlayerMain1">
     
@@ -1421,49 +1362,49 @@
       
       <Button name="$parentActionButton2" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton1" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton1" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
       <Button name="$parentActionButton3" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton2" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton2" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
       <Button name="$parentActionButton4" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton3" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton3" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
       <Button name="$parentActionButton5" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton4" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton4" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
       <Button name="$parentActionButton6" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton5" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton5" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
       <Button name="$parentActionButton7" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton6" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton6" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
       <Button name="$parentActionButton8" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton7" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton7" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
       <Button name="$parentActionButton9" inherits="ARKINV_TemplateButtonAction">
         <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentActionButton8" relativePoint="LEFT" x="-3" y="0" />
+          <Anchor point="RIGHT" relativeTo="$parentActionButton8" relativePoint="LEFT" x="-5" y="0" />
         </Anchors>
       </Button>
       
@@ -1526,7 +1467,7 @@
           </OnShow>
           
           <OnCursorChanged>
-            ArkInventory.Frame_Main_Search( self:GetParent( ):GetParent( ) )
+            ArkInventory.Frame_Main_SearchFilterUpdate( self:GetParent( ):GetParent( ) )
           </OnCursorChanged>
           
           <OnEnterPressed>
@@ -1574,9 +1515,9 @@
       
       <Slider name="$parentVerticalScroll" inherits="MinimalHybridScrollBarTemplate" hidden="true" >
         <Anchors>
-          <Anchor point="TOP" y="-30" />
+          <Anchor point="TOP" y="-15" />
           <Anchor point="LEFT" relativePoint="RIGHT" />
-          <Anchor point="BOTTOM" y="30" />
+          <Anchor point="BOTTOM" y="15" />
         </Anchors>
         <Scripts>
           <OnValueChanged>
@@ -1742,10 +1683,15 @@
     
     <Frames>
       
+      <Button parentKey="ArkAction" name="$parentAction" inherits="ARKINV_TemplateButtonStatusAction">
+        <Anchors>
+          <Anchor point="RIGHT" /> <!-- adjusted in code -->
+        </Anchors>
+      </Button>
+      
       <Frame parentKey="ArkMoney" name="$parentMoney" inherits="ARKINV_TemplateSmallMoneyFrame" >
         <Anchors>
-          <Anchor point="TOP" x="0" y="-5" />
-          <Anchor point="RIGHT" x="-10" y="0" />
+          <Anchor point="RIGHT" /> <!-- adjusted in code -->
         </Anchors>
         <Scripts>
           <OnLoad>
@@ -1753,6 +1699,24 @@
           </OnLoad>
         </Scripts>
       </Frame>
+      
+      <Button parentKey="ArkAction" name="$parentAction" inherits="ARKINV_TemplateButtonAction" hidden="true" >
+        <Anchors>
+          <Anchor point="RIGHT" x="-10" y="0" relativeTo="$parentMoney" relativePoint="LEFT" />
+        </Anchors>
+        <NormalTexture file="Interface\BUTTONS\UI-PlusButton-Up" />
+        <PushedTexture file="Interface\BUTTONS\UI-PlusButton-Down" />
+        <DisabledTexture file="Interface\BUTTONS\UI-PlusButton-Disabled" />
+        <HighlightTexture file="Interface\BUTTONS\UI-PlusButton-Highlight" alphaMode="ADD" />
+        <Scripts>
+          <OnClick>
+            ArkInventory.MenuStatusActionOpen( self )
+          </OnClick>
+          <OnEnter>
+            -- do nothing for the moment
+          </OnEnter>
+        </Scripts>
+      </Button>
       
       <ScrollFrame parentKey="ArkScroll" name="$parentScroll" inherits="HybridScrollFrameTemplate" >
         <Size x="1" y="20" />
@@ -2163,7 +2127,7 @@
   
   <Frame name="ARKINV_Debug" inherits="ARKINV_TemplateFrameStandard" parent="UIParent" toplevel="true" movable="true" enableMouse="true" hidden="true">
     
-    <Size x="800" y="400" />
+    <Size x="800" y="800" />
     
     <Anchors>
       <Anchor point="TOPLEFT" x="50" y="-50" />
@@ -2208,7 +2172,7 @@
       
       <ScrollingMessageFrame parentKey="List" name="$parentList" enableMouse="true">
         <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT" x="0" y="-10" />
+          <Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT" x="0" y="10" />
           <Anchor point="BOTTOM" y="10" />
           <Anchor point="RIGHT" relativeTo="$parentTitle" x="-30" />
         </Anchors>
@@ -2339,141 +2303,6 @@
       <Anchor point="BOTTOMRIGHT" />
     </Anchors>
   
-    <Frames>
-      
-      <Button name="$parentAction" inherits="ARKINV_TemplateChangerVaultAction">
-        <Anchors>
-          <Anchor point="RIGHT" x="-10" y="0" />
-        </Anchors>
-      </Button>
-      
-      <Button name="$parentWithdrawButton" inherits="UIPanelButtonTemplate" text="WITHDRAW" hidden="true">
-        
-        <Size x="124" y="21" />
-        
-        <Anchors>
-          <Anchor point="BOTTOMRIGHT" x="-5" y="5" />
-        </Anchors>
-        
-        <Scripts>
-          <OnClick>
-            PlaySound( SOUNDKIT.IG_MAINMENU_OPTION )
-            StaticPopup_Hide( "GUILDBANK_DEPOSIT" )
-            if StaticPopup_Visible( "GUILDBANK_WITHDRAW" ) then
-              StaticPopup_Hide( "GUILDBANK_WITHDRAW" )
-            else
-              StaticPopup_Show( "GUILDBANK_WITHDRAW" )
-            end
-          </OnClick>
-        </Scripts>
-        
-      </Button>
-      
-      <Frame name="$parentGoldAvailable" inherits="ARKINV_TemplateSmallMoneyFrame" hidden="true">
-        
-        <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentWithdrawButton" relativePoint="LEFT" />
-        </Anchors>
-        
-        <Scripts>
-          <OnLoad>
-            ArkInventory.SmallMoneyFrame_OnLoad( self, "GUILDBANK_WITHDRAW" )
-          </OnLoad>
-        </Scripts>
-        
-      </Frame>
-
-      <Button name="$parentDepositButton" inherits="UIPanelButtonTemplate" text="DEPOSIT" hidden="true">
-          
-        <Size x="124" y="21" />
-        
-        <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentGoldAvailable" relativePoint="LEFT" x="-5" y="0" />
-        </Anchors>
-        
-        <Scripts>
-          <OnClick>
-            PlaySound( SOUNDKIT.IG_MAINMENU_OPTION )
-            StaticPopup_Hide( "GUILDBANK_WITHDRAW" )
-            if StaticPopup_Visible( "GUILDBANK_DEPOSIT") then
-              StaticPopup_Hide( "GUILDBANK_DEPOSIT" )
-            else
-              StaticPopup_Show( "GUILDBANK_DEPOSIT" )
-            end
-          </OnClick>
-        </Scripts>
-        
-      </Button>
-      
-      <Frame name="$parentGoldTotal" inherits="ARKINV_TemplateSmallMoneyFrame" hidden="true">
-          
-        <Anchors>
-          <Anchor point="RIGHT" relativeTo="$parentDepositButton" relativePoint="LEFT" />
-        </Anchors>
-
-        <Scripts>
-          <OnLoad>
-            ArkInventory.SmallMoneyFrame_OnLoad( self, "GUILDBANK" )
-          </OnLoad>
-        </Scripts>
-        
-      </Frame>
-      
-      <Frame name="$parentPurchaseInfo" hidden="true">
-      
-        <Size x="130" y="38" />
-        
-        <Anchors>
-          <Anchor point="BOTTOM" relativeTo="$parentWithdrawButton" relativePoint="BOTTOM" />
-          <Anchor point="RIGHT" relativeTo="$parentGoldAvailable" relativePoint="LEFT" x="-5" y="0" />
-        </Anchors>
-        
-        <Layers>
-          <Layer level="BACKGROUND">
-            <FontString name="$parentSlotCost" inherits="ARKINV_GameFontNormal" text="COSTS_LABEL">
-              <Size x="0" y="12" />
-              <Anchors>
-                <Anchor point="TOPLEFT" />
-              </Anchors>
-            </FontString>
-          </Layer>
-        </Layers>
-
-        <Frames>
-
-          <Button name="$parentPurchaseButton" inherits="UIPanelButtonTemplate" text="BANKSLOTPURCHASE">
-            <Size x="124" y="21" />
-            <Anchors>
-              <Anchor point="BOTTOMLEFT" />
-            </Anchors>
-            <Scripts>
-              <OnClick>
-                PlaySound( SOUNDKIT.IG_MAINMENU_OPTION )
-                StaticPopup_Show( "CONFIRM_BUY_GUILDBANK_TAB" )
-              </OnClick>
-            </Scripts>
-          </Button>
-
-          <Frame name="$parentDetailMoneyFrame" inherits="ARKINV_TemplateSmallMoneyFrame">
-          
-            <Anchors>
-              <Anchor point="LEFT" relativeTo="$parentSlotCost" relativePoint="RIGHT" x="10" y="0" />
-            </Anchors>
-            
-            <Scripts>
-              <OnLoad>
-                ArkInventory.MoneyFrame_SetType( self, "STATIC" )
-              </OnLoad>
-            </Scripts>
-            
-          </Frame>
-          
-        </Frames>
-        
-      </Frame>
-      
-    </Frames>
-    
     <Scripts>
       <OnLoad>
         ArkInventory.Frame_Changer_OnLoad( self, ArkInventory.Const.Location.Vault )
@@ -2539,8 +2368,15 @@
     
   </Frame>
   
+  <Frame name="ARKINV_IconSelectorPopupFrame" mixin="ArkInventoryIconSelectorPopupFrameMixin" inherits="IconSelectorPopupFrameTemplate" enableMouse="true" hidden="true" frameLevel="50">
+    <Anchors>
+      <Anchor point="TOPLEFT" x="0" y="5"/>
+    </Anchors>
+	</Frame>
+
   
-<!-- END OF ADD ON FRAME -->
+<!-- END OF ADDON FRAME -->
+  
   
   <GameTooltip name="ARKINV_ScanTooltip" inherits="ArkScanTooltipTemplate" hidden="false"/>
   
@@ -2558,5 +2394,7 @@
       </OnUpdate>
     </Scripts>
   </Frame>
+  
+  <Frame name="ARKINV_Hidden" hidden="true" />
   
 </Ui>

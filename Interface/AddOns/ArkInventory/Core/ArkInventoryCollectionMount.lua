@@ -11,6 +11,9 @@ local C_MountJournal = _G.C_MountJournal
 local loc_id = ArkInventory.Const.Location.Mount
 local PLAYER_MOUNT_LEVEL = 20
 
+local spellSkyriding = 404464
+local spellSteady = 404468
+
 ArkInventory.Collection.Mount = { }
 
 local collection = {
@@ -49,8 +52,6 @@ local ZoneRestrictions = {
 	
 	[75207] = ArkInventory.Const.Mount.Zone.Vashjir, -- Vashj'ir Seahorse
 	
---	[000000] = ArkInventory.Const.Mount.Zone.DragonIsles, -- is now calculated
-	
 --	[294143] = { [85]=1 }, -- X-995 Mechanocat, testing in org
 	
 }
@@ -65,6 +66,10 @@ local ImportCrossRefTable = {
 {229377,{142224}}, -- High Priest's Lightsworn Seeker
 {231437,{143638}}, -- Archdruid's Lunarwing Form
 {278979,{163188}}, -- Surf Jelly
+{127178,{87784}}, -- Jungle Riding Crane
+{123182,{84753}}, -- Kafa Yak
+{127209,{87786}}, -- Black Riding Yak
+{127213,{87787}}, -- Modest Expedition Yak
 
 -- may no longer exist
 {343550,{186480}}, -- Battle-Hardened Aquilon
@@ -321,7 +326,7 @@ local ImportCrossRefTable = {
 {68187,{49096}}, -- Crusader's White Warhorse
 {68188,{49098}}, -- Crusader's Black Warhorse
 {69395,{49636}}, -- Onyxian Drake / Reins of the Onyxian Drake
-{71342,{50250}}, -- Big Love Rocket
+{71342,{50250}}, -- X-45 Heartbreaker
 {71810,{50435}}, -- Wrathful Gladiator's Frost Wyrm
 {72286,{50818}}, -- Invincible / Invincible's Reins
 {72807,{51955}}, -- Icebound Frostbrood Vanquisher / Reins of the Icebound Frostbrood Vanquisher
@@ -402,7 +407,7 @@ local ImportCrossRefTable = {
 {121839,{83089}}, -- Sunstone Panther
 {122708,{84101}}, -- Grand Expedition Yak / Reins of the Grand Expedition Yak
 {123160,{}}, -- Crimson Riding Crane
-{123182,{}}, -- White Riding Yak
+{123182,{}}, -- Kafa Yak
 {123886,{85262}}, -- Amber Scorpion / Reins of the Amber Scorpion
 {123992,{85430}}, -- Azure Cloud Serpent / Reins of the Azure Cloud Serpent
 {123993,{85429}}, -- Golden Cloud Serpent / Reins of the Golden Cloud Serpent
@@ -425,7 +430,7 @@ local ImportCrossRefTable = {
 {127178,{}}, -- Jungle Riding Crane
 {127180,{}}, -- Albino Riding Crane
 {127209,{}}, -- Black Riding Yak
-{127213,{}}, -- Brown Riding Yak
+{127213,{}}, -- Modest Expedition Yak
 {127216,{87788}}, -- Grey Riding Yak / Reins of the Grey Riding Yak
 {127220,{87789}}, -- Blonde Riding Yak / Reins of the Blonde Riding Yak
 {127271,{87791}}, -- Crimson Water Strider / Reins of the Crimson Water Strider
@@ -453,7 +458,7 @@ local ImportCrossRefTable = {
 {130138,{89391}}, -- Black Riding Goat / Reins of the Black Riding Goat
 {130965,{89783}}, -- Son of Galleon / Son of Galleon's Saddle
 {130985,{89785}}, -- Pandaren Kite / Pandaren Kite String
-{132036,{90655}}, -- Thundering Ruby Cloud Serpent / Reins of the Thundering Ruby Cloud Serpent
+{132036,{90655,224374}}, -- Thundering Ruby Cloud Serpent / Reins of the Thundering Ruby Cloud Serpent
 {132117,{90710}}, -- Ashen Pandaren Phoenix / Reins of the Ashen Pandaren Phoenix
 {132118,{90711}}, -- Emerald Pandaren Phoenix / Reins of the Emerald Pandaren Phoenix
 {132119,{90712}}, -- Violet Pandaren Phoenix / Reins of the Violet Pandaren Phoenix
@@ -544,6 +549,7 @@ local ImportCrossRefTable = {
 {171837,{116780}}, -- Warsong Direfang
 {171838,{116781}}, -- Armored Frostwolf
 {171839,{116782}}, -- Ironside Warwolf
+{171840,{137576}}, -- Coldflame Infernal / Dim Coldflame Core
 {171841,{116784}}, -- Trained Snarler
 {171842,{116785}}, -- Swift Frostwolf
 {171843,{116786}}, -- Smoky Direwolf
@@ -591,6 +597,7 @@ local ImportCrossRefTable = {
 {213165,{137580}}, -- Viridian Sharptalon
 {213209,{137686}}, -- Steelbound Devourer / Steelbound Harness
 {213339,{129962}}, -- Great Northern Elderhorn / Elderhorn Riding Harness
+{213349,{137615}}, -- Flarecore Infernal / Molten Flarecore
 {213350,{137614}}, -- Frostshard Infernal / Biting Frostshard Core
 {214791,{138811}}, -- Brinedeep Bottom-Feeder
 {215159,{138258}}, -- Long-Forgotten Hippogryph / Reins of the Long-Forgotten Hippogryph
@@ -713,7 +720,7 @@ local ImportCrossRefTable = {
 {254473,{}}, -- Divine Steed
 {254474,{}}, -- Divine Steed
 {254811,{163586}}, -- Squawks
-{254812,{}}, -- PH Giant Parrot (Blue)
+{254812,{}}, -- Royal Seafeather
 {254813,{159842}}, -- Summon Sharkbait / Sharkbait's Favorite Crackers
 {255695,{153539}}, -- Seabraid Stallion
 {255696,{153540}}, -- Gilded Ravasaur
@@ -769,7 +776,7 @@ local ImportCrossRefTable = {
 {276112,{}}, -- Divine Steed
 {278656,{163063}}, -- Spectral Phoenix / Reins of the Spectral Phoenix
 {278803,{163131}}, -- Great Sea Ray
-{278966,{163186}}, -- Tempestuous Skystallion
+{278966,{163186}}, -- Fiery Hearthsteed
 {278979,{163585}}, -- Surf Jelly
 {279454,{163577}}, -- Conqueror's Scythemaw
 {279456,{163579}}, -- Highland Mustang
@@ -843,11 +850,11 @@ local ImportCrossRefTable = {
 {300151,{169203}}, -- Inkscale Deepseeker
 {300152,{}}, -- Tidestallion
 {300153,{169202}}, -- Crimson Tidestallion
-{300154,{}}, -- Tidestallion
+{300154,{}}, -- Silver Tidestallion
 {301841,{}}, -- Kua'fon
 {302143,{174862}}, -- Uncorrupted Voidwing
-{302361,{}}, -- Alabaster Stormtalon
-{302362,{}}, -- Alabaster Thunderwing
+{302361,{207964}}, -- Alabaster Stormtalon
+{302362,{207963}}, -- Alabaster Thunderwing
 {302794,{}}, -- Swift Spectral Fathom Ray
 {302795,{}}, -- Swift Spectral Magnetocraft
 {302796,{}}, -- Swift Spectral Armored Gryphon
@@ -880,6 +887,7 @@ local ImportCrossRefTable = {
 {312776,{183617}}, -- Chittering Animite
 {312777,{181316}}, -- Silvertip Dredwing
 {315014,{174752}}, -- Ivory Cloud Serpent
+{315132,{}}, -- Gargantuan Grrloc
 {315427,{174649}}, -- Rajani Warserpent
 {315847,{174641}}, -- Drake of the Four Winds / Reins of the Drake of the Four Winds
 {315987,{174653}}, -- Mail Muncher
@@ -894,6 +902,7 @@ local ImportCrossRefTable = {
 {316722,{174841}}, -- Ren's Stalwart Hound
 {316723,{174840}}, -- Xinlao
 {316802,{174859}}, -- Springfur Alpaca / Reins of the Springfur Alpaca
+{317177,{}}, -- Sunwarmed Furline
 {318051,{180748}}, -- Silky Shimmermoth
 {318052,{181817}}, -- Deathbringer's Flayedwing
 {326390,{}}, -- Steamscale Incinerator
@@ -946,7 +955,7 @@ local ImportCrossRefTable = {
 {334408,{180767}}, -- Eternal Phalynx of Loyalty
 {334409,{180768}}, -- Eternal Phalynx of Humility
 {334433,{180772}}, -- Silverwind Larion
-{334482,{}}, -- PH Death Elemental
+{334482,{192557}}, -- Restoration Deathwalker
 {336036,{181819}}, -- Marrowfang / Marrowfang's Reins
 {336038,{181818}}, -- Callow Flayedwing / Chewed Reins of the Callow Flayedwing
 {336039,{181300}}, -- Gruesome Flayedwing
@@ -968,6 +977,11 @@ local ImportCrossRefTable = {
 {342335,{183741}}, -- Ascended Skymane
 {342666,{183800}}, -- Amber Ardenmoth
 {342667,{183801}}, -- Vibrant Flutterwing
+{342668,{187666}}, -- Desertwing Hunter
+{342671,{187639}}, -- Pale Regal Cervid
+{342677,{}}, -- PH Progenitor Spider
+{342678,{187660}}, -- Vespoid Flutterer
+{342680,{187676}}, -- Deepstar Aurelid / Deepstar Polyp
 {343550,{186480}}, -- Battle-Hardened Aquilon
 {344228,{184062}}, -- Battle-Bound Warhound / Gnawed Reins of the Battle-Bound Warhound
 {344574,{184160}}, -- Bulbous Necroray
@@ -980,19 +994,25 @@ local ImportCrossRefTable = {
 {346141,{}}, -- Slime Serpent
 {346554,{186637}}, -- Tazavesh Gearglider
 {346718,{}}, -- PH Wolf Serpent
+{346719,{187669}}, -- Serenade
 {347250,{186489}}, -- Lord of the Corpseflies
 {347251,{186648}}, -- Soaring Razorwing
+{347255,{187680}}, -- Vicious War Croaker
+{347256,{187681}}, -- Vicious War Croaker
 {347536,{186641}}, -- Tamed Mauler / Tamed Mauler Harness
 {347810,{186644}}, -- Beryl Shardhide
 {347812,{}}, -- Sapphire Skyblazer
 {347813,{}}, -- Fireplume Phoenix
+{348162,{}}, -- Wandering Ancient
 {348769,{186179}}, -- Vicious War Gorm
 {348770,{186178}}, -- Vicious War Gorm
 {349823,{187642}}, -- Vicious Warstalker
 {349824,{187644}}, -- Vicious Warstalker
 {349935,{204382}}, -- Noble Bruffalon
+{349943,{192766}}, -- Amber Skitterfly
 {350219,{192777}}, -- Magmashell
 {351195,{186642}}, -- Vengeance / Vengeance's Reins
+{351408,{192792}}, -- Bestowed Thunderspine Packleader
 {352309,{185973}}, -- Hand of Bahmethra / Chain of Bahmethra
 {352441,{186000}}, -- Wild Hunt Legsplitter / Legsplitter War Harness
 {352742,{186103}}, -- Undying Darkhound / Undying Darkhound's Harness
@@ -1086,7 +1106,7 @@ local ImportCrossRefTable = {
 {368126,{190767}}, -- Armored Golden Pterrordax
 {368128,{190766}}, -- Colossal Wraithbound Mawrat / Spectral Mawrat's Tail
 {368158,{190768}}, -- Zereth Overseer / Fractal Cypher of the Zereth Overseer
-{368893,{204361}}, -- Winding Slitherdrake
+{368893,{204361,211486}}, -- Winding Slitherdrake
 {368896,{194034}}, -- Renewed Proto-Drake
 {368899,{194549}}, -- Windborne Velocidrake
 {368901,{194521}}, -- Cliffside Wylderdrake
@@ -1100,25 +1120,31 @@ local ImportCrossRefTable = {
 {371176,{191838}}, -- Subterranean Magmammoth
 {372995,{}}, -- Swift Spectral Drake
 {373859,{192601,201837}}, -- Loyal Magmammoth
+{373967,{}}, -- Stormtouched Bruffalon
 {374032,{192761}}, -- Tamed Skitterfly
 {374034,{192762}}, -- Azure Skitterfly
 {374048,{192764}}, -- Verdant Skitterfly
+{374071,{192765}}, -- Bestowed Sandskimmer
 {374090,{192772}}, -- Ancient Salamanther
+{374097,{192774}}, -- Coralscale Salamanther
 {374098,{192775}}, -- Stormhide Salamanther
 {374138,{192779}}, -- Seething Slug
 {374155,{192784}}, -- Shellack
 {374157,{192785}}, -- Gooey Snailemental
 {374162,{192786}}, -- Scrappy Worldsnail / Slumbering Worldsnail Shell
+{374172,{192788}}, -- Bestowed Trawling Mammoth
 {374194,{192790}}, -- Mossy Mammoth
 {374196,{192791}}, -- Plainswalker Bearer
+{374204,{192796}}, -- Explorer's Stonehide Packbeast
 {374247,{192799}}, -- Lizi, Thunderspine Tramper / Lizi's Reins
-{374263,{192804}}, -- Restless Hornstrider
+{374263,{192804}}, -- Restless Hornstrider / PH Primal Tallstrider Green
 {374275,{192806}}, -- Raging Magmammoth
 {374278,{192807}}, -- Renewed Magmammoth
 {376873,{198870}}, -- Otto
 {376875,{198872}}, -- Brown Scouting Ottuk
 {376879,{198873}}, -- Ivory Trader's Ottuk
 {376880,{200118}}, -- Yellow Scouting Ottuk
+{376898,{211862}}, -- Bestowed Ottuk Vanguard
 {376910,{201426}}, -- Brown War Ottuk
 {376912,{198654}}, -- Otterworldly Ottuk Carrier
 {376913,{201425}}, -- Yellow War Ottuk
@@ -1128,6 +1154,7 @@ local ImportCrossRefTable = {
 {385115,{198811}}, -- Majestic Armored Vorquin
 {385131,{198809}}, -- Armored Vorquin Leystrider
 {385134,{198810}}, -- Swift Armored Vorquin
+{385260,{198822}}, -- Bestowed Ohuna Spotter
 {385262,{198824}}, -- Duskwing Ohuna
 {385266,{198825}}, -- Zenet Hatchling
 {385738,{201454}}, -- Temperamental Skyclaw
@@ -1146,12 +1173,13 @@ local ImportCrossRefTable = {
 {399708,{203226}}, -- Stormfused Salamanther
 {400733,{204091}}, -- Rocket Shredder 9001
 {400976,{203727}}, -- Gleaming Moonbeast / Gleaming Moonbeast's Reins
+{404018,{210140}}, -- [PH] Black-Furred Bakar
 {406637,{204798}}, -- Inferno Armoredon
 {407555,{206162}}, -- Tarecgosa's Visage / Lingering Echo of Tarecgosa
 {408313,{205155}}, -- Big Slick in the City
 {408627,{205197}}, -- Igneous Shalewing
 {408647,{205203}}, -- Cobalt Shalewing
-{408648,{}}, -- Shalewing, Fire (Yellow) [PH]
+{408648,{}}, -- Calescent Shalewing
 {408649,{205205}}, -- Shadowflame Shalewing
 {408651,{205204}}, -- Cataloged Shalewing / Flaming Shalewing Subject 01
 {408653,{205209}}, -- Boulder Hauler / Boulder Hauler Reins
@@ -1179,12 +1207,115 @@ local ImportCrossRefTable = {
 {417552,{}}, -- Riders of Azeroth Velocidrake
 {417554,{}}, -- Riders of Azeroth Wylderdrake
 {417556,{}}, -- Riders of Azeroth Slitherdrake
+{417888,{}}, -- Algarian Stormrider
 {418078,{208152}}, -- Pattie / Pattie's Cap
+{418286,{}}, -- Auspicious Arborwyrm
 {419002,{208433}}, -- Bronze Racer's Pennant
 {419345,{208598}}, -- Eve's Ghastly Rider
 {419567,{}}, -- Ginormous Grrloc
 {420097,{208572}}, -- Azure Worldchiller
+{422486,{209060}}, -- Verdant Armoredon
+{423871,{209947}}, -- Blossoming Dreamstag / Reins of the Blossoming Dreamstag
+{423873,{209949}}, -- Suntouched Dreamstag / Reins of the Suntouched Dreamstag
+{423877,{209950}}, -- Rekindled Dreamstag / Reins of the Rekindled Dreamstag
+{423891,{209951}}, -- Lunar Dreamstag / Reins of the Lunar Dreamstag
+{424009,{210008}}, -- Runebound Firelord / Smoldering Rune of Binding
 {424082,{210022}}, -- Mimiron's Jumpjets
+{424474,{210060}}, -- Shadow Dusk Dreamsaber / Reins of the Shadow Dusk Dreamsaber
+{424476,{210059}}, -- Winter Night Dreamsaber / Reins of the Winter Night Dreamsaber
+{424479,{210058}}, -- Evening Sun Dreamsaber / Reins of the Evening Sun Dreamsaber
+{424482,{210057}}, -- Morning Flourish Dreamsaber / Reins of the Morning Flourish Dreamsaber
+{424484,{210061}}, -- Anu'relos, Flame's Guidance / Reins of Anu'relos, Flame's Guidance
+{424534,{210070}}, -- Vicious Moonbeast
+{424535,{210069}}, -- Vicious Moonbeast
+{424539,{210077}}, -- Draconic Gladiator's Drake
+{424601,{210141}}, -- [PH] Brown-Furred Spiky Bakar
+{424607,{210142}}, -- Taivan / Good Boy's Leash
+{424608,{210143}}, -- [PH] White-Furred Bakar
+{424610,{210144}}, -- [PH] Yellow-Furred Spiky Bakar
+{424611,{210145}}, -- [PH] YellowBlack-Furred Bakar
+{425338,{210412}}, -- Flourishing Whimsydrake
+{425416,{210345}}, -- Verdant Gladiator's Slitherdrake
+{426955,{210769}}, -- Springtide Dreamtalon / Reins of the Springtide Dreamtalon
+{427041,{210774}}, -- Ochre Dreamtalon / Reins of the Ochre Dreamtalon
+{427043,{210775}}, -- Snowfluff Dreamtalon / Reins of the Snowfluff Dreamtalon
+{427222,{210831}}, -- Delugen
+{427224,{210833}}, -- Talont
+{427226,{210945}}, -- Stargrazer
+{427435,{210919}}, -- Crimson Glimmerfur
+{427546,{210946}}, -- Mammyth
+{427549,{210948}}, -- Imagiwing
+{427724,{210969}}, -- Salatrancer
+{427777,{210973}}, -- Heartseeker Mana Ray
+{428005,{211074}}, -- Jeweled Copper Scarab / Copper Resonating Crystal
+{428013,{211075}}, -- Deathbringer's Shadowcycle
+{428060,{211084}}, -- Golden Regal Scarab / Gold Resonating Crystal
+{428062,{211085}}, -- Jeweled Sapphire Scarab / Sapphire Resonating Crystal
+{428065,{211086}}, -- Jeweled Jade Scarab / Jade Resonating Crystal
+{428067,{211087}}, -- Hateforged Blazecycle / Shadowflame Hellbike
+{428068,{211089}}, -- Felreaver Deathcycle
+{430225,{211873}}, -- Gilnean Prowler / Reins of the Gilnean Prowler
+{430747,{}}, -- Soar
+{430833,{}}, -- Soar
+{431049,{}}, -- Riders of Azeroth Netherwing Drake
+{431050,{}}, -- Riders of Azeroth Whimsydrake
+{431357,{212227}}, -- Fur-endship Fox / Reins of the Fur-endship Fox
+{431359,{212228}}, -- Soaring Sky Fox / Reins of the Soaring Sky Fox
+{431360,{212229}}, -- Twilight Sky Prowler / Reins of the Twilight Sky Prowler
+{431992,{212522}}, -- Compass Rose
+{432455,{212599}}, -- Noble Flying Carpet
+{432558,{212630}}, -- Majestic Azure Peafowl / Reins of the Majestic Azure Peafowl
+{432562,{212631}}, -- Brilliant Sunburst Peafowl / Reins of the Brilliant Sunburst Peafowl
+{432564,{212632}}, -- Starry Twilight Peafowl / Reins of the Starry Twilight Peafowl
+{432610,{212645}}, -- Clayscale Hornstrider
+{433281,{212920}}, -- Savage Blue Battle Turtle
+{434462,{213438}}, -- Infinite Armoredon
+{434470,{213439}}, -- Vicious Dreamtalon
+{434477,{213440}}, -- Vicious Dreamtalon
+{435044,{213576}}, -- Golden Discus
+{435082,{213584}}, -- Mogu Hazeblazer
+{435084,{213582}}, -- Sky Surfer
+{435103,{213598}}, -- Dashing Windsteed / Reins of the Dashing Windsteed
+{435107,{213597}}, -- Forest Windsteed / Reins of the Forest Windsteed
+{435108,{213596}}, -- Daystorm Windsteed / Reins of the Daystorm Windsteed
+{435109,{213595}}, -- Feathered Windsurfer / Feathered Windsurfer String
+{435115,{213601}}, -- Guardian Quilen / Reins of the Guardian Quilen
+{435118,{213600}}, -- Marble Quilen / Reins of the Marble Quilen
+{435123,{213602}}, -- Gilded Riding Crane / Reins of the Gilded Riding Crane
+{435124,{213607}}, -- Luxurious Riding Crane / Reins of the Luxurious Riding Crane
+{435125,{213604}}, -- Tropical Riding Crane / Reins of the Tropical Riding Crane
+{435126,{213606}}, -- Silver Riding Crane / Reins of the Silver Riding Crane
+{435127,{213605}}, -- Rose Riding Crane / Reins of the Rose Riding Crane
+{435128,{213603}}, -- Pale Riding Crane / Reins of the Pale Riding Crane
+{435131,{213608}}, -- Snowy Riding Goat / Reins of the Snowy Riding Goat
+{435133,{213609}}, -- Little Red Riding Goat / Reins of the Little Red Riding Goat
+{435145,{213623}}, -- Bloody Skyscreamer / Reins of the Bloody Skyscreamer
+{435146,{213622}}, -- Night Pterrorwing / Reins of the Night Pterrorwing
+{435147,{213621}}, -- Jade Pterrordax / Reins of the Jade Pterrordax
+{435149,{213624}}, -- Cobalt Juggernaut
+{435150,{213625}}, -- Fel Iron Juggernaut
+{435153,{213626}}, -- Purple Shado-Pan Riding Tiger / Reins of the Purple Shado-Pan Riding Tiger
+{435160,{213628}}, -- Riverwalker Mushan / Reins of the Riverwalker Mushan
+{435161,{213627}}, -- Palehide Mushan Beast / Reins of the Palehide Mushan Beast
+{437162,{}}, -- Polly Roger
+{439138,{217340}}, -- Voyaging Wilderling / Voyaging Wilderling's Harness
+{440444,{217612}}, -- Zovaal's Soul Eater / Zovaal's Shadebeast Collar
+{441794,{218111}}, -- Amber Pterrordax / Reins of the Amber Pterrordax
+{446017,{220766}}, -- August Phoenix / Reins of the August Phoenix
+{446022,{220768}}, -- Astral Emperor's Serpent / Reins of the Astral Emperor's Serpent
+{446352,{221270}}, -- [PH] Goblin Surfboard
+{447413,{221814}}, -- Pearlescent Goblin Wave Shredder
+{448845,{223282}}, -- [PH] Blue Old God Fish Mount
+{448849,{223284}}, -- Underlight Shorestalker
+{448850,{223286}}, -- [PH] Red Old God Fish Mount
+{448851,{223285}}, -- Underlight Corrupted Behemoth
+{449126,{223449}}, -- Kor'kron Warsaber
+{449132,{223459}}, -- [PH] Nightsaber Horde Mount / [PH] Nightsaber Horde Mount Black
+{449133,{223460}}, -- [PH] Nightsaber Horde Mount / [PH] Nightsaber Horde Mount White
+{449140,{223469}}, -- Sentinel War Wolf
+{449141,{223470}}, -- [PH] Alliance Wolf Mount Red
+{449142,{223471}}, -- [PH] Alliance Wolf Mount Purple
+{453255,{224574}}, -- Savage Ebony Battle Turtle
 -- end of live
 
 -- ptr
@@ -1195,10 +1326,12 @@ local ImportCrossRefTable = {
 function ArkInventory.Collection.Mount.ImportCrossRefTable( )
 	
 	if not ImportCrossRefTable then return end
+	
 	if not ArkInventory.Collection.Mount.IsReady( ) then return end
 	
+	
 	ImportCrossRefTableAttempt = ImportCrossRefTableAttempt + 1
-	--ArkInventory.Output( "attempt ", ImportCrossRefTableAttempt )
+	--ArkInventory.Output( "Mount.ImportCrossRefTable - attempt ", ImportCrossRefTableAttempt )
 	
 	if ImportCrossRefTableAttempt > 8 or ( ArkInventory.Table.Elements( ImportCrossRefTable ) == 0 ) then
 		
@@ -1231,7 +1364,7 @@ function ArkInventory.Collection.Mount.ImportCrossRefTable( )
 					key1 = ArkInventory.ObjectIDCount( string.format( "item:%s", v2 ) )
 				end
 				
-				--ArkInventory.Output( k, " - ", spell, " - ", k2, " - ", key1, " - ", key2 )
+				--ArkInventory.OutputDebug( k, " - ", spell, " - ", k2, " - ", key1, " - ", key2 )
 				
 				if key1 then
 					
@@ -1277,6 +1410,12 @@ function ArkInventory.Collection.Mount.GetCount( mta )
 	else
 		return collection.numOwned, collection.numTotal
 	end
+end
+
+function ArkInventory.Collection.Mount.isOwnedBySpell( spellID )
+	local md = ArkInventory.Collection.Mount.GetMountBySpell( spellID )
+	-- /dump ArkInventory.Collection.Mount.GetMountBySpell( 374247 )
+	return md and md.isOwned
 end
 
 function ArkInventory.Collection.Mount.GetMount( index )
@@ -1340,10 +1479,16 @@ function ArkInventory.Collection.Mount.IterateAll( )
 end
 
 function ArkInventory.Collection.Mount.Iterate( mta )
+	
+	if not mta then
+		return ArkInventory.Collection.Mount.IterateAll( )
+	end
+	
 	local t = collection.owned
-	if mta and t[mta] then
+	if t[mta] then
 		return ArkInventory.spairs( t[mta], function( a, b ) return ( t[mta][a].name or "" ) < ( t[mta][b].name or "" ) end )
 	end
+	
 end
 
 function ArkInventory.Collection.Mount.Dismiss( )
@@ -1373,6 +1518,13 @@ function ArkInventory.Collection.Mount.SetFavorite( id, value )
 	end
 end
 
+function ArkInventory.Collection.Mount.GetFlightMode( )
+	if ArkInventory.CrossClient.GetPlayerAuraBySpellID( spellSteady ) then
+		return ArkInventory.ENUM.FLIGHT.MODE.STEADY
+	else
+		return ArkInventory.ENUM.FLIGHT.MODE.DRAGON
+	end
+end
 
 function ArkInventory.Collection.Mount.isFlyableAdvanced( )
 	
@@ -1496,7 +1648,7 @@ function ArkInventory.Collection.Mount.isUsable( id )
 	local md = ArkInventory.Collection.Mount.GetMount( id )
 	if md then
 		
-		if IsUsableSpell( md.spellID ) then
+		if ArkInventory.CrossClient.IsUsableSpell( md.spellID ) then
 			
 			local mz = false
 			
@@ -1507,11 +1659,11 @@ function ArkInventory.Collection.Mount.isUsable( id )
 				if md.mta == "a" then
 					if md.isDragonriding then
 						if not ArkInventory.Collection.Mount.isFlyableAdvanced( ) then
-							mu = false
+							--mu = false
 						end
 					else
 						if not ArkInventory.Collection.Mount.isFlyableNormal( ) then
-							mu = false
+							--mu = false
 						end
 					end
 				end
@@ -1606,14 +1758,14 @@ function ArkInventory.Collection.Mount.UpdateOwned( )
 	end
 	
 	for _, md in ArkInventory.Collection.Mount.IterateAll( ) do
-		if md.owned then
+		if md.isOwned then
 			collection.owned[md.mta][md.index] = md
 		end
 	end
 	
 end
 
-function ArkInventory.Collection.Mount.UpdateUsable( useDragonridingWhenAvailable, forceDragonridingAlternative )
+function ArkInventory.Collection.Mount.UpdateUsable( )
 	
 	for mta in pairs( ArkInventory.Const.Mount.Types ) do
 		if not collection.usable[mta] then
@@ -1628,8 +1780,11 @@ function ArkInventory.Collection.Mount.UpdateUsable( useDragonridingWhenAvailabl
 	local n = ArkInventory.Collection.Mount.GetCount( )
 	if n == 0 then return end
 	
-	local me = ArkInventory.GetPlayerCodex( )
+	local me = ArkInventory.Codex.GetPlayer( )
 	
+	local flightMode = ArkInventory.Collection.Mount.GetFlightMode( )
+	
+	ArkInventory.OutputDebug( "Flight Mode = ", flightMode )
 	ArkInventory.OutputDebug( "Area Flyable (Normal) = ", ArkInventory.Collection.Mount.isFlyableNormal( ) )
 	ArkInventory.OutputDebug( "Area Flyable (Advanced) = ", ArkInventory.Collection.Mount.isFlyableAdvanced( ) )
 	
@@ -1660,26 +1815,14 @@ function ArkInventory.Collection.Mount.UpdateUsable( useDragonridingWhenAvailabl
 					usable = false
 				end
 				
-				if usable and checkType == 1 and mta == "a" then
-					if useDragonridingWhenAvailable then
-						if forceDragonridingAlternative then
-							if md.isDragonriding then
-								usable = false
-							end
-						else
-							if not md.isDragonriding then
-								usable = false
-							end
+				if usable and mta == "a" then
+					if flightMode == ArkInventory.ENUM.FLIGHT.MODE.STEADY then
+						if me.player.data.ldb.mounts.type[mta].mode[md.spellID] == ArkInventory.ENUM.FLIGHT.MODE.DRAGON then
+							usable = false
 						end
 					else
-						if forceDragonridingAlternative then
-							if not md.isDragonriding then
-								usable = false
-							end
-						else
-							if md.isDragonriding then
-								usable = false
-							end
+						if md.isSteadyFlight or me.player.data.ldb.mounts.type[mta].mode[md.spellID] == ArkInventory.ENUM.FLIGHT.MODE.STEADY then
+							usable = false
 						end
 					end
 				end
@@ -1754,7 +1897,7 @@ local function Scan_Threaded( thread_id )
 	local numOwned = 0
 	local YieldCount = 0
 	
-	--ArkInventory.OutputDebug( "Mount: Start Scan @ ", time( ) )
+	--ArkInventory.Output( "Mount: Start Scan @ ", time( ) )
 	
 	if not collection.isInit then
 		ScanInit( )
@@ -1793,7 +1936,8 @@ local function Scan_Threaded( thread_id )
 		numTotal = numTotal + 1
 		YieldCount = YieldCount + 1
 		
-		local name, spellID, icon, isActive, isUsable, source, isFavorite, isFactionSpecific, faction, shouldHideOnChar, isCollected, mountID, isDragonriding = C_MountJournal.GetMountInfoByID( index )
+		local name, spellID, icon, isActive, isUsable, source, isFavorite, isFactionSpecific, faction, shouldHideOnChar, isCollected, mountID, mountModeType = C_MountJournal.GetMountInfoByID( index )
+		--C_MountJournal.GetMountInfoByID( 6 )
 		local creatureDisplayInfoID, description, source2, isSelfMount, mountTypeID, uiModelSceneID = C_MountJournal.GetMountInfoExtraByID( index )
 --		local isFavorite, canSetFavorite = C_MountJournal.GetIsFavorite( i )
 		
@@ -1838,19 +1982,24 @@ local function Scan_Threaded( thread_id )
 			c[i].isSelfMount = isSelfMount
 			c[i].mountTypeID = mountTypeID
 			c[i].uiModelSceneID = uiModelSceneID
-			c[i].isDragonriding = isDragonriding
+			
+			if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT, ArkInventory.ENUM.EXPANSION.DRAGONFLIGHT ) then
+				c[i].isDragonriding = mountModeType
+			elseif ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.WARWITHIN ) then
+				c[i].isSteadyFlight = mountModeType
+			end
 			
 			collection.cachespell[spellID] = i
 			
-			c[i].link = GetSpellLink( spellID )
+			c[i].link = ArkInventory.CrossClient.GetSpellLink( spellID )
 			
 			local mta = ( mountTypeID and ArkInventory.Const.Mount.TypeID[mountTypeID] ) or "x"
 			if mta == "x" then
 				ArkInventory.OutputDebug( "unknown mount type [", mountTypeID, "] for ", name )
 			end
 			
-			c[i].mta = mta
-			c[i].mt = ArkInventory.Const.Mount.Types[mta]
+			c[i].mta = mta -- the letter
+			c[i].mt = ArkInventory.Const.Mount.Types[mta] -- the number
 			c[i].mto = c[i].mt -- save original mount type (user corrections can override the other value)
 			
 		end
@@ -1879,9 +2028,9 @@ local function Scan_Threaded( thread_id )
 			numOwned = numOwned + 1
 		end
 		
-		if c[i].owned ~= isOwned then
+		if c[i].isOwned ~= isOwned then
 			update = true
-			c[i].owned = isOwned
+			c[i].isOwned = isOwned
 		end
 		
 		if YieldCount % ArkInventory.Const.YieldAfter == 0 then
@@ -1897,7 +2046,7 @@ local function Scan_Threaded( thread_id )
 	
 	ArkInventory.Collection.Mount.ApplyUserCorrections( )
 	
-	--ArkInventory.OutputDebug( "Mount: End Scan @ ", time( ), " [", collection.numOwned, "] [", collection.numTotal, "] [", update, "]" )
+	--ArkInventory.Output( "Mount: End Scan @ ", time( ), " [", collection.numOwned, "] [", collection.numTotal, "] [", update, "]" )
 	
 	collection.isReady = true
 	
@@ -1905,7 +2054,7 @@ local function Scan_Threaded( thread_id )
 	ArkInventory.Collection.Mount.ApplyUserCorrections( )
 	
 	if update then
-		ArkInventory.ScanLocation( loc_id )
+		ArkInventory.ScanLocationWindow( loc_id )
 --		ArkInventory:SendMessage( "EVENT_ARKINV_LDB_MOUNT_UPDATE_BUCKET" )
 	end
 	
@@ -1980,7 +2129,7 @@ end
 
 function ArkInventory:EVENT_ARKINV_COLLECTION_MOUNT_EQUIPMENT_UPDATE( event )
 	local loc_id = ArkInventory.Const.Location.MountEquipment
-	ArkInventory.ScanLocation( loc_id )	
+	ArkInventory.ScanLocationWindow( loc_id )	
 end
 
 function ArkInventory:EVENT_ARKINV_PLAYER_CAN_GLIDE_CHANGED( event, ... )
@@ -1996,7 +2145,7 @@ function ArkInventory.SetMountMacro( )
 		
 		--ArkInventory.Output( "SetMountMacro" )
 		
-		local codex = ArkInventory.GetPlayerCodex( )
+		local codex = ArkInventory.Codex.GetPlayer( )
 		
 		local macrotext = ""
 		macrotext = macrotext .. "/dismount [combat,mounted,noflying]" -- dismount if in combat and mounted and not flying
@@ -2037,20 +2186,25 @@ function ArkInventory.SetMountMacro( )
 			btn:SetAttribute( "type", "macro" )
 			btn:SetPoint( "CENTER" )
 			btn:Hide( )
-			btn:RegisterForClicks( "LeftButtonDown", "LeftButtonUp" )
+			btn:SetMouseClickEnabled( true )
+			btn:RegisterForClicks( "AnyDown", "AnyUp" )
+			--btn:SetAttribute( "macrotext", "/sit" )
 		end
+		
 		btn:SetAttribute( "macrotext", macrotext )
 		
 		if ArkInventory.ClientCheck( nil, ArkInventory.ENUM.EXPANSION.SHADOWLANDS ) then
 			
+			--ArkInventory.Output( "re-register clicks" )
 			local state = ArkInventory.CrossClient.GetCVarBool( "ActionButtonUseKeyDown" )
 			
 			-- /run C_CVar.SetCVar("ActionButtonUseKeyDown",1)
+			-- /run C_CVar.SetCVar("ActionButtonUseKeyDown",0)
 			
 			if state then
-				btn:RegisterForClicks( "LeftButtonDown" )
+				btn:RegisterForClicks( "AnyDown" )
 			else
-				btn:RegisterForClicks( "LeftButtonUp" )
+				btn:RegisterForClicks( "AnyUp" )
 			end
 		end
 		

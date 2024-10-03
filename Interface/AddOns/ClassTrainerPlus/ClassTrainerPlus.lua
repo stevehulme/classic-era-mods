@@ -56,10 +56,10 @@ MAX_LEARNABLE_PROFESSIONS = 2
 SKILL_TEXT_WIDTH = 270
 
 -- Trainer Filter Default Values
-TRAINER_FILTER_AVAILABLE = 1
-TRAINER_FILTER_UNAVAILABLE = 1
-TRAINER_FILTER_USED = 0
-TRAINER_FILTER_IGNORED = 1
+TRAINER_FILTER_AVAILABLE = true
+TRAINER_FILTER_UNAVAILABLE = true
+TRAINER_FILTER_USED = false
+TRAINER_FILTER_IGNORED = true
 
 UIPanelWindows["ClassTrainerPlusFrame"] = UIPanelWindows["ClassTrainerFrame"]
 
@@ -197,6 +197,11 @@ end
 
 function ClassTrainerPlusFrame_OnEvent(self, event, ...)
 	if (event == "ADDON_LOADED" and ... == "ClassTrainerPlus") then
+		-- Upgrade from 0/1 to true/false in 1.15.4
+		TRAINER_FILTER_AVAILABLE = TRAINER_FILTER_AVAILABLE and true or false
+		TRAINER_FILTER_UNAVAILABLE = TRAINER_FILTER_UNAVAILABLE and true or false
+		TRAINER_FILTER_USED = TRAINER_FILTER_USED and true or false
+		TRAINER_FILTER_IGNORED = TRAINER_FILTER_IGNORED and true or false
 		SetTrainerServiceTypeFilter("available", TRAINER_FILTER_AVAILABLE)
 		SetTrainerServiceTypeFilter("unavailable", TRAINER_FILTER_UNAVAILABLE)
 		SetTrainerServiceTypeFilter("used", TRAINER_FILTER_USED)
@@ -414,7 +419,7 @@ function ClassTrainerPlus_SetSelection(id)
 		return
 	end
 
-	local showIgnored = TRAINER_FILTER_IGNORED == 1
+	local showIgnored = TRAINER_FILTER_IGNORED == true
 	local serviceName, serviceSubText, serviceType, isExpanded
 	local service = ctp.TrainerServices:GetService(id)
 	if (service == nil) then
@@ -604,47 +609,35 @@ function ClassTrainerPlusSkillButton_OnClick(self, button)
 		end
 		local ability = ctp.Abilities:GetByNameAndSubText(service.name, service.subText)
 		local spellId = ability and ability.spellId or 0
-		local menu = {
-			{text = menuTitle, isTitle = true, classicChecks = true},
-			{
-				text = ctp.L["IGNORED"],
-				checked = checked,
-				func = function()
-					PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
-					if (spellId ~= nil and spellId > 0) then
-						ignoreStore:Flip(spellId)
-					else
-						print(format("ClassTrainerPlus: could not find spell for %s", service.name))
-					end
-					-- UpdateUserFilters()
-					TrainerUpdateHandler()
-				end,
-				isNotRadio = true
-				-- classicChecks = true
-			}
-		}
-		if (ctp.SpellsToIgnoreAllRanksOn == nil or not ctp.SpellsToIgnoreAllRanksOn[spellId]) then
-			local spellIds = ctp.Abilities:GetAllIdsByName(service.name)
-			if (spellIds ~= nil) then
-				local allIgnored = true
-				for _, id in ipairs(spellIds) do
-					allIgnored = allIgnored and ignoreStore:IsIgnored(id)
+		MenuUtil.CreateContextMenu(self, function(owner, rootDescription)
+			rootDescription:CreateTitle(menuTitle)
+			rootDescription:CreateCheckbox(ctp.L["IGNORED"], function() return checked end, function()
+				PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
+				if (spellId ~= nil and spellId > 0) then
+					ignoreStore:Flip(spellId)
+				else
+					print(format("ClassTrainerPlus: could not find spell for %s", service.name))
 				end
-				tinsert(menu, {
-					text = ctp.L["IGNOREALLRANKS"],
-					checked = allIgnored,
-					func = function()
+				-- UpdateUserFilters()
+				TrainerUpdateHandler()
+				return MenuResponse.Close
+			end)
+			if (ctp.SpellsToIgnoreAllRanksOn == nil or not ctp.SpellsToIgnoreAllRanksOn[spellId]) then
+				local spellIds = ctp.Abilities:GetAllIdsByName(service.name)
+				if (spellIds ~= nil) then
+					local allIgnored = true
+					for _, id in ipairs(spellIds) do
+						allIgnored = allIgnored and ignoreStore:IsIgnored(id)
+					end
+					rootDescription:CreateCheckbox(ctp.L["IGNOREALLRANKS"], function() return allIgnored end, function() 
 						PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
 						ignoreStore:UpdateMany(spellIds, not allIgnored)
 						TrainerUpdateHandler()
-					end,
-					isNotRadio = true
-					-- classicChecks = true
-				})
+						return MenuResponse.Close
+					end)
+				end
 			end
-		end
-
-		EasyMenu(menu, menuFrame, "cursor", 10, 35, "MENU")
+		end)
 	end
 end
 
@@ -749,14 +742,10 @@ end
 function ClassTrainerPlusFrameFilterDropDown_Initialize()
 	-- Available button
 	local info = {}
-	local checked = nil
-	if (GetTrainerServiceTypeFilter("available")) then
-		checked = 1
-	end
 	info.text = GREEN_FONT_COLOR_CODE .. AVAILABLE .. FONT_COLOR_CODE_CLOSE
 	info.value = "available"
 	info.func = ClassTrainerPlusFrameFilterDropDown_OnClick
-	info.checked = checked
+	info.checked = GetTrainerServiceTypeFilter("available")
 	info.keepShownOnClick = 1
 	info.classicChecks = true
 	UIDropDownMenu_AddButton(info)
@@ -764,14 +753,10 @@ function ClassTrainerPlusFrameFilterDropDown_Initialize()
 	if (not IsTradeskillTrainer()) then
 		-- Ignored button
 		info = {}
-		checked = nil
-		if (TRAINER_FILTER_IGNORED == 1) then
-			checked = 1
-		end
 		info.text = LIGHTYELLOW_FONT_COLOR_CODE .. ctp.L["IGNORED"] .. FONT_COLOR_CODE_CLOSE
 		info.value = "ignored"
 		info.func = ClassTrainerPlusFrameFilterDropDown_OnClick
-		info.checked = checked
+		info.checked = TRAINER_FILTER_IGNORED
 		info.keepShownOnClick = 1
 		info.classicChecks = true
 		UIDropDownMenu_AddButton(info)
@@ -779,37 +764,29 @@ function ClassTrainerPlusFrameFilterDropDown_Initialize()
 
 	-- Unavailable button
 	info = {}
-	checked = nil
-	if (GetTrainerServiceTypeFilter("unavailable")) then
-		checked = 1
-	end
 	info.text = RED_FONT_COLOR_CODE .. UNAVAILABLE .. FONT_COLOR_CODE_CLOSE
 	info.value = "unavailable"
 	info.func = ClassTrainerPlusFrameFilterDropDown_OnClick
-	info.checked = checked
+	info.checked = GetTrainerServiceTypeFilter("unavailable")
 	info.keepShownOnClick = 1
 	info.classicChecks = true
 	UIDropDownMenu_AddButton(info)
 
 	-- Already Known button
 	info = {}
-	checked = nil
-	if (GetTrainerServiceTypeFilter("used")) then
-		checked = 1
-	end
 	info.text = GRAY_FONT_COLOR_CODE .. USED .. FONT_COLOR_CODE_CLOSE
 	info.value = "used"
 	info.func = ClassTrainerPlusFrameFilterDropDown_OnClick
-	info.checked = checked
+	info.checked = GetTrainerServiceTypeFilter("used")
 	info.keepShownOnClick = 1
 	info.classicChecks = true
 	UIDropDownMenu_AddButton(info)
 end
 
 function ClassTrainerPlusFrameFilterDropDown_OnClick(self)
-	local newFilterValue = 0
+	local newFilterValue = false
 	if (UIDropDownMenuButton_GetChecked(self)) then
-		newFilterValue = 1
+		newFilterValue = true
 	end
 
 	ClassTrainerPlusListScrollFrameScrollBar:SetValue(0)

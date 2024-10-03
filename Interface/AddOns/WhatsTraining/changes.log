@@ -1,3 +1,9 @@
+* 6.1.0
+    - Fix broken right-click when ClassTrainerPlus is active in 1.15.4
+
+* 6.0.2
+    - Update Classic Era ToC version
+
 * 6.0.1
     - Remove debug statement in death knight data
 

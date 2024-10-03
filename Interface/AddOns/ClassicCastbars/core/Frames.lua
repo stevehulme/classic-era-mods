@@ -190,6 +190,7 @@ function ClassicCastbars:SetCastbarStyle(castbar, db, unitID)
     castbar.Text:SetWidth(db.width - 10) -- ensures text gets truncated
     castbar.currWidth = db.width -- avoids having to use a function call later on in OnUpdate
     castbar:SetIgnoreParentAlpha(db.ignoreParentAlpha)
+    castbar:SetIgnoreParentScale(db.ignoreParentScale)
 
     castbar.Border:SetDrawLayer("ARTWORK", 1)
     castbar.BorderShield:SetDrawLayer("ARTWORK", 2)
@@ -501,10 +502,6 @@ function ClassicCastbars:SkinPlayerCastbar()
 
     local db = self.db.player
     if not db.enabled then return end
-
-    if not CastingBarFrame.showCastbar or not CastingBarFrame:IsEventRegistered("UNIT_SPELLCAST_START") then
-        print("|cFFFF0000[ClassicCastbars] Incompatibility detected for PLAYER castbar. You most likely have another addon disabling the default Blizzard castbar.|r") -- luacheck: ignore
-    end
 
     if not CastingBarFrame.Timer then
         CastingBarFrame.Timer = CastingBarFrame:CreateFontString(nil, "OVERLAY")
