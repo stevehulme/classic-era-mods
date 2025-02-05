@@ -189,6 +189,10 @@ local function RestackBagOrder( loc_id_window )
 	
 end
 
+local function IngoreItem( id )
+	local search_id = string.format( "item:%s", id )
+	return not ArkInventory.db.option.restack.include.item[search_id]
+end
 
 local function FindItem( src_loc_id_window, dst_loc_id_window, dst_bag_id_window, dst_bag_pos, dst_slot_id, id, partial_only )
 	
@@ -202,6 +206,8 @@ local function FindItem( src_loc_id_window, dst_loc_id_window, dst_bag_id_window
 	-- find a stack of a specific item
 	
 	--ArkInventory.Output( "item> find [", src_loc_id_window, "] [", dst_loc_id_window, "] [", dst_bag_id_window, "] [", dst_bag_pos, "] [", dst_slot_id, "] [", id, "]" )
+	
+	if IngoreItem( id ) then return end
 	
 	local map = ArkInventory.Util.MapGetWindow( dst_loc_id_window, dst_bag_id_window )
 	local dst_loc_id_storage = map.loc_id_storage
@@ -400,38 +406,46 @@ local function FindCraftingItem( src_loc_id_window, dst_loc_id_window, dst_bag_i
 								
 								local info = ArkInventory.GetObjectInfo( itemInfo.hyperlink )
 								
-								--ArkInventory.OutputDebug( mode, "> check [", blizzard_id, ".", slot_id, "] [", info.craft, "] [", info.itemunique, "] ", itemInfo.hyperlink )
-								
-								if not info.itemunique then
+								if IngoreItem( info.id ) then
 									
-									if dst_bag_type then
+									--ArkInventory.OutputDebug( mode, "> ignored [", blizzard_id, ".", slot_id, "] [", info.craft, "] [", info.itemunique, "] ", itemInfo.hyperlink )
+									
+								else
+									
+									--ArkInventory.OutputDebug( mode, "> check [", blizzard_id, ".", slot_id, "] [", info.craft, "] [", info.itemunique, "] ", itemInfo.hyperlink )
+									
+									if not info.itemunique then
 										
-										if info.craft or info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.REAGENT.PARENT or info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.PROJECTILE.PARENT then
+										if dst_bag_type then
 											
-											if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.WRATH ) then -- FIX ME, not sure when this shifted to multi bagtype support
+											if info.craft or info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.REAGENT.PARENT or info.itemtypeid == ArkInventory.ENUM.ITEM.TYPE.PROJECTILE.PARENT then
 												
-												if bit.band( info.itemfamily, dst_bag_type ) > 0 then
-													--ArkInventory.Output( mode, "> found [", blizzard_id, ".", slot_id, "] " , itemInfo.hyperlink )
-													return false, recheck, true, src_loc_id_window, src_bag_id_window, blizzard_id, slot_id
-												end
-												
-											else
-												
-												if info.itemfamily == dst_bag_type then
-													--ArkInventory.Output( mode, "> found [", blizzard_id, ".", slot_id, "] " , itemInfo.hyperlink )
-													return false, recheck, true, src_loc_id_window, src_bag_id_window, blizzard_id, slot_id
+												if ArkInventory.ClientCheck( ArkInventory.ENUM.EXPANSION.WRATH ) then -- FIX ME, not sure when this shifted to multi bagtype support
+													
+													if bit.band( info.itemfamily, dst_bag_type ) > 0 then
+														--ArkInventory.Output( mode, "> found [", blizzard_id, ".", slot_id, "] " , itemInfo.hyperlink )
+														return false, recheck, true, src_loc_id_window, src_bag_id_window, blizzard_id, slot_id
+													end
+													
+												else
+													
+													if info.itemfamily == dst_bag_type then
+														--ArkInventory.Output( mode, "> found [", blizzard_id, ".", slot_id, "] " , itemInfo.hyperlink )
+														return false, recheck, true, src_loc_id_window, src_bag_id_window, blizzard_id, slot_id
+													end
+													
 												end
 												
 											end
 											
-										end
-										
-									else
-										
-										if info.craft then
+										else
 											
-											--ArkInventory.Output( mode, "> found [", blizzard_id, ".", slot_id, "] " , itemInfo.hyperlink )
-											return false, recheck, true, src_loc_id_window, src_bag_id_window, blizzard_id, slot_id
+											if info.craft then
+												
+												--ArkInventory.Output( mode, "> found [", blizzard_id, ".", slot_id, "] " , itemInfo.hyperlink )
+												return false, recheck, true, src_loc_id_window, src_bag_id_window, blizzard_id, slot_id
+												
+											end
 											
 										end
 										
@@ -552,8 +566,18 @@ local function FindNormalItem( src_loc_id_window, dst_loc_id, dst_bag_id, dst_ba
 									
 								else
 									
-									--ArkInventory.OutputDebug( "found> ", src_loc_id_window, ".", blizzard_id, ".", slot_id )
-									return false, recheck, true, src_loc_id_window, bag_id_window, blizzard_id, slot_id
+									local info = ArkInventory.GetObjectInfo( itemInfo.hyperlink )
+									
+									if IngoreItem( info.id ) then
+										
+										--ArkInventory.OutputDebug( "found "> ignored [", blizzard_id, ".", slot_id, "] ", itemInfo.hyperlink )
+										
+									else
+										
+										--ArkInventory.OutputDebug( "found> ", src_loc_id_window, ".", blizzard_id, ".", slot_id )
+										return false, recheck, true, src_loc_id_window, bag_id_window, blizzard_id, slot_id
+										
+									end
 									
 								end
 								
@@ -791,6 +815,10 @@ local function ConsolidateSkip( blizzard_id )
 			end
 			
 		elseif bt > 0 then
+			
+			if not no_more_profession_items[ArkInventory.Const.Location.Bag] then
+				no_more_profession_items[ArkInventory.Const.Location.Bag] = { }
+			end
 			
 			if not no_more_profession_items[loc_id_window] then
 				no_more_profession_items[loc_id_window] = { }

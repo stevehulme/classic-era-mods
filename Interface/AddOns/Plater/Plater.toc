@@ -1,11 +1,12 @@
-## Interface: 110002
+## Interface: 110007
 ## Title: Plater
 ## Notes: Nameplate addon designed for advanced users.
 ## SavedVariables: PlaterDB, PlaterLanguage, PlaterLogs, PlaterBackup
 ## SavedVariablesPerCharacter: PlaterDBChr
+## OptionalDeps: Masque
 ## IconTexture-blank: 982414
 ## IconTexture: Interface\AddOns\Plater\images\cast_bar
-## Version: Plater-v589-Retail
+## Version: Plater-v600-Retail
 ## X-Curse-Project-ID: 100547
 ## X-Wago-ID: kRNLep6o
 

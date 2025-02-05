@@ -61,6 +61,10 @@ helper_ResetItemDataTypes( 211446, ArkInventory.ENUM.ITEM.TYPE.ARMOR.PARENT, Ark
 helper_ResetItemDataTypes( 224298, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.PARENT, ArkInventory.ENUM.ITEM.TYPE.CONSUMABLE.OTHER ) -- Dilated Eon Canister
 helper_ResetItemDataTypes( 228228, ArkInventory.ENUM.ITEM.TYPE.QUEST.PARENT, ArkInventory.ENUM.ITEM.TYPE.QUEST.QUEST ) -- Strange Lump of Wax
 
+helper_ResetItemDataTypes( 225770, ArkInventory.ENUM.ITEM.TYPE.MISC.PARENT, ArkInventory.ENUM.ITEM.TYPE.MISC.OTHER ) -- Algari Anglerthread
+helper_ResetItemDataTypes( 225771, ArkInventory.ENUM.ITEM.TYPE.MISC.PARENT, ArkInventory.ENUM.ITEM.TYPE.MISC.OTHER ) -- Algari Seekerthread
+
+
 
 local function helper_CorrectData( info, tmp )
 	-- correct any data

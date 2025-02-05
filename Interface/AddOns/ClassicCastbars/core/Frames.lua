@@ -349,8 +349,8 @@ function ClassicCastbars:SetFinishCastStyle(castbar, unitID)
 
     -- Successfull cast
     if castbar.isCastComplete then
-        if castbar.Border:GetAlpha() == 1 or castbar.isUninterruptible then
-            if castbar.BorderShield:IsShown() or nonLSMBorders[castbar.Border:GetTextureFilePath() or ""] or nonLSMBorders[castbar.Border:GetTexture() or ""] then
+        if castbar.Border:GetAlpha() == 1 or castbar.BorderShield:IsShown() then
+            if nonLSMBorders[castbar.Border:GetTextureFilePath() or ""] or nonLSMBorders[castbar.Border:GetTexture() or ""] then
                 if castbar.isUninterruptible then
                     castbar.Flash:SetVertexColor(0.7, 0.7, 0.7, 1)
                 elseif castbar.isChanneled then
@@ -618,7 +618,11 @@ function ClassicCastbars:SkinPlayerCastbar()
     self:SetCastbarFonts(CastingBarFrame, db)
 
     if not isRetail then
-        hooksecurefunc("CastingBarFrame_OnLoad", ColorPlayerCastbar)
+        if not CastingBarFrame.CC_ColorIsHooked then
+            hooksecurefunc("CastingBarFrame_OnLoad", ColorPlayerCastbar)
+            CastingBarFrame.CC_ColorIsHooked = true
+        end
+
         C_Timer.After(GetTickTime(), ColorPlayerCastbar)
     else
         if PlayerCastingBarFrame.isTesting then
@@ -632,22 +636,27 @@ end
 if isRetail then
     -- Modified code from Classic Frames, some parts might be redundant for us.
     -- This is mostly just quick *hacks* to get the player castbar customizations working for retail after patch 10.0.0.
+    -- Once 'player-castbar-v2' branch is done this will all be removed.
     hooksecurefunc(PlayerCastingBarFrame, 'UpdateShownState', function(self)
         local db = ClassicCastbars.db and ClassicCastbars.db.player
         if not db or not db.enabled then return end
 
-        if self.barType ~= "empowered" then
+        --if self.barType ~= "empowered" then
             self:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+            if self.barType == "empowered" then
+                self.Spark:SetAtlas(nil)
+            end
             self.Spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
             self.Spark:SetSize(32, 32)
             self.Spark:ClearAllPoints()
-            self.Spark:SetPoint("CENTER", 0, 2)
+            self.Spark:SetPoint("CENTER", self, "LEFT", 0, 0)
+            self.Spark.offsetY = 0
             self.Spark:SetBlendMode("ADD")
-            if self.channeling then
+            if self.channeling and self.barType ~= "empowered" then
                 self.Spark:Hide()
             end
             ClassicCastbars:SkinPlayerCastbar()
-        end
+        --end
     end)
 
     hooksecurefunc(PlayerCastingBarFrame, "FinishSpell", function(self)

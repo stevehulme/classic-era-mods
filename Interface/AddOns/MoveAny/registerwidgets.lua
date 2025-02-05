@@ -125,21 +125,21 @@ function MoveAny:CreateSlider(parent, x, y, name, key, value, steps, vmin, vmax,
 	if slider.Low == nil then
 		slider.Low = slider:CreateFontString(nil, nil, "GameFontNormal")
 		slider.Low:SetPoint("BOTTOMLEFT", slider, "BOTTOMLEFT", 0, -12)
-		slider.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+		MoveAny:SetFontSize(slider.Low, 10, "THINOUTLINE")
 		slider.Low:SetTextColor(1, 1, 1)
 	end
 
 	if slider.High == nil then
 		slider.High = slider:CreateFontString(nil, nil, "GameFontNormal")
 		slider.High:SetPoint("BOTTOMRIGHT", slider, "BOTTOMRIGHT", 0, -12)
-		slider.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+		MoveAny:SetFontSize(slider.High, 10, "THINOUTLINE")
 		slider.High:SetTextColor(1, 1, 1)
 	end
 
 	if slider.Text == nil then
 		slider.Text = slider:CreateFontString(nil, nil, "GameFontNormal")
 		slider.Text:SetPoint("TOP", slider, "TOP", 0, 16)
-		slider.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+		MoveAny:SetFontSize(slider.Text, 12, "THINOUTLINE")
 		slider.Text:SetTextColor(1, 1, 1)
 	end
 
@@ -314,22 +314,9 @@ function MoveAny:MenuOptions(opt, frame)
 				function()
 					local checked = hide:GetChecked()
 					MoveAny:SetEleOption(name, "Hide", checked)
-					local maframe1 = _G["MA" .. name]
-					local maframe2 = _G[string.gsub(name, "MA", "")]
 					local dragf = _G[name .. "_MA_DRAG"]
 					if checked then
-						frame.oldparent = frame.oldparent or frame:GetParent()
-						frame:SetParent(MAHIDDEN)
-						if maframe1 then
-							maframe1.oldparent = maframe1.oldparent or maframe1:GetParent()
-							maframe1:SetParent(MAHIDDEN)
-						end
-
-						if maframe2 then
-							maframe2.oldparent = maframe2.oldparent or maframe2:GetParent()
-							maframe2:SetParent(MAHIDDEN)
-						end
-
+						MoveAny:HideFrame(frame)
 						dragf.t:SetVertexColor(MoveAny:GetColor("hidden"))
 						if MoveAny:IsEnabled("HIDEHIDDENFRAMES", false) then
 							dragf:Hide()
@@ -337,15 +324,7 @@ function MoveAny:MenuOptions(opt, frame)
 							dragf:Show()
 						end
 					else
-						frame:SetParent(frame.oldparent)
-						if maframe1 then
-							maframe1:SetParent(maframe1.oldparent)
-						end
-
-						if maframe2 then
-							maframe2:SetParent(maframe2.oldparent)
-						end
-
+						MoveAny:ShowFrame(frame)
 						if MACurrentEle == frame then
 							dragf.t:SetVertexColor(MoveAny:GetColor("se"))
 						else
@@ -355,8 +334,8 @@ function MoveAny:MenuOptions(opt, frame)
 				end
 			)
 
-			hide.text = hide:CreateFontString(nil, "ARTWORK")
-			hide.text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+			hide.text = hide:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+			MoveAny:SetFontSize(hide.text, 12, "THINOUTLINE")
 			hide.text:SetPoint("LEFT", hide, "RIGHT", 0, 0)
 			hide.text:SetText(getglobal("HIDE"))
 			local clickthrough = CreateFrame("CheckButton", "clickthrough", content, "ChatConfigCheckButtonTemplate")
@@ -389,8 +368,8 @@ function MoveAny:MenuOptions(opt, frame)
 				end
 			)
 
-			clickthrough.text = clickthrough:CreateFontString(nil, "ARTWORK")
-			clickthrough.text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+			clickthrough.text = clickthrough:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+			MoveAny:SetFontSize(clickthrough.text, 12, "THINOUTLINE")
 			clickthrough.text:SetPoint("LEFT", clickthrough, "RIGHT", 0, 0)
 			clickthrough.text:SetText(MoveAny:GT("LID_CLICKTHROUGH"))
 			local fullhp = CreateFrame("CheckButton", "FULLHPENABLED", content, "ChatConfigCheckButtonTemplate")
@@ -467,21 +446,21 @@ function MoveAny:MenuOptions(opt, frame)
 				if sliderCount.Low == nil then
 					sliderCount.Low = sliderCount:CreateFontString(nil, nil, "GameFontNormal")
 					sliderCount.Low:SetPoint("BOTTOMLEFT", sliderCount, "BOTTOMLEFT", 0, -12)
-					sliderCount.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+					MoveAny:SetFontSize(sliderCount.Low, 10, "THINOUTLINE")
 					sliderCount.Low:SetTextColor(1, 1, 1)
 				end
 
 				if sliderCount.High == nil then
 					sliderCount.High = sliderCount:CreateFontString(nil, nil, "GameFontNormal")
 					sliderCount.High:SetPoint("BOTTOMRIGHT", sliderCount, "BOTTOMRIGHT", 0, -12)
-					sliderCount.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+					MoveAny:SetFontSize(sliderCount.High, 10, "THINOUTLINE")
 					sliderCount.High:SetTextColor(1, 1, 1)
 				end
 
 				if sliderCount.Text == nil then
 					sliderCount.Text = sliderCount:CreateFontString(nil, nil, "GameFontNormal")
 					sliderCount.Text:SetPoint("TOP", sliderCount, "TOP", 0, 16)
-					sliderCount.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+					MoveAny:SetFontSize(sliderCount.Text, 12, "THINOUTLINE")
 					sliderCount.Text:SetTextColor(1, 1, 1)
 				end
 
@@ -523,21 +502,21 @@ function MoveAny:MenuOptions(opt, frame)
 				if sliderRows.Low == nil then
 					sliderRows.Low = sliderRows:CreateFontString(nil, nil, "GameFontNormal")
 					sliderRows.Low:SetPoint("BOTTOMLEFT", sliderRows, "BOTTOMLEFT", 0, -12)
-					sliderRows.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+					MoveAny:SetFontSize(sliderRows.Low, 10, "THINOUTLINE")
 					sliderRows.Low:SetTextColor(1, 1, 1)
 				end
 
 				if sliderRows.High == nil then
 					sliderRows.High = sliderRows:CreateFontString(nil, nil, "GameFontNormal")
 					sliderRows.High:SetPoint("BOTTOMRIGHT", sliderRows, "BOTTOMRIGHT", 0, -12)
-					sliderRows.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+					MoveAny:SetFontSize(sliderRows.High, 10, "THINOUTLINE")
 					sliderRows.High:SetTextColor(1, 1, 1)
 				end
 
 				if sliderRows.Text == nil then
 					sliderRows.Text = sliderRows:CreateFontString(nil, nil, "GameFontNormal")
 					sliderRows.Text:SetPoint("TOP", sliderRows, "TOP", 0, 16)
-					sliderRows.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+					MoveAny:SetFontSize(sliderRows.Text, 12, "THINOUTLINE")
 					sliderRows.Text:SetTextColor(1, 1, 1)
 				end
 
@@ -578,21 +557,21 @@ function MoveAny:MenuOptions(opt, frame)
 			if sliderOffset.Low == nil then
 				sliderOffset.Low = sliderOffset:CreateFontString(nil, nil, "GameFontNormal")
 				sliderOffset.Low:SetPoint("BOTTOMLEFT", sliderOffset, "BOTTOMLEFT", 0, -12)
-				sliderOffset.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderOffset.Low, 10, "THINOUTLINE")
 				sliderOffset.Low:SetTextColor(1, 1, 1)
 			end
 
 			if sliderOffset.High == nil then
 				sliderOffset.High = sliderOffset:CreateFontString(nil, nil, "GameFontNormal")
 				sliderOffset.High:SetPoint("BOTTOMRIGHT", sliderOffset, "BOTTOMRIGHT", 0, -12)
-				sliderOffset.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderOffset.High, 10, "THINOUTLINE")
 				sliderOffset.High:SetTextColor(1, 1, 1)
 			end
 
 			if sliderOffset.Text == nil then
 				sliderOffset.Text = sliderOffset:CreateFontString(nil, nil, "GameFontNormal")
 				sliderOffset.Text:SetPoint("TOP", sliderOffset, "TOP", 0, 16)
-				sliderOffset.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderOffset.Text, 12, "THINOUTLINE")
 				sliderOffset.Text:SetTextColor(1, 1, 1)
 			end
 
@@ -634,8 +613,8 @@ function MoveAny:MenuOptions(opt, frame)
 				end
 			)
 
-			flipped.text = flipped:CreateFontString(nil, "ARTWORK")
-			flipped.text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+			flipped.text = flipped:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+			MoveAny:SetFontSize(flipped.text, 12, "THINOUTLINE")
 			flipped.text:SetPoint("LEFT", flipped, "RIGHT", 0, 0)
 			flipped.text:SetText(MoveAny:GT("LID_FLIPPED"))
 			PY = PY - 40
@@ -646,21 +625,21 @@ function MoveAny:MenuOptions(opt, frame)
 			if slider.Low == nil then
 				slider.Low = slider:CreateFontString(nil, nil, "GameFontNormal")
 				slider.Low:SetPoint("BOTTOMLEFT", slider, "BOTTOMLEFT", 0, -12)
-				slider.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(slider.Low, 10, "THINOUTLINE")
 				slider.Low:SetTextColor(1, 1, 1)
 			end
 
 			if slider.High == nil then
 				slider.High = slider:CreateFontString(nil, nil, "GameFontNormal")
 				slider.High:SetPoint("BOTTOMRIGHT", slider, "BOTTOMRIGHT", 0, -12)
-				slider.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(slider.High, 10, "THINOUTLINE")
 				slider.High:SetTextColor(1, 1, 1)
 			end
 
 			if slider.Text == nil then
 				slider.Text = slider:CreateFontString(nil, nil, "GameFontNormal")
 				slider.Text:SetPoint("TOP", slider, "TOP", 0, 16)
-				slider.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+				MoveAny:SetFontSize(slider.Text, 12, "THINOUTLINE")
 				slider.Text:SetTextColor(1, 1, 1)
 			end
 
@@ -699,8 +678,13 @@ function MoveAny:MenuOptions(opt, frame)
 					0,
 					4,
 					function()
-						MoveAny:UpdateBuffs()
-						DebuffFrame:UpdatePoint()
+						if MoveAny.UpdateBuffs then
+							MoveAny:UpdateBuffs()
+						end
+
+						if MoveAny.UpdateDebuffs then
+							MoveAny:UpdateDebuffs()
+						end
 					end,
 					{
 						[0] = "AUTO",
@@ -725,8 +709,13 @@ function MoveAny:MenuOptions(opt, frame)
 				1,
 				20,
 				function()
-					MoveAny:UpdateBuffs()
-					DebuffFrame:UpdatePoint()
+					if MoveAny.UpdateBuffs then
+						MoveAny:UpdateBuffs()
+					end
+
+					if MoveAny.UpdateDebuffs then
+						MoveAny:UpdateDebuffs()
+					end
 				end
 			)
 
@@ -742,8 +731,13 @@ function MoveAny:MenuOptions(opt, frame)
 				0,
 				30,
 				function()
-					MoveAny:UpdateBuffs()
-					DebuffFrame:UpdatePoint()
+					if MoveAny.UpdateBuffs then
+						MoveAny:UpdateBuffs()
+					end
+
+					if MoveAny.UpdateDebuffs then
+						MoveAny:UpdateDebuffs()
+					end
 				end
 			)
 
@@ -759,8 +753,13 @@ function MoveAny:MenuOptions(opt, frame)
 				0,
 				30,
 				function()
-					MoveAny:UpdateBuffs()
-					DebuffFrame:UpdatePoint()
+					if MoveAny.UpdateBuffs then
+						MoveAny:UpdateBuffs()
+					end
+
+					if MoveAny.UpdateDebuffs then
+						MoveAny:UpdateDebuffs()
+					end
 				end
 			)
 
@@ -809,21 +808,21 @@ function MoveAny:MenuOptions(opt, frame)
 			if sliderW.Low == nil then
 				sliderW.Low = sliderW:CreateFontString(nil, nil, "GameFontNormal")
 				sliderW.Low:SetPoint("BOTTOMLEFT", sliderW, "BOTTOMLEFT", 0, -12)
-				sliderW.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderW.Low, 10, "THINOUTLINE")
 				sliderW.Low:SetTextColor(1, 1, 1)
 			end
 
 			if sliderW.High == nil then
 				sliderW.High = sliderW:CreateFontString(nil, nil, "GameFontNormal")
 				sliderW.High:SetPoint("BOTTOMRIGHT", sliderW, "BOTTOMRIGHT", 0, -12)
-				sliderW.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderW.High, 10, "THINOUTLINE")
 				sliderW.High:SetTextColor(1, 1, 1)
 			end
 
 			if sliderW.Text == nil then
 				sliderW.Text = sliderW:CreateFontString(nil, nil, "GameFontNormal")
 				sliderW.Text:SetPoint("TOP", sliderW, "TOP", 0, 16)
-				sliderW.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderW.Text, 12, "THINOUTLINE")
 				sliderW.Text:SetTextColor(1, 1, 1)
 			end
 
@@ -854,21 +853,21 @@ function MoveAny:MenuOptions(opt, frame)
 			if sliderH.Low == nil then
 				sliderH.Low = sliderH:CreateFontString(nil, nil, "GameFontNormal")
 				sliderH.Low:SetPoint("BOTTOMLEFT", sliderH, "BOTTOMLEFT", 0, -12)
-				sliderH.Low:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderH.Low, 10, "THINOUTLINE")
 				sliderH.Low:SetTextColor(1, 1, 1)
 			end
 
 			if sliderH.High == nil then
 				sliderH.High = sliderH:CreateFontString(nil, nil, "GameFontNormal")
 				sliderH.High:SetPoint("BOTTOMRIGHT", sliderH, "BOTTOMRIGHT", 0, -12)
-				sliderH.High:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderH.High, 10, "THINOUTLINE")
 				sliderH.High:SetTextColor(1, 1, 1)
 			end
 
 			if sliderH.Text == nil then
 				sliderH.Text = sliderH:CreateFontString(nil, nil, "GameFontNormal")
 				sliderH.Text:SetPoint("TOP", sliderH, "TOP", 0, 16)
-				sliderH.Text:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
+				MoveAny:SetFontSize(sliderH.Text, 12, "THINOUTLINE")
 				sliderH.Text:SetTextColor(1, 1, 1)
 			end
 
@@ -976,14 +975,17 @@ function MoveAny:ClearSelectEle()
 end
 
 function MoveAny:SelectEle(ele)
+	if ele == nil then return end
 	if MACurrentEle and MACurrentEle.t then
 		MACurrentEle.t:SetVertexColor(MoveAny:GetColor("el"))
 		MACurrentEle.name:Hide()
 	end
 
 	MACurrentEle = ele
-	MACurrentEle.t:SetVertexColor(MoveAny:GetColor("se"))
-	MACurrentEle.name:Show()
+	if MACurrentEle and MACurrentEle.t then
+		MACurrentEle.t:SetVertexColor(MoveAny:GetColor("se"))
+		MACurrentEle.name:Show()
+	end
 end
 
 function MoveAny:GetSelectEleName(lstr)
@@ -1109,6 +1111,7 @@ function MoveAny:RegisterWidget(tab)
 	local posx = tab.posx
 	local posy = tab.posy
 	local setup = tab.setup
+	local soft = tab.soft
 	tab.delay = tab.delay or 0.2
 	local enabled1, forced1 = MoveAny:IsInEditModeEnabled(name)
 	local enabled2, forced2 = MoveAny:IsInEditModeEnabled(lstr)
@@ -1146,8 +1149,7 @@ function MoveAny:RegisterWidget(tab)
 		dragframe:SetClampedToScreen(true)
 		dragframe:SetFrameStrata("MEDIUM")
 		dragframe:SetFrameLevel(99)
-		dragframe:SetAlpha(0)
-		dragframe:EnableMouse(false)
+		dragframe:Hide()
 		if MoveAny:GetEleSize(name) then
 			dragframe:SetSize(MoveAny:GetEleSize(name))
 		else
@@ -1366,37 +1368,12 @@ function MoveAny:RegisterWidget(tab)
 		frame:SetClampedToScreen(true)
 	end
 
-	local maframe1 = _G["MA" .. name]
-	local maframe2 = _G[string.gsub(name, "MA", "")]
+	if frame ~= TalkingHeadFrame and frame ~= Minimap and frame ~= MinimapCluster and frame.SetIgnoreParentAlpha ~= nil and frame:GetParent() ~= UIParent and frame:GetParent() ~= MoveAny:GetMainPanel() then
+		frame:SetIgnoreParentAlpha(true)
+	end
+
 	if MoveAny:GetEleOption(name, "Hide", false, "Hide2") then
-		frame.oldparent = frame.oldparent or frame:GetParent()
-		hooksecurefunc(
-			frame,
-			"SetParent",
-			function(sel, newParent)
-				if sel.ma_setparent then return end
-				sel.ma_setparent = true
-				if MoveAny:GetEleOption(name, "Hide", false, "Hide3") then
-					sel:SetParent(MAHIDDEN)
-				else
-					sel:SetParent(sel.oldparent)
-				end
-
-				sel.ma_setparent = false
-			end
-		)
-
-		frame:SetParent(MAHIDDEN)
-		if maframe1 then
-			maframe1.oldparent = maframe1.oldparent or frame:GetParent()
-			maframe1:SetParent(MAHIDDEN)
-		end
-
-		if maframe2 then
-			maframe2.oldparent = maframe2.oldparent or frame:GetParent()
-			maframe2:SetParent(MAHIDDEN)
-		end
-
+		MoveAny:HideFrame(frame, soft)
 		dragf.t:SetVertexColor(MoveAny:GetColor("hidden"))
 		if MoveAny:IsEnabled("HIDEHIDDENFRAMES", false) then
 			dragf:Hide()
@@ -1443,7 +1420,7 @@ function MoveAny:RegisterWidget(tab)
 				)
 
 				frame:UpdateBuffMouse()
-			elseif frame == MADebuffBar then
+			elseif frame == MoveAny:GetDebuffBar() then
 				function frame:UpdateDebuffMouse()
 					for i = 1, 32 do
 						local db = _G["DebuffButton" .. i]
@@ -1633,10 +1610,6 @@ function MoveAny:RegisterWidget(tab)
 		end
 	)
 
-	if MoveAny:GetEleScale(name) and MoveAny:GetEleScale(name) > 0 then
-		frame:SetScale(MoveAny:GetEleScale(name))
-	end
-
 	hooksecurefunc(
 		frame,
 		"SetSize",
@@ -1670,20 +1643,24 @@ function MoveAny:RegisterWidget(tab)
 		end
 	)
 
-	if not InCombatLockdown() then
-		frame:SetSize(sw, sh)
-	end
+	MoveAny:SafeExec(
+		frame,
+		function()
+			frame:SetSize(sw, sh)
+			if MoveAny:GetEleScale(name) and MoveAny:GetEleScale(name) > 0 then
+				frame:SetScale(MoveAny:GetEleScale(name))
+			end
+		end
+	)
 
 	local dragframe = _G[name .. "_MA_DRAG"]
 	dragframe:SetSize(sw, sh)
 	dragframe:ClearAllPoints()
 	dragframe:SetPoint("CENTER", frame, "CENTER", posx, posy)
 	if MoveAny:IsEnabled("MALOCK", false) then
-		dragframe:SetAlpha(1)
-		dragframe:EnableMouse(true)
+		dragframe:Show()
 	else
-		dragframe:SetAlpha(0)
-		dragframe:EnableMouse(false)
+		dragframe:Hide()
 	end
 
 	if setup then

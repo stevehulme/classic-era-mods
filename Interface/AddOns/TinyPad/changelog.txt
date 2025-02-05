@@ -1,3 +1,6 @@
+v3.2.3, 10/22/2024
+- toc update for 11.0.5 and 1.15.4 patch
+
 v3.2.2, 08/13/2024
 - toc update for 11.0.2 patch
 

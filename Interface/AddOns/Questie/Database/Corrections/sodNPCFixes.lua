@@ -586,6 +586,12 @@ function SeasonOfDiscovery:LoadNPCs()
                 [zoneIDs.FERALAS] = {{84.2,43.8}},
             },
         },
+        [218920] = {
+            [npcKeys.name] = "Agent Keanna",
+            [npcKeys.spawns] = {
+                [zoneIDs.DEADWIND_PASS] = {{52.1,34.12}},
+            },
+        },
         [218931] = { -- Dark Rider Deadwind Pass
             [npcKeys.zoneID] = zoneIDs.DEADWIND_PASS,
             [npcKeys.spawns] = {
@@ -693,30 +699,6 @@ function SeasonOfDiscovery:LoadNPCs()
                 [zoneIDs.EASTERN_PLAGUELANDS] = {{47.8,50.4}},
             },
         },
-        [229897] = { -- Wild Windtwister
-            [npcKeys.zoneID] = zoneIDs.MOONGLADE,
-            [npcKeys.spawns] = {
-                [zoneIDs.MOONGLADE] = {{39,68}},
-            },
-        },
-        [230481] = { -- Earth Elemental Fragment
-            [npcKeys.zoneID] = zoneIDs.MOONGLADE,
-            [npcKeys.spawns] = {
-                [zoneIDs.MOONGLADE] = {{72.4,62.2}},
-            },
-        },
-        [232755] = { -- Van Amburgh
-            [npcKeys.zoneID] = zoneIDs.UN_GORO_CRATER,
-            [npcKeys.spawns] = {
-                [zoneIDs.UN_GORO_CRATER] = {{23.64,33.23}},
-            },
-        },
-        [233084] = { -- Estelenn
-            [npcKeys.zoneID] = zoneIDs.UN_GORO_CRATER,
-            [npcKeys.spawns] = {
-                [zoneIDs.UN_GORO_CRATER] = {{23.64,33.23}},
-            },
-        },
         [227755] = { -- Estelenn
             [npcKeys.zoneID] = zoneIDs.BURNING_STEPPES,
             [npcKeys.spawns] = {
@@ -724,6 +706,29 @@ function SeasonOfDiscovery:LoadNPCs()
                 [zoneIDs.BURNING_STEPPES] = {{17.03,46.32}},
                 [zoneIDs.WINTERSPRING] = {{58,21}},
             },
+        },
+        [228818] = { -- Shrine of Cooperation
+            [npcKeys.zoneID] = zoneIDs.EASTERN_PLAGUELANDS,
+            [npcKeys.spawns] = {[zoneIDs.EASTERN_PLAGUELANDS] = {{47,58}}},
+        },
+        [229897] = { -- Wild Windtwister
+            [npcKeys.zoneID] = zoneIDs.MOONGLADE,
+            [npcKeys.spawns] = {
+                [zoneIDs.MOONGLADE] = {{39,68}},
+            },
+        },
+        [230302] = { -- Lord Kazzak
+            [npcKeys.zoneID] = zoneIDs.THE_TAINTED_SCAR,
+            [npcKeys.spawns] = {[zoneIDs.THE_TAINTED_SCAR]={{-1,-1}}},
+        },
+        [230481] = { -- Earth Elemental Fragment
+            [npcKeys.zoneID] = zoneIDs.MOONGLADE,
+            [npcKeys.spawns] = {
+                [zoneIDs.MOONGLADE] = {{72.4,62.2}},
+            },
+        },
+        [230319] = { -- Deliana
+            [npcKeys.spawns] = {[zoneIDs.IRONFORGE]={{43.53,52.64}}},
         },
         [230775] = { -- Rage Talon Quartermaster
             [npcKeys.zoneID] = zoneIDs.LOWER_BLACKROCK_SPIRE,
@@ -737,13 +742,101 @@ function SeasonOfDiscovery:LoadNPCs()
             [npcKeys.zoneID] = zoneIDs.FELWOOD,
             [npcKeys.spawns] = {[zoneIDs.FELWOOD] = {{35.4,57.8}}},
         },
+        [231485] = { -- Procrastimond (actuall this NPC is in "elsewhere", but to get to him you need to use an item in Tanaris)
+            [npcKeys.zoneID] = zoneIDs.TANARIS,
+            [npcKeys.spawns] = {[zoneIDs.TANARIS] = {{50,28}}},
+        },
+        [232398] = { -- Primordial Flame
+            [npcKeys.spawns] = {[zoneIDs.BURNING_STEPPES] = {{15.6,56.6}}},
+        },
+        [232399] = { -- Outcast Cryomancer
+            [npcKeys.spawns] = {[zoneIDs.WINTERSPRING] = {{63.2,68.9}}},
+        },
+        [232429] = { -- Magical Stone
+            [npcKeys.spawns] = {[zoneIDs.BURNING_STEPPES] = {{14.8,56.7}}},
+        },
+        [232466] = { -- Magical Stone
+            [npcKeys.spawns] = {[zoneIDs.WINTERSPRING] = {{63.2,68.4}}},
+        },
         [232529] = { -- Nandieb
             [npcKeys.zoneID] = zoneIDs.WINTERSPRING,
             [npcKeys.spawns] = {[zoneIDs.WINTERSPRING] = {{50.7,27.9}}},
         },
+        [232532] = { -- Fel Interloper
+            [npcKeys.spawns] = {}, -- Spawned when closing a Growing Fel Rift (232538)
+        },
+        [232755] = { -- Van Amburgh
+            [npcKeys.zoneID] = zoneIDs.UN_GORO_CRATER,
+            [npcKeys.spawns] = {
+                [zoneIDs.UN_GORO_CRATER] = {{23.64,33.23}},
+            },
+        },
         [232929] = { -- Gregory
             [npcKeys.zoneID] = zoneIDs.WINTERSPRING,
             [npcKeys.spawns] = {[zoneIDs.WINTERSPRING] = {{53.36,83.59}}},
+        },
+        [233084] = { -- Estelenn
+            [npcKeys.zoneID] = zoneIDs.UN_GORO_CRATER,
+            [npcKeys.spawns] = {
+                [zoneIDs.UN_GORO_CRATER] = {{23.64,33.23}},
+            },
+        },
+        [233158] = { -- Azgaloth
+            [npcKeys.zoneID] = zoneIDs.DEMON_FALL_CANYON,
+            [npcKeys.spawns] = {[zoneIDs.DEMON_FALL_CANYON] = {{-1,-1}}},
+        },
+        [233335] = { -- Rune Broker (Alliance)
+            [npcKeys.spawns] = {
+                [zoneIDs.STORMWIND_CITY] = {{57.4,26.8}},
+                [zoneIDs.IRONFORGE] = {{53.8,14.1}},
+                [zoneIDs.DARNASSUS] = {{28.6,38.6}},
+                [zoneIDs.ELWYNN_FOREST] = {{48.2,41.5}},
+                [zoneIDs.DUN_MOROGH] = {{29.5,72.1}},
+                [zoneIDs.TELDRASSIL] = {{58.9,43.7}},
+            },
+        },
+        [233428] = { -- Rune Broker (Horde)
+            [npcKeys.spawns] = {
+                [zoneIDs.ORGRIMMAR] = {{49.5,46}},
+                [zoneIDs.THUNDER_BLUFF] = {{22.8,13.8}},
+                [zoneIDs.UNDERCITY] = {{79.4,19.8}},
+                [zoneIDs.DUROTAR] = {{42.7,68}},
+                [zoneIDs.MULGORE] = {{44.3,76.7}},
+                [zoneIDs.TIRISFAL_GLADES] = {{31.3,66.4}},
+            },
+        },
+        [238382] = { -- Kug Softjaw
+            [npcKeys.minLevel] = 58,
+            [npcKeys.maxLevel] = 58,
+            [npcKeys.zoneID] = zoneIDs.NAXXRAMAS,
+            [npcKeys.spawns] = {[zoneIDs.NAXXRAMAS] = {{-1,-1}}},
+            [npcKeys.questStarts] = {87362,87364},
+            [npcKeys.questEnds] = {87362,87364},
+        },
+        [238431] = { -- Enthusiastic Wisp
+            [npcKeys.zoneID] = zoneIDs.WINTERSPRING,
+            [npcKeys.spawns] = {[zoneIDs.WINTERSPRING] = {{52.19,90.51}}},
+        },
+        [237818] = { -- Harrison Jones
+            [npcKeys.spawns] = {[zoneIDs.DEADWIND_PASS] = {{52.3,34.08}}},
+            [npcKeys.questStarts] = {86968},
+            [npcKeys.questEnds] = {86967},
+        },
+        [237819] = { -- Injured Adventurer
+            [npcKeys.spawns] = {[zoneIDs.DEADWIND_PASS] = {{65.43,78.64}}},
+        },
+        [237820] = { -- Deceased Adventurer
+            [npcKeys.spawns] = {[zoneIDs.DEADWIND_PASS] = {{39.99,74.16}}},
+        },
+        [237957] = { -- Archmage Kir-Moldir
+            [npcKeys.minLevel] = 60,
+            [npcKeys.maxLevel] = 60,
+            [npcKeys.zoneID] = zoneIDs.NAXXRAMAS,
+            [npcKeys.spawns] = {[zoneIDs.NAXXRAMAS] = {{-1,-1}}},
+            [npcKeys.questEnds] = {87283},
+        },
+        [238376] = { -- Brother Luctus
+            [npcKeys.spawns] = {[zoneIDs.EASTERN_PLAGUELANDS] = {{80.56,65.46}}},
         },
 
         -- fake NPCs

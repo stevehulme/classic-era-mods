@@ -19,6 +19,100 @@ local MAHIDDEN = CreateFrame("Frame", "MAHIDDEN")
 MAHIDDEN:Hide()
 MAHIDDEN.unit = "player"
 MAHIDDEN.auraRows = 0
+local sethidden = {}
+local sethiddenSetup = {}
+function MoveAny:HideFrame(frame, soft)
+	if not soft then
+		if InCombatLockdown() then
+			C_Timer.After(
+				0.1,
+				function()
+					MoveAny:HideFrame(frame, soft)
+				end
+			)
+
+			return
+		end
+
+		sethidden[frame] = true
+		if sethiddenSetup[frame] == nil then
+			sethiddenSetup[frame] = true
+			local setparent = false
+			hooksecurefunc(
+				frame,
+				"SetParent",
+				function(sel, parent)
+					if sethidden[sel] == nil then return end
+					if setparent then return end
+					setparent = true
+					sel:SetParent(MAHIDDEN)
+					setparent = false
+				end
+			)
+		end
+
+		frame:SetParent(MAHIDDEN)
+
+		return
+	end
+
+	sethidden[frame] = true
+	if sethiddenSetup[frame] == nil then
+		sethiddenSetup[frame] = true
+		local setalpha = false
+		hooksecurefunc(
+			frame,
+			"SetAlpha",
+			function(sel, alpha)
+				if sethidden[sel] == nil then return end
+				if setalpha then return end
+				setalpha = true
+				sel:SetAlpha(0)
+				if not InCombatLockdown() then
+					sel:EnableMouse(false)
+				end
+
+				if sel.GetChildren then
+					for i, v in pairs({sel:GetChildren()}) do
+						v:SetAlpha(0)
+						if not InCombatLockdown() then
+							v:EnableMouse(false)
+						end
+					end
+				end
+
+				setalpha = false
+			end
+		)
+	end
+
+	frame:SetAlpha(0)
+	frame:EnableMouse(false)
+	if InCombatLockdown() then
+		C_Timer.After(
+			0.1,
+			function()
+				MoveAny:HideFrame(frame, soft)
+			end
+		)
+	end
+end
+
+function MoveAny:ShowFrame(frame)
+	sethidden[frame] = nil
+	frame:SetAlpha(1)
+	if not InCombatLockdown() then
+		frame:EnableMouse(true)
+	else
+		C_Timer.After(
+			0.1,
+			function()
+				MoveAny:ShowFrame(frame)
+			end
+		)
+	end
+end
+
 --[[ HIDEPANEL ]]
 --[[ NEW ]]
 local MAUIP = CreateFrame("Frame", "UIParent")
@@ -180,8 +274,7 @@ function MoveAny:ShowMALock()
 	MoveAny:Unlock()
 	if MoveAny:IsEnabled("MALOCK", false) then
 		for i, df in pairs(MoveAny:GetDragFrames()) do
-			df:EnableMouse(true)
-			df:SetAlpha(1)
+			df:Show()
 			if df.opt then
 				df.opt:Show()
 			end
@@ -206,8 +299,7 @@ function MoveAny:HideMALock(onlyHide)
 
 	if not MoveAny:IsEnabled("MALOCK", false) then
 		for i, df in pairs(MoveAny:GetDragFrames()) do
-			df:EnableMouse(false)
-			df:SetAlpha(0)
+			df:Hide()
 			if df.opt then
 				df.opt:Hide()
 			end

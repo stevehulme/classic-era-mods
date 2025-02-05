@@ -23,8 +23,8 @@ local lineInfo = LibFroznFunctions:CreatePushArray();
 local lineTargetedBy = LibFroznFunctions:CreatePushArray();
 
 -- String Constants
-local TT_LevelMatch = "^"..TOOLTIP_UNIT_LEVEL:gsub("%%[^s ]*s",".+"); -- Was changed to match other localizations properly, used to match: "^"..LEVEL.." .+" -- Doesn't actually match the level line on the russian client! [14.02.24] Doesn't match for Italian client either. [18.07.27] changed the pattern, might match non-english clients now
-local TT_LevelMatchPet = "^"..TOOLTIP_WILDBATTLEPET_LEVEL_CLASS:gsub("%%[^s ]*s",".+");	-- "^Pet Level .+ .+"
+local TT_LevelMatch = "^"..TOOLTIP_UNIT_LEVEL:gsub("%%[^s ]*s",".+"); -- "Level %s" -> "^Level .+" Was changed to match other localizations properly, used to match: "^"..LEVEL.." .+" -- Doesn't actually match the level line on the russian client! [14.02.24] Doesn't match for Italian client either. [18.07.27] changed the pattern, might match non-english clients now
+local TT_LevelMatchPet = "^"..TOOLTIP_WILDBATTLEPET_LEVEL_CLASS:gsub("%%[^s ]*s",".+");	-- "Pet Level %s %s" -> "^Pet Level .+ .+"
 local TT_Unknown = UNKNOWN; -- "Unknown"
 local TT_UnknownObject = UNKNOWNOBJECT; -- "Unknown"
 local TT_Targeting = BINDING_HEADER_TARGETING;	-- "Targeting"
@@ -157,9 +157,9 @@ function ttStyle:RemoveUnwantedLinesFromTip(tip, unitRecord)
 	local specNames = LibFroznFunctions:CreatePushArray();
 	
 	if (hideSpecializationAndClassText) then
-		local numSpecs = GetNumSpecializationsForClassID(unitRecord.classID);
+		local specCount = C_SpecializationInfo.GetNumSpecializationsForClassID(unitRecord.classID);
 		
-		for i = 1, numSpecs do
+		for i = 1, specCount do
 			local specID, specName = GetSpecializationInfoForClassID(unitRecord.classID, i, unitRecord.sex);
 			
 			specNames:Push(specName);
@@ -174,7 +174,7 @@ function ttStyle:RemoveUnwantedLinesFromTip(tip, unitRecord)
 				(((gttLineText == FACTION_ALLIANCE) or (gttLineText == FACTION_HORDE) or (gttLineText == FACTION_NEUTRAL)) or
 				(cfg.hidePvpText) and (gttLineText == PVP_ENABLED) or
 				(hideCreatureTypeIfNoCreatureFamily) and (gttLineText == creatureType) or
-				(hideSpecializationAndClassText) and ((gttLineText == unitRecord.className) or (specNames:Contains(gttLineText:match("^(.+) " .. unitRecord.className .. "$"))))) then
+				(hideSpecializationAndClassText) and (unitRecord.className) and ((gttLineText == unitRecord.className) or (specNames:Contains(gttLineText:match("^(.+) " .. unitRecord.className .. "$"))))) then
 			
 			gttLine:SetText(nil);
 		end
@@ -352,16 +352,13 @@ function ttStyle:GeneratePlayerLines(tip, currentDisplayParams, unitRecord, firs
 		end
 	end
 	-- race
-	local race = UnitRace(unitRecord.id);
-	if (not race) then
-		race = TT_Unknown;
-	end
+	local race = UnitRace(unitRecord.id) or TT_Unknown;
 	lineLevel:Push(" ");
 	lineLevel:Push(CreateColor(unpack(cfg.colorRace)):WrapTextInColorCode(race));
 	-- class
 	local classColor = LibFroznFunctions:GetClassColor(unitRecord.classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
 	lineLevel:Push(" ");
-	lineLevel:Push(classColor:WrapTextInColorCode(unitRecord.className));
+	lineLevel:Push(classColor:WrapTextInColorCode(unitRecord.className or TT_Unknown));
 	-- name
 	local nameColor = (cfg.colorNameByClass and classColor) or unitRecord.nameColor;
 	local name = (cfg.nameType == "marysueprot" and unitRecord.rpName) or (cfg.nameType == "original" and unitRecord.originalName) or (cfg.nameType == "title" and unitRecord.nameWithTitle) or unitRecord.name;
@@ -428,10 +425,7 @@ function ttStyle:GeneratePetLines(tip, currentDisplayParams, unitRecord, first)
 	lineLevel:Push(CreateColor(unpack(cfg.colorRace)):WrapTextInColorCode(_G["BATTLE_PET_NAME_"..petType] or TT_Unknown));
 
 	if (unitRecord.isWildBattlePet) then
-		local race = UnitCreatureFamily(unitRecord.id) or UnitCreatureType(unitRecord.id);
-		if (not race) then
-			race = TT_Unknown;
-		end
+		local race = UnitCreatureFamily(unitRecord.id) or UnitCreatureType(unitRecord.id) or TT_Unknown;
 		lineLevel:Push(" ");
 		lineLevel:Push(CreateColor(unpack(cfg.colorRace)):WrapTextInColorCode(race));
 	else
@@ -466,10 +460,7 @@ function ttStyle:GenerateNpcLines(tip, currentDisplayParams, unitRecord, first)
 	end
 
 	-- race
-	local race = UnitCreatureFamily(unitRecord.id) or UnitCreatureType(unitRecord.id);
-	if (not race) then
-		race = TT_Unknown;
-	end
+	local race = UnitCreatureFamily(unitRecord.id) or UnitCreatureType(unitRecord.id) or TT_Unknown;
 	lineLevel:Push(" ");
 	lineLevel:Push(CreateColor(unpack(cfg.colorRace)):WrapTextInColorCode(race));
 end

@@ -1174,9 +1174,8 @@ function ArkInventory.MenuItemOpen( frame )
 				
 				if not isEmpty then
 					
-					ArkInventory.Lib.Dewdrop:AddLine( )
-					
 					local osd = info.osd
+					
 					local search_id = string.format( "%s:%s", osd.class, osd.id )
 					
 					local text = ArkInventory.Localise["CONFIG_GENERAL_TOOLTIP_ITEMCOUNT"]
@@ -1184,12 +1183,13 @@ function ArkInventory.MenuItemOpen( frame )
 					
 					if ArkInventory.db.option.tooltip.itemcount.ignore[search_id] then
 						text = string.format( "%s: %s%s", text, RED_FONT_COLOR_CODE, ArkInventory.Localise["DISABLED"] )
-						desc = string.format( ArkInventory.Localise["MENU_ITEM_ITEMCOUNT_STATUS_DESC"], desc, ArkInventory.Localise["ENABLE"] )
+						desc = string.format( ArkInventory.Localise["MENU_ITEM_STATUS_DESC"], desc, ArkInventory.Localise["ENABLE"] )
 					else
 						text = string.format( "%s: %s%s", text, GREEN_FONT_COLOR_CODE, ArkInventory.Localise["ENABLED"] )
-						desc = string.format( ArkInventory.Localise["MENU_ITEM_ITEMCOUNT_STATUS_DESC"], desc, ArkInventory.Localise["DISABLE"] )
+						desc = string.format( ArkInventory.Localise["MENU_ITEM_STATUS_DESC"], desc, ArkInventory.Localise["DISABLE"] )
 					end
 					
+					ArkInventory.Lib.Dewdrop:AddLine( )
 					ArkInventory.Lib.Dewdrop:AddLine(
 						"text", text,
 						"tooltipTitle", text,
@@ -1198,6 +1198,30 @@ function ArkInventory.MenuItemOpen( frame )
 							ArkInventory.db.option.tooltip.itemcount.ignore[search_id] = not ArkInventory.db.option.tooltip.itemcount.ignore[search_id]
 						end
 					)
+					
+					if osd.class == "item" and not ArkInventory.db.option.cleanup.enable then
+						
+						local text = ArkInventory.Localise["RESTACK"]
+						local desc = ArkInventory.Localise["RESTACK_INCLUDE_DESC"]
+						
+						if ArkInventory.db.option.restack.include.item[search_id] then
+							text = string.format( "%s: %s%s", text, GREEN_FONT_COLOR_CODE, ArkInventory.Localise["ENABLED"] )
+							desc = string.format( ArkInventory.Localise["MENU_ITEM_STATUS_DESC"], desc, ArkInventory.Localise["DISABLE"] )
+						else
+							text = string.format( "%s: %s%s", text, RED_FONT_COLOR_CODE, ArkInventory.Localise["DISABLED"] )
+							desc = string.format( ArkInventory.Localise["MENU_ITEM_STATUS_DESC"], desc, ArkInventory.Localise["ENABLE"] )
+						end
+						
+						ArkInventory.Lib.Dewdrop:AddLine(
+							"text", text,
+							"tooltipTitle", text,
+							"tooltipText", desc,
+							"func", function( )
+								ArkInventory.db.option.restack.include.item[search_id] = not ArkInventory.db.option.restack.include.item[search_id]
+							end
+						)
+						
+					end
 					
 				end
 				
@@ -1739,10 +1763,10 @@ function ArkInventory.MenuCurrencyItemOpen( frame )
 					
 					if ArkInventory.db.option.tooltip.itemcount.ignore[search_id] then
 						text = string.format( "%s: %s%s", text, RED_FONT_COLOR_CODE, ArkInventory.Localise["DISABLED"] )
-						desc = string.format( ArkInventory.Localise["MENU_ITEM_ITEMCOUNT_STATUS_DESC"], desc, ArkInventory.Localise["ENABLE"] )
+						desc = string.format( ArkInventory.Localise["MENU_ITEM_STATUS_DESC"], desc, ArkInventory.Localise["ENABLE"] )
 					else
 						text = string.format( "%s: %s%s", text, GREEN_FONT_COLOR_CODE, ArkInventory.Localise["ENABLED"] )
-						desc = string.format( ArkInventory.Localise["MENU_ITEM_ITEMCOUNT_STATUS_DESC"], desc, ArkInventory.Localise["DISABLE"] )
+						desc = string.format( ArkInventory.Localise["MENU_ITEM_STATUS_DESC"], desc, ArkInventory.Localise["DISABLE"] )
 					end
 					
 					ArkInventory.Lib.Dewdrop:AddLine(

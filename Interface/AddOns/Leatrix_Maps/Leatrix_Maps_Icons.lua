@@ -1,6 +1,6 @@
 ﻿
 	----------------------------------------------------------------------
-	-- Leatrix Maps Icons
+	-- Leatrix Maps Icons for Classic Era
 	----------------------------------------------------------------------
 
 	local void, Leatrix_Maps = ...
@@ -29,7 +29,7 @@
 
 		--[[Alterac Mountains]] [1416] = {
 			{"Spirit", 42.9, 38.0, L["Spirit Healer"], nil, spTex, nil, nil},
-			{"Arrow", 80.7, 34.2, L["Western Plagielands"], nil, arTex, nil, nil, nil, nil, nil, 0, 1422},
+			{"Arrow", 80.7, 34.2, L["Western Plaguelands"], nil, arTex, nil, nil, nil, nil, nil, 0, 1422},
 			{"Arrow", 51.8, 68.8, L["Hillsbrad Foothills"], nil, arTex, nil, nil, nil, nil, nil, 3, 1424},
 			{"Arrow", 81.7, 77.5, L["Hillsbrad Foothills"], L["Ravenholdt Manor"], arTex, nil, nil, nil, nil, nil, 2.2, 1424},
 		},
@@ -39,6 +39,7 @@
 			{"Spirit", 48.8, 55.6, L["Spirit Healer"], nil, spTex, nil, nil},
 			{"Arrow", 45.4, 88.9, L["Wetlands"], L["Thandol Span"], arTex, nil, nil, nil, nil, nil, 3.2, 1437},
 			{"Arrow", 20.9, 30.6, L["Hillsbrad Foothills"], nil, arTex, nil, nil, nil, nil, nil, 1, 1424},
+			{"Arrow", 29.6, 67.5, L["Faldir's Cove"], L["Just follow the path west"], arTex, nil, nil, nil, nil, nil, 1.9, 1417},
 		},
 		--[[Badlands]] [1418] = {
 			{"Dungeon", 44.6, 12.1, L["Uldaman"], L["Dungeon"], dnTex, 41, 51},
@@ -81,7 +82,7 @@
 			{"Spirit", 65.8, 74.2, L["Spirit Healer"], nil, spTex, nil, nil},
 			{"Spirit", 45.0, 86.0, L["Spirit Healer"], nil, spTex, nil, nil},
 			{"Arrow", 44.1, 87.1, L["Alterac Mountains"], nil, arTex, nil, nil, nil, nil, nil, 3, 1416},
-			{"Arrow", 28.6, 57.5, L["Tirisfal Glades"], L["The Balwark"], arTex, nil, nil, nil, nil, nil, 1.6, 1420},
+			{"Arrow", 28.6, 57.5, L["Tirisfal Glades"], L["The Bulwark"], arTex, nil, nil, nil, nil, nil, 1.6, 1420},
 			{"Arrow", 69.7, 50.3, L["Eastern Plaguelands"], nil, arTex, nil, nil, nil, nil, nil, 4.7, 1423},
 			{"Arrow", 65.3, 86.4, L["The Hinterlands"], nil, arTex, nil, nil, nil, nil, nil, 3, 1425},
 		},
@@ -319,6 +320,7 @@
 			{"Arrow", 80.2, 92.4, L["The Barrens"], nil, arTex, nil, nil, nil, nil, nil, 3.4, 1413},
 			{"Arrow", 30.4, 75.4, L["Desolace"], nil, arTex, nil, nil, nil, nil, nil, 2.7, 1443},
 			{"Arrow", 78.2, 42.8, L["Ashenvale"], L["The Talondeep Path"], arTex, nil, nil, nil, nil, nil, 6.1, 1440},
+			{"Arrow", 37.9, 67.8, L["Sun Rock Retreat"], L["Mountain Pass (Horde Only)"], arTex, nil, nil, nil, nil, nil, 4.1, 1442},
 		},
 		--[[Desolace]] [1443] = {
 			{"Dungeon", 29.1, 62.5, L["Maraudon"], L["Dungeon"], dnTex, 46, 55},
@@ -420,8 +422,8 @@
 		--[[Thunder Bluff]] [1456] = {
 			{"FlightH", 47.0, 49.8, L["Central Mesa"] .. ", " .. L["Thunder Bluff"], nil, tHTex, nil, nil},
 			{"Spirit", 56.7, 19.1, L["Spirit Healer"], nil, spTex, nil, nil},
-			{"Arrow", 35.7, 62.8, L["Mulgore"], "South", arTex, nil, nil, nil, nil, nil, 2.0, 1412},
-			{"Arrow", 51.3, 31.3, L["Mulgore"], "North", arTex, nil, nil, nil, nil, nil, 5.7, 1412},
+			{"Arrow", 35.7, 62.8, L["Mulgore"], L["South"], arTex, nil, nil, nil, nil, nil, 2.0, 1412},
+			{"Arrow", 51.3, 31.3, L["Mulgore"], L["North"], arTex, nil, nil, nil, nil, nil, 5.7, 1412},
 		},
 		--[[Darnassus]] [1457] = {
 			{"Spirit", 77.7, 25.9, L["Spirit Healer"], nil, spTex, nil, nil},

@@ -9,11 +9,23 @@ function CataItemFixes.Load()
     local itemClasses = QuestieDB.itemClasses
 
     return {
+        [1349] = { -- Abercrombie's Crate
+            [itemKeys.objectDrops] = {119},
+        },
+        [1357] = { -- Captain Sander's Treasure Map
+            [itemKeys.startQuest] = 26353,
+        },
+        [2536] = { -- Trogg Stone Tooth
+            [itemKeys.npcDrops] = {1161,1162,1163,1164,1165,1166,1167,1197,1393},
+        },
         [2629] = { -- Intrepid Strongbox Key
             [itemKeys.npcDrops] = {41429},
         },
         [2633] = { -- Jungle Remedy
             [itemKeys.npcDrops] = {937,940,941,942},
+        },
+        [2676] = { -- Shimmerweed
+            [itemKeys.npcDrops] = {41121},
         },
         [2859] = { -- Vile Fin Scale
             [itemKeys.npcDrops] = {1541,1543,1544,1545},
@@ -36,6 +48,13 @@ function CataItemFixes.Load()
         [5382] = { -- Anaya's Pendant
             [itemKeys.npcDrops] = {33181},
         },
+        [5464] = { -- Iron Shaft
+            [itemKeys.relatedQuests] = {26477},
+            [itemKeys.npcDrops] = {},
+        },
+        [5475] = { -- Wooden Key
+            [itemKeys.class] = itemClasses.QUEST,
+        },
         [5508] = { -- Fallen Moonstone
             [itemKeys.npcDrops] = {3758,3759,3762,3763},
         },
@@ -46,8 +65,23 @@ function CataItemFixes.Load()
         [5533] = { -- Ilkrud Magthrull's Tome
             [itemKeys.npcDrops] = {},
         },
+        [5847] = { -- Mirefin Head
+            [itemKeys.npcDrops] = {4358,4359,4360,4361,4362,4363,23841},
+        },
         [8170] = { -- Rugged Leather
             [itemKeys.vendors] = {},
+        },
+        [8244] = { -- Flawless Draenethyst Sphere
+            [itemKeys.startQuest] = 25772,
+        },
+        [8705] = { -- OOX-22/FE Distress Beacon
+            [itemKeys.startQuest] = 25475,
+        },
+        [8973] = { -- Thick Yeti Hide
+            [itemKeys.npcDrops] = {40224},
+        },
+        [9597] = { -- Mountain Giant Muisek
+            [itemKeys.npcDrops] = {40026},
         },
         [10441] = { -- Glowing Shard
             [itemKeys.startQuest] = 0,
@@ -55,8 +89,26 @@ function CataItemFixes.Load()
         [10458] = { -- Prayer to Elune
             [itemKeys.npcDrops] = {},
         },
+        [10593] = { -- Imperfect Draenethyst Fragment
+            [itemKeys.startQuest] = 25771,
+        },
+        [10753] = { -- Amulet of Grol
+            [itemKeys.npcDrops] = {41267},
+        },
+        [10754] = { -- Amulet of Sevine
+            [itemKeys.npcDrops] = {41265},
+        },
+        [10755] = { -- Amulet of Allistarj
+            [itemKeys.npcDrops] = {},
+        },
         [11114] = { -- Dinosaur Bone
             [itemKeys.npcDrops] = {6501,6502,6503,6504,9162,9163,9164},
+        },
+        [11569] = { -- Preserved Threshadon Meat
+            [itemKeys.npcDrops] = {},
+        },
+        [11570] = { -- Preserved Pheromone Mixture
+            [itemKeys.npcDrops] = {},
         },
         [11818] = { -- Grimesilt Outhouse Key
             [itemKeys.startQuest] = 0,
@@ -69,6 +121,15 @@ function CataItemFixes.Load()
         },
         [12842] = { -- Crudely-Written Log
             [itemKeys.startQuest] = 28471,
+        },
+        [13202] = { -- Extended Annals of Darrowshire
+            [itemKeys.npcDrops] = {11063},
+        },
+        [13250] = { -- Head of Balnazzar
+            [itemKeys.startQuest] = 0,
+        },
+        [13920] = { -- Healthy Dragon Scale
+            [itemKeys.startQuest] = 0,
         },
         [16790] = { -- Damp Note
             [itemKeys.startQuest] = 0,
@@ -85,11 +146,44 @@ function CataItemFixes.Load()
         [18947] = { -- Feral Scar Yeti Hide
             [itemKeys.npcDrops] = {39896},
         },
-        [19424] = { -- Sayge's Fortune #24
+        [18950] = { -- Chambermaid Pillaclencher's Pillow
             [itemKeys.startQuest] = 0,
         },
         [18960] = { -- Lookout's Spyglass
             [itemKeys.npcDrops] = {5840},
+        },
+        [19424] = { -- Sayge's Fortune #24
+            [itemKeys.startQuest] = 0,
+        },
+        [19716] = { -- Primal Hakkari Bindings
+            [itemKeys.npcDrops] = {},
+        },
+        [19717] = { -- Primal Hakkari Armsplint
+            [itemKeys.npcDrops] = {},
+        },
+        [19718] = { -- Primal Hakkari Stanchion
+            [itemKeys.npcDrops] = {},
+        },
+        [19719] = { -- Primal Hakkari Girdle
+            [itemKeys.npcDrops] = {},
+        },
+        [19720] = { -- Primal Hakkari Sash
+            [itemKeys.npcDrops] = {},
+        },
+        [19721] = { -- Primal Hakkari Shawl
+            [itemKeys.npcDrops] = {},
+        },
+        [19722] = { -- Primal Hakkari Tabard
+            [itemKeys.npcDrops] = {},
+        },
+        [19723] = { -- Primal Hakkari Kossack
+            [itemKeys.npcDrops] = {},
+        },
+        [19724] = { -- Primal Hakkari Aegis
+            [itemKeys.npcDrops] = {},
+        },
+        [19802] = { -- Heart of Hakkar
+            [itemKeys.npcDrops] = {},
         },
         [20743] = { -- Unstable Mana Crystal
             [itemKeys.npcDrops] = {},
@@ -103,8 +197,11 @@ function CataItemFixes.Load()
         [22978] = { -- Emitter Spare Part
             [itemKeys.npcDrops] = {},
         },
+        [23777] = { -- Diabolical Plans
+            [itemKeys.startQuest] = 26443,
+        },
         [23798] = { -- Diabolical Plans
-            [itemKeys.npcDrops] = {6073},
+            [itemKeys.startQuest] = 26447,
         },
         [24025] = { -- Deathclaw's Paw
             [itemKeys.npcDrops] = {17661},
@@ -112,7 +209,22 @@ function CataItemFixes.Load()
         [24026] = { -- Elder Brown Bear Flank
             [itemKeys.npcDrops] = {17348},
         },
+        [24040] = { -- Blood Mushroom
+            [itemKeys.npcDrops] = {},
+        },
+        [24041] = { -- Aquatic Stinkhorn
+            [itemKeys.npcDrops] = {17673},
+        },
+        [24042] = { -- Ruinous Polyspore
+            [itemKeys.npcDrops] = {},
+        },
+        [24043] = { -- Fel Cone Fungus
+            [itemKeys.npcDrops] = {},
+        },
         [24049] = { -- Ysera's Tear
+            [itemKeys.npcDrops] = {},
+        },
+        [24081] = { -- Satyrnaar Fel Wood
             [itemKeys.npcDrops] = {},
         },
         [24416] = { -- Corrupted Flower
@@ -126,6 +238,9 @@ function CataItemFixes.Load()
         },
         [33009] = { -- Tender Strider Meat
             [itemKeys.npcDrops] = {2956,2957},
+        },
+        [34130] = { -- Recovery Diver's Potion
+            [itemKeys.class] = itemClasses.QUEST,
         },
         [38567] = { -- Maraudine Prisoner Manifest
             [itemKeys.startQuest] = 14330,
@@ -235,6 +350,12 @@ function CataItemFixes.Load()
         [48766] = { -- Kaja'mite Chunk
             [itemKeys.npcDrops] = {},
         },
+        [48953] = { -- Bleached Skull
+            [itemKeys.npcDrops] = {},
+        },
+        [49136] = { -- Blood-Filled Leech
+            [itemKeys.npcDrops] = {36059},
+        },
         [49164] = { -- Cenarion Supply Crate
             [itemKeys.npcDrops] = {},
         },
@@ -335,6 +456,9 @@ function CataItemFixes.Load()
         [50746] = { -- Tara's Tar Scraper
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [51549] = { -- Pirate Booty
+            [itemKeys.npcDrops] = {},
+        },
         [51956] = { -- Blessed Offerings
             [itemKeys.class] = itemClasses.QUEST,
         },
@@ -429,6 +553,9 @@ function CataItemFixes.Load()
         [54814] = { -- Talisman of Flame Ascendancy
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [54861] = { -- Glimmerdeep Clam
+            [itemKeys.npcDrops] = {},
+        },
         [55122] = { -- Tholo's Horn
             [itemKeys.class] = itemClasses.QUEST,
         },
@@ -492,8 +619,11 @@ function CataItemFixes.Load()
         [56178] = { -- Duarn's Rope
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [56225] = { -- Frozen Artifact
+            [itemKeys.npcDrops] = {},
+        },
         [56254] = { -- Merciless Head
-            [itemKeys.npcDrops] = {41601,41729},
+            [itemKeys.npcDrops] = {41601,41729,41747},
         },
         [56569] = { -- Underlight Nibbler
             [itemKeys.npcDrops] = {41916},
@@ -625,6 +755,9 @@ function CataItemFixes.Load()
         [59522] = { -- Key of Ilgalar
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [60291] = { -- Tkashi Fetish
+            [itemKeys.npcDrops] = {43977},
+        },
         [60297] = { -- Side of Basilisk Meat
             [itemKeys.npcDrops] = {43981},
         },
@@ -634,6 +767,12 @@ function CataItemFixes.Load()
         [60382] = { -- Mylra's Knife
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [60502] = { -- Clever Plant Disguise Kit
+            [itemKeys.npcDrops] = {},
+        },
+        [60503] = { -- Potent Murloc Pheromones
+            [itemKeys.npcDrops] = {},
+        },
         [60574] = { -- The Upper World Pillar Fragment
             [itemKeys.npcDrops] = {},
         },
@@ -642,6 +781,9 @@ function CataItemFixes.Load()
         },
         [60681] = { -- Cannary's Cache
             [itemKeys.class] = itemClasses.QUEST,
+        },
+        [60738] = { -- Nascent Elementium Spike
+            [itemKeys.npcDrops] = {},
         },
         [60739] = { -- Twilight Slaver's Key
             [itemKeys.class] = itemClasses.QUEST,
@@ -658,8 +800,26 @@ function CataItemFixes.Load()
         [60857] = { -- Recovered Supplies
             [itemKeys.npcDrops] = {},
         },
+        [60862] = { -- Forsaken Insignia
+            [itemKeys.npcDrops] = {45197},
+        },
+        [60878] = { -- Silverlaine's Enchanted Crystal
+            [itemKeys.npcDrops] = {3887},
+        },
         [60879] = { -- Commander's Holy Symbol
             [itemKeys.npcDrops] = {4278},
+        },
+        [60880] = { -- Springvale's Sharpening Stone
+            [itemKeys.npcDrops] = {4278},
+        },
+        [60881] = { -- Walden's Talisman
+            [itemKeys.npcDrops] = {46963},
+        },
+        [60885] = { -- Silverlaine Family Sword
+            [itemKeys.npcDrops] = {3887},
+        },
+        [61285] = { -- Active Liquid Plague Agent
+            [itemKeys.npcDrops] = {8519,8520},
         },
         [61292] = { -- Plague Puffer
             [itemKeys.npcDrops] = {45650},
@@ -670,11 +830,17 @@ function CataItemFixes.Load()
         [61294] = { -- Infectis Scuttler
             [itemKeys.npcDrops] = {45657},
         },
+        [61310] = { -- Arcane Remnant
+            [itemKeys.startQuest] = 27480,
+        },
         [61317] = { -- Vermillion Egg
             [itemKeys.npcDrops] = {45651,45682},
         },
         [61376] = { -- Suspended Starlight
             [itemKeys.npcDrops] = {},
+        },
+        [61505] = { -- Partially Digested Head
+            [itemKeys.startQuest] = 27574,
         },
         [61929] = { -- Broken Spectacles
             [itemKeys.npcDrops] = {45874},
@@ -721,11 +887,23 @@ function CataItemFixes.Load()
         [62793] = { -- Furious Spectral Essence
             [itemKeys.npcDrops] = {47220},
         },
+        [62806] = { -- Dark Ember
+            [itemKeys.npcDrops] = {},
+        },
+        [62809] = { -- Glassweb Venom
+            [itemKeys.npcDrops] = {5856,47281},
+        },
         [62817] = { -- Neferset Key
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [62820] = { -- Deadwood Honey Glob
+            [itemKeys.objectDrops] = {430016},
+        },
         [62822] = { -- Twilight Collar
             [itemKeys.npcDrops] = {5860,5861,5862,8419,47309,47310,47311},
+        },
+        [62827] = { -- Filled Furnace Flask
+            [itemKeys.npcDrops] = {5850,5852,5855,47553},
         },
         [62926] = { -- Twilight Caravan Cargo Key
             [itemKeys.class] = itemClasses.QUEST,
@@ -733,38 +911,83 @@ function CataItemFixes.Load()
         [62927] = { -- Twilight's Hammer Gatestone
             [itemKeys.npcDrops] = {},
         },
+        [62934] = { -- Ash Chicken
+            [itemKeys.npcDrops] = {47278},
+        },
         [63027] = { -- Brazier Torch
             [itemKeys.class] = itemClasses.QUEST,
+        },
+        [63029] = { -- Creeper Egg
+            [itemKeys.npcDrops] = {47203},
         },
         [63034] = { -- Dusty Prison Journal
             [itemKeys.npcDrops] = {},
         },
+        [63053] = { -- Codemaster's Code
+            [itemKeys.npcDrops] = {},
+        },
+        [63090] = { -- Muckgill's Flipper
+            [itemKeys.startQuest] = 28154,
+        },
+        [63114] = { -- Freed Red Whelpling
+            [itemKeys.npcDrops] = {47814},
+        },
+        [63116] = { -- Freed Green Whelpling
+            [itemKeys.npcDrops] = {47820},
+        },
+        [63117] = { -- Freed Blue Whelpling
+            [itemKeys.npcDrops] = {47821},
+        },
+        [63119] = { -- Freed Bronze Whelpling
+            [itemKeys.npcDrops] = {47822},
+        },
         [63149] = { -- Cursed Shackles
             [itemKeys.npcDrops] = {},
+        },
+        [63250] = { -- The Battle for Hillsbrad
+            [itemKeys.startQuest] = 28196,
         },
         [63315] = { -- Cellblock Rations
             [itemKeys.npcDrops] = {47550},
         },
         [63333] = { -- Obsidian Piston
-            [itemKeys.npcDrops] = {7039},
+            [itemKeys.objectDrops] = {206971,206972,206973,206974},
         },
         [63334] = { -- Stone Power Core
-            [itemKeys.npcDrops] = {7039},
+            [itemKeys.objectDrops] = {206971,206972,206973,206974},
         },
         [63335] = { -- Thorium Gearshaft
-            [itemKeys.npcDrops] = {7039},
+            [itemKeys.objectDrops] = {206971,206972,206973,206974},
         },
         [63336] = { -- Flux Exhaust Sieve
-            [itemKeys.npcDrops] = {7039},
+            [itemKeys.objectDrops] = {206971,206972,206973,206974},
         },
         [63351] = { -- Tahret Dynasty Mallet
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [63423] = { -- Fallen Flamekin
+            [itemKeys.npcDrops] = {9776,9778,9779},
+        },
+        [63424] = { -- Worg Cutlet
+            [itemKeys.npcDrops] = {9697},
+        },
         [63685] = { -- Ancient Copper Scroll
             [itemKeys.npcDrops] = {},
         },
+        [63686] = { -- Daggerspine Attack Plans
+            [itemKeys.startQuest] = 28356,
+        },
+        [64318] = { -- Fine Dark Cloth
+            [itemKeys.npcDrops] = {},
+        },
+        [64380] = { -- Beating Yeti Heart
+            [itemKeys.npcDrops] = {2248,48628},
+        },
         [64404] = { -- Ruby Crystal Cluster
             [itemKeys.npcDrops] = {48533,48639},
+        },
+        [64409] = { -- Flamefly
+            [itemKeys.npcDrops] = {48671},
         },
         [64585] = { -- Cannon Powder
             [itemKeys.npcDrops] = {49143},
@@ -796,7 +1019,16 @@ function CataItemFixes.Load()
         [69233] = { -- Cone of Cold
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [69238] = { -- Timeless Eye
+            [itemKeys.objectDrops] = {430024},
+        },
         [69765] = { -- Lucifern
+            [itemKeys.npcDrops] = {},
+        },
+        [69812] = { -- Flame Druid Reagent Pouch
+            [itemKeys.npcDrops] = {},
+        },
+        [69813] = { -- Flame Druid Idol
             [itemKeys.npcDrops] = {},
         },
         [69815] = { -- Seething Cinder
@@ -873,6 +1105,9 @@ function CataItemFixes:LoadFactionFixes()
     local itemKeys = QuestieDB.itemKeys
 
     local itemFixesHorde = {
+        [17662] = { -- Stolen Treats
+            [itemKeys.objectDrops] = {209506},
+        },
         [56188] = { -- Rescue Flare
             [itemKeys.objectDrops] = {203410},
         },
@@ -882,6 +1117,9 @@ function CataItemFixes:LoadFactionFixes()
     }
 
     local itemFixesAlliance = {
+        [17662] = { -- Stolen Treats
+            [itemKeys.objectDrops] = {209497},
+        },
         [56188] = { -- Rescue Flare
             [itemKeys.objectDrops] = {203403},
         },

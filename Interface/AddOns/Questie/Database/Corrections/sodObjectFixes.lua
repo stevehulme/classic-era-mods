@@ -181,7 +181,7 @@ function SeasonOfDiscovery:LoadObjects()
         [409692] = { -- Scrolls
             [objectKeys.zoneID] = zoneIDs.THE_BARRENS,
             [objectKeys.spawns] = {
-                [zoneIDs.THE_BARRENS] = {{49.3,33.5}},
+                [zoneIDs.THE_BARRENS] = {{49.3,32.88}},
             },
         },
         [409731] = { -- Scrolls
@@ -271,6 +271,12 @@ function SeasonOfDiscovery:LoadObjects()
             [objectKeys.zoneID] = zoneIDs.DESOLACE,
             [objectKeys.spawns] = {
                 [zoneIDs.DESOLACE] = {{55,26.2}},
+            },
+        },
+        [424003] = { -- Cage
+            [objectKeys.zoneID] = zoneIDs.DEADWIND_PASS,
+            [objectKeys.spawns] = {
+                [zoneIDs.DEADWIND_PASS] = {{65.43,78.64}},
             },
         },
         [424074] = { -- Quadrangulation Beacon 001
@@ -509,6 +515,12 @@ function SeasonOfDiscovery:LoadObjects()
                 [zoneIDs.TIRISFAL_GLADES] = {{53.56,57.21}},
             },
         },
+        [462201] = { -- Shards of Light
+            [objectKeys.zoneID] = zoneIDs.DEADWIND_PASS,
+            [objectKeys.spawns] = {
+                [zoneIDs.DEADWIND_PASS] = {{40.6,78.4}},
+            },
+        },
         [463206] = { -- Book
             [objectKeys.zoneID] = zoneIDs.BURNING_STEPPES,
             [objectKeys.spawns] = {
@@ -519,13 +531,6 @@ function SeasonOfDiscovery:LoadObjects()
             [objectKeys.zoneID] = zoneIDs.WESTERN_PLAGUELANDS,
             [objectKeys.spawns] = {
                 [zoneIDs.WESTERN_PLAGUELANDS] = {{69.41,72.84}},
-            },
-        },
-        [467315] = { -- Old Campsite
-            [objectKeys.name] = "Old Campsite",
-            [objectKeys.zoneID] = zoneIDs.WINTERSPRING,
-            [objectKeys.spawns] = {
-                [zoneIDs.WINTERSPRING] = {{58,21}},
             },
         },
         [478062] = { -- Damaged Silver Hand Breastplate
@@ -539,6 +544,18 @@ function SeasonOfDiscovery:LoadObjects()
             [objectKeys.spawns] = {
                 [zoneIDs.BURNING_STEPPES] = {{17,46}},
             },
+        },
+
+        -- Fake IDs
+        [600000] = {
+            [objectKeys.name] = "Bone Pile", -- For Soul of Mischief
+            [objectKeys.spawns] = {[zoneIDs.EASTERN_PLAGUELANDS]={{69.2,29.4},{69.2,29.6},{69.8,29.4},{69.8,29.6},{70.4,31},{70.6,30},{71.2,29.2},{71.4,31.8}}},
+            [objectKeys.zoneID] = zoneIDs.EASTERN_PLAGUELANDS,
+        },
+        [600001] = {
+            [objectKeys.name] = "Seeking Seasoned Adventurers!", -- For "For Gold and Glory!"
+            [objectKeys.spawns] = {[zoneIDs.EASTERN_PLAGUELANDS]={{81.29,58.75}}},
+            [objectKeys.zoneID] = zoneIDs.EASTERN_PLAGUELANDS,
         },
     }
 end

@@ -135,7 +135,7 @@ function MoveAny:LangdeDE()
 		["LID_MABUFFLIMIT"] = "Stärkungszauber Grenze",
 		["LID_MABUFFSPACINGX"] = "Stärkungszauber Abstand Horizontal",
 		["LID_MABUFFSPACINGY"] = "Stärkungszauber Abstand Vertikal",
-		["LID_ISENABLEDINEDITMODE"] = "(Deaktiviere es im Bearbeitungsmodus)",
+		["LID_ISENABLEDINEDITMODE"] = "(Deaktiviere es im Spielmenü-Bearbeitungsmodus)",
 		["LID_CANBREAKBECAUSEOFEDITMODE"] = "(Kann Error verursachen, wegen Bearbeitungsmodus)",
 		["LID_HELPTEXT"] = "\"%s\" ist bereits im EditMode aktiviert. Bitte deaktivieren Sie im EditMode oder MoveAny.",
 		["LID_BUILTIN"] = "Eingebaut",
@@ -224,10 +224,14 @@ function MoveAny:LangdeDE()
 		["LID_FRAMES"] = "Fenster",
 		["LID_SCALEFRAMES"] = "Fenster skalieren",
 		["LID_RESETFRAMES"] = "Fenster resetten",
+		["LID_ExpansionLandingPageMinimapButton"] = "ExpansionLandingPageMinimapButton",
 		["LID_MOVEANYINFO"] = "Wählen Sie die Dinge aus, die Sie ändern möchten",
 		["LID_PLEASESWITCHPROFILE1"] = "Bitte wechsel das LAYOUT im Bearbeitungsmodus (von Blizzard) zu einem BENUTZERDEFINIERTEN Layout.",
 		["LID_PLEASESWITCHPROFILE2"] = "MoveAny funktioniert nicht mit einem voreingestellten Layout, es ist meist schreibgeschützt.",
 		["LID_PLEASESWITCHPROFILE3"] = "ESC -> Bearbeitungsmodus -> Layout: [BENUTZERDEFINIERTES-LAYOUT] (Kein Voreingestelltes Layout)",
+		["LID_LFGMinimapFrame"] = "LFG Minimapknopf",
+		["LID_QUESTTIMERFRAME"] = "Questzeit-Fenster",
+		["LID_BATTLEFIELDMAPFRAME"] = "Schlachtfeld Karte",
 	}
 
 	if MoveAny:GetWoWBuild() ~= "RETAIL" then

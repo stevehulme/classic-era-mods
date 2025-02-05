@@ -1,7 +1,7 @@
-local _, ItemProfConstants = ...
+local addonName, ItemProfConstants = ...
 
 local frame = CreateFrame( "Frame" )
-frame.name = "ItemTooltipIconConfig"
+frame.name = addonName
 
 local NUM_PROFS_TRACKED = ItemProfConstants.NUM_PROF_FLAGS
 
@@ -135,11 +135,16 @@ local function IconSizeChanged( self, value )
 end
 
 
-local function InitVariables()
+local function InitVariables( self, event, loadedName )
 	
+	if loadedName ~= addonName then
+		return
+	end
+
+	frame:UnregisterEvent( "ADDON_LOADED" )
+
 	local configRealm = ItemProfConstants.configTooltipIconsRealm
 	local configChar = ItemProfConstants.configTooltipIconsChar
-	
 	
 	if not ItemTooltipIconsConfig then
 		ItemTooltipIconsConfig = {}
@@ -296,10 +301,18 @@ CreateIconResizeWidgets()
 
 
 
-frame.okay = SaveAndQuit
-frame:SetScript( "OnShow", RefreshWidgets )
 frame:SetScript( "OnEvent", InitVariables )
-frame:RegisterEvent( "VARIABLES_LOADED" )
+frame:RegisterEvent( "ADDON_LOADED" )
 
-
-InterfaceOptions_AddCategory( frame )
+if Settings and ( Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory ) then
+	-- Classic client is now using the modern Settings API
+	frame.OnCommit = SaveAndQuit
+	frame.OnRefresh = RefreshWidgets
+	local category = _G.Settings.RegisterCanvasLayoutCategory( frame, frame.name )
+	category.ID = frame.name
+	_G.Settings.RegisterAddOnCategory( category )
+else
+	frame.okay = SaveAndQuit
+	frame:SetScript( "OnShow", RefreshWidgets )
+	InterfaceOptions_AddCategory( frame )
+end

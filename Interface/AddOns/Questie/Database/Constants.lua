@@ -2,6 +2,7 @@
 local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
 
 QuestieDB.sortKeys = {
+    EPIC = -1,
     SEASONAL = -22,
     HERBALISM = -24,
     BATTLEGROUND = -25,
@@ -23,9 +24,11 @@ QuestieDB.sortKeys = {
     SPECIAL = -284,
     COOKING = -304,
     FIRST_AID = -324,
+    LEGENDARY = -344,
     DARKMOON_FAIRE = -364,
     LUNAR_FESTIVAL = -366,
     REPUTATION = -367,
+    INVASION = -368,
     MIDSUMMER = -369,
     BREWFEST = -370,
     INSCRIPTION = -371,
@@ -43,9 +46,7 @@ QuestieDB.sortKeys = {
     BLACKROCK_ERUPTION = -644,
 }
 
-local isWotlk = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
-
-QuestieDB.factionTemplate = isWotlk and { -- [id] = EnemyGroup
+QuestieDB.factionTemplate = Questie.IsWotlk and { -- [id] = EnemyGroup
     [1] = 12,
     [2] = 10,
     [3] = 12,

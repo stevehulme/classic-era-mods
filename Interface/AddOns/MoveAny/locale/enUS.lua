@@ -141,7 +141,7 @@ function MoveAny:LangenUS()
 		["LID_MABUFFLIMIT"] = "Buff limit",
 		["LID_MABUFFSPACINGX"] = "Buff Spacing Horizontal",
 		["LID_MABUFFSPACINGY"] = "Buff Spacing Vertical",
-		["LID_ISENABLEDINEDITMODE"] = "(Disable it in EditMode)",
+		["LID_ISENABLEDINEDITMODE"] = "(Disable it GameMenu's Edit Mode)",
 		["LID_CANBREAKBECAUSEOFEDITMODE"] = "(May cause error due to edit mode)",
 		["LID_HELPTEXT"] = "\"%s\" is already enabled in EditMode. Please deactivate in EditMode or MoveAny.",
 		["LID_BUILTIN"] = "Built-In",
@@ -235,6 +235,9 @@ function MoveAny:LangenUS()
 		["LID_PLEASESWITCHPROFILE1"] = "Please switch LAYOUT in Editmode (from Blizzard) to a CUSTOM LAYOUT.",
 		["LID_PLEASESWITCHPROFILE2"] = "MoveAny doesn't work with a Preset Profile, it's mostly readonly.",
 		["LID_PLEASESWITCHPROFILE3"] = "ESC -> Editmode -> Layout: [CUSTOM-LAYOUT] (no Preset Layout)",
+		["LID_LFGMinimapFrame"] = "LFG Minimap Button",
+		["LID_QUESTTIMERFRAME"] = "Quest Timer Frame",
+		["LID_BATTLEFIELDMAPFRAME"] = "Battlefield Map",
 	}
 
 	if MoveAny:GetWoWBuild() ~= "RETAIL" then

@@ -9,9 +9,11 @@ local iconSize
 local ITEM_VENDOR_FLAG = ItemProfConstants.VENDOR_ITEM_FLAG
 local ITEM_DMF_FLAG = ItemProfConstants.DMF_ITEM_FLAG
 local ITEM_PROF_FLAGS = ItemProfConstants.ITEM_PROF_FLAGS
-local QUEST_FLAG = ItemProfConstants.QUEST_FLAG
 local NUM_PROFS_TRACKED = ItemProfConstants.NUM_PROF_FLAGS
 local PROF_TEXTURES = ItemProfConstants.PROF_TEXTURES
+
+local DMF_TEXT
+local QUEST_TEXT
 
 local showProfs
 local showQuests
@@ -23,11 +25,12 @@ local showDMF
 ItemProfConstants.configTooltipIconsRealm = GetRealmName()
 ItemProfConstants.configTooltipIconsChar = UnitName( "player" )
 
+local t = {}
+
 
 
 local function CreateItemIcons( itemFlags )
 
-	
 	if not includeVendor then
 		-- Return if the item has the vendor flag
 		local isVendor = bit.band( itemFlags, ITEM_VENDOR_FLAG )
@@ -37,7 +40,7 @@ local function CreateItemIcons( itemFlags )
 	end
 	
 	
-	local t = {}
+	for k, v in pairs( t ) do t[ k ] = nil end
 	
 	if showProfs then
 	
@@ -48,9 +51,7 @@ local function CreateItemIcons( itemFlags )
 			if isSet ~= 0 then
 				t[ #t+1 ] = "|T"
 				t[ #t+1 ] = PROF_TEXTURES[ bitMask ]
-				t[ #t+1 ] = ":"
 				t[ #t+1 ] = iconSize
-				t[ #t+1 ] = "|t "
 			end
 		end
 	end
@@ -59,11 +60,7 @@ local function CreateItemIcons( itemFlags )
 	
 		local isTicketItem = bit.band( itemFlags, ITEM_DMF_FLAG )
 		if isTicketItem ~= 0 then
-			t[ #t+1 ] = "|T"
-			t[ #t+1 ] = PROF_TEXTURES[ ITEM_DMF_FLAG ]
-			t[ #t+1 ] = ":"
-			t[ #t+1 ] = iconSize
-			t[ #t+1 ] = "|t "
+			t[ #t+1 ] = DMF_TEXT
 		end
 	end
 	
@@ -89,11 +86,7 @@ local function CreateItemIcons( itemFlags )
 		end
 		
 		if isSet ~= 0 then
-			t[ #t+1 ] = "|T"
-			t[ #t+1 ] = PROF_TEXTURES[ QUEST_FLAG ]
-			t[ #t+1 ] = ":"
-			t[ #t+1 ] = iconSize
-			t[ #t+1 ] = "|t "
+			t[ #t+1 ] = QUEST_TEXT
 		end
 	end
 
@@ -105,7 +98,7 @@ local function ModifyItemTooltip( tt )
 		
 	local itemName, itemLink = tt:GetItem() 
 	if not itemName then return end
-	local itemID = select( 1, GetItemInfoInstant( itemName ) )
+	local itemID = select( 1, C_Item.GetItemInfoInstant( itemName ) )
 	
 	if itemID == nil then
 		-- Extract ID from link: GetItemInfoInstant unreliable with AH items (uncached on client?)
@@ -146,7 +139,11 @@ function ItemProfConstants:ConfigChanged()
 	includeVendor = ItemTooltipIconsConfig[ ItemProfConstants.configTooltipIconsRealm ][ ItemProfConstants.configTooltipIconsChar ].includeVendor
 	iconSize = ItemTooltipIconsConfig[ ItemProfConstants.configTooltipIconsRealm ][ ItemProfConstants.configTooltipIconsChar ].iconSize
 	showDMF = ItemTooltipIconsConfig[ ItemProfConstants.configTooltipIconsRealm ][ ItemProfConstants.configTooltipIconsChar ].showDMF
-	
+	-- Refresh constants used in texture construction
+	iconSize = ":" .. iconSize .. "|t "
+	DMF_TEXT = "|T" .. PROF_TEXTURES[ ITEM_DMF_FLAG ] .. iconSize
+	QUEST_TEXT = "|T" .. PROF_TEXTURES[ ItemProfConstants.QUEST_FLAG ] .. iconSize
+
 	previousItemID = -1		-- Reset line
 end
 
@@ -154,8 +151,17 @@ end
 local function InitFrame()
 
 	GameTooltip:HookScript( "OnTooltipSetItem", ModifyItemTooltip )
-	--ItemRefTooltip:HookScript( "OnTooltipSetItem", ModifyItemTooltip )
+	ItemRefTooltip:HookScript( "OnTooltipSetItem", ModifyItemTooltip )
 end
 
 
+local function ApplySeasonalModifications()
+
+	local seasonID = C_Seasons.GetActiveSeason()
+	if seasonID == 2 then
+		ItemProfConstants.ApplySodChanges()
+	end
+end
+
 InitFrame()
+ApplySeasonalModifications()

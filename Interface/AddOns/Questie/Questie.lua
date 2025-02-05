@@ -5,8 +5,8 @@ local band = bit.band
 -------------------------
 ---@type QuestieOptionsDefaults
 local QuestieOptionsDefaults = QuestieLoader:ImportModule("QuestieOptionsDefaults")
----@type QuestieEventHandler
-local QuestieEventHandler = QuestieLoader:ImportModule("QuestieEventHandler")
+---@type EventHandler
+local EventHandler = QuestieLoader:ImportModule("EventHandler")
 ---@type QuestieQuest
 local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
 ---@type TrackerBaseFrame
@@ -26,7 +26,7 @@ function Questie:OnInitialize()
     Questie.db.RegisterCallback(Questie, "OnProfileCopied", "RefreshConfig")
     Questie.db.RegisterCallback(Questie, "OnProfileReset", "RefreshConfig")
 
-    QuestieEventHandler:RegisterEarlyEvents()
+    EventHandler:RegisterEarlyEvents()
 
     QuestieInit.OnAddonLoaded()
 end
@@ -175,6 +175,7 @@ Questie.icons = {
     ["node"] = "Interface\\Addons\\Questie\\Icons\\node.tga",
     ["player"] = "Interface\\WorldMap\\WorldMapPartyIcon",
     ["fav"] = "Interface\\Addons\\Questie\\Icons\\fav.tga",
+    ["hand"] = "Interface\\Addons\\Questie\\Icons\\hand.blp",
     ["faction_alliance"] = "Interface\\Addons\\Questie\\Icons\\icon_alliance.tga",
     ["faction_horde"] = "Interface\\Addons\\Questie\\Icons\\icon_horde.tga",
     ["loot_mono"] = "Interface\\Addons\\Questie\\Icons\\loot_mono.tga",
@@ -242,7 +243,7 @@ function Questie.SetIcons()
     Questie.usedIcons[Questie.ICON_TYPE_EVENTQUEST_COMPLETE] = Questie.db.profile.ICON_EVENTQUEST_COMPLETE or Questie.icons["complete"]
     Questie.usedIcons[Questie.ICON_TYPE_PVPQUEST] = Questie.db.profile.ICON_PVPQUEST or Questie.icons["pvpquest"]
     Questie.usedIcons[Questie.ICON_TYPE_PVPQUEST_COMPLETE] = Questie.db.profile.ICON_PVPQUEST_COMPLETE or Questie.icons["complete"]
-    Questie.usedIcons[Questie.ICON_TYPE_INTERACT] = Questie.db.profile.ICON_TYPE_INTERACT or Questie.icons["interact"]
+    Questie.usedIcons[Questie.ICON_TYPE_INTERACT] = Questie.db.profile.ICON_INTERACT or Questie.icons["interact"]
     Questie.usedIcons[Questie.ICON_TYPE_SODRUNE] = Questie.icons["sod_rune"]
     Questie.usedIcons[Questie.ICON_TYPE_MOUNT_UP] = Questie.icons["mount_up"]
     Questie.usedIcons[Questie.ICON_TYPE_NODE_FISH] = Questie.icons["node_fish"]

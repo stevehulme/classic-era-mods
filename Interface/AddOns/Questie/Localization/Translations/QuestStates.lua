@@ -48,7 +48,7 @@ local questStateLocales = {
         ["zhCN"] = "已有",
         ["zhTW"] = "已有",
         ["esES"] = "Activo",
-        ["frFR"] = "Activée",
+        ["frFR"] = "Actif",
     },
     ["Event"] = {
         ["ptBR"] = "Evento",

@@ -40,6 +40,9 @@ function SeasonOfDiscovery:LoadItems()
         [208085] = { -- Scarlet Lieutenant Signet Ring
             [itemKeys.npcDrops] = {1662,1664,1665},
         },
+        [208205] = { -- Blackrat's Note
+            [itemKeys.npcDrops] = {6123,6124},
+        },
         [208609] = { -- Glade Flower
             [itemKeys.objectDrops] = {407247},
         },
@@ -47,7 +50,7 @@ function SeasonOfDiscovery:LoadItems()
             [itemKeys.npcDrops] = {1998,1999,2000,2001},
         },
         [208689] = { -- Ferocious Idol
-            [itemKeys.npcDrops] = {98,117,500,1972,6788},
+            [itemKeys.npcDrops] = {98,117,452,500,1065,1972,6788},
         },
         [208771] = { -- Rune of Blade Dance
             [itemKeys.objectDrops] = {407453,408718,414532},
@@ -72,7 +75,7 @@ function SeasonOfDiscovery:LoadItems()
             [itemKeys.npcDrops] = {2265,2266,2267,2268,2360,2387},
         },
         [210195] = { -- Unbalanced Idol
-            [itemKeys.npcDrops] = {1769,1770,1779},
+            [itemKeys.npcDrops] = {1769,1770,1779,1782,1924},
         },
         [210589] = { -- Echo of the Ancestors
             [itemKeys.npcDrops] = {204937},
@@ -179,6 +182,9 @@ function SeasonOfDiscovery:LoadItems()
         [221326] = { -- Sacred Stag Heart
             [itemKeys.class] = itemClasses.QUEST,
         },
+        [225954] = { -- Charred Spell Notes
+            [itemKeys.npcDrops] = {227324},
+        },
         [226122] = { -- Dalton's Horn
             [itemKeys.class] = itemClasses.QUEST,
         },
@@ -197,8 +203,56 @@ function SeasonOfDiscovery:LoadItems()
         [229362] = { -- Storehouse Key
             [itemKeys.npcDrops] = {230775},
         },
+        [231298] = { -- Scroll of Lesser Spatial Mending
+            [itemKeys.class] = itemClasses.QUEST,
+        },
+        [231797] = { -- Soul of the Void
+            [itemKeys.npcDrops] = {232875},
+        },
+        [231798] = { -- Soul of Enthralling
+            [itemKeys.npcDrops] = {230146},
+        },
+        [231799] = { -- Soul of Devouring
+            [itemKeys.npcDrops] = {232896},
+        },
         [231842] = { -- Nandieb's Stave
             [itemKeys.npcDrops] = {232529},
+        },
+        [231904] = { -- Tarnished Horn
+            [itemKeys.class] = itemClasses.QUEST,
+        },
+        [234006] = { -- Monstrous Silithid Chitin
+            [itemKeys.npcDrops] = {11727,13136,15240,15286,15288,15341,15348,234798},
+        },
+        [234007] = { -- Spiked Silithid Chitin
+            [itemKeys.npcDrops] = {11698,11724,11727,13136,15230,15233,15235,15236,15240,15318,15319,15320,15323,15324,15325,15327,15336,234798},
+        },
+        [234008] = { -- Qiraji Silk
+            [itemKeys.npcDrops] = {11880,11881,11882,11883,14479,15201,15202,15213,15247,15249,15263,15343,15516,15541,15542,234762,234800},
+        },
+        [235045] = { -- Imperial Qiraji Regalia
+            [itemKeys.npcDrops] = {15275,15276,15299,15509,15510,15511,15516,15517,15543,15544},
+        },
+        [235046] = { -- Imperial Qiraji Armaments
+            [itemKeys.npcDrops] = {15275,15276,15299,15509,15510,15511,15516,15517,15543,15544},
+        },
+        [235785] = { -- Deadwind Cage "Key"
+            [itemKeys.npcDrops] = {7369,7371,7372,7379},
+        },
+        [235787] = { -- Ancient Ironwood Branch
+            [itemKeys.npcDrops] = {226923},
+        },
+        [235788] = { -- Enthusiastic Wisp
+            [itemKeys.npcDrops] = {238431},
+        },
+        [235789] = { -- Flame of Life
+            [itemKeys.npcDrops] = {1045,1046,1047,1048,1049,1050},
+        },
+        [235790] = { -- Enchanted Firebrand
+            [itemKeys.class] = itemClasses.QUEST,
+        },
+        [236350] = { -- The Phylactery of Kel'Thuzad
+            [itemKeys.npcDrops] = {15990},
         },
     }
 end

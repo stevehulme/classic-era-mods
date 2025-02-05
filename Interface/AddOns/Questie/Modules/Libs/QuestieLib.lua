@@ -340,7 +340,7 @@ function QuestieLib:CacheItemNames(questId)
     end
 end
 
-function QuestieLib:Euclid(x, y, i, e)
+function QuestieLib.Euclid(x, y, i, e)
     -- No need for absolute values as these are used only as squared
     local xd = x - i
     local yd = y - e
@@ -417,32 +417,6 @@ function QuestieLib:SortQuestIDsByLevel(quests)
     table.sort(sortedQuestsByLevel, compareTablesByIndex)
 
     return sortedQuestsByLevel
-end
-
-local randomSeed = 0
-function QuestieLib:MathRandomSeed(seed)
-    randomSeed = seed
-end
-
-function QuestieLib:MathRandom(low_or_high_arg, high_arg)
-    local low
-    local high
-    if low_or_high_arg ~= nil then
-        if high_arg ~= nil then
-            low = low_or_high_arg
-            high = high_arg
-        else
-            low = 1
-            high = low_or_high_arg
-        end
-    end
-
-    randomSeed = (randomSeed * 214013 + 2531011) % 2 ^ 32
-    local rand = (math.floor(randomSeed / 2 ^ 16) % 2 ^ 15) / 0x7fff
-    if not high then
-        return rand
-    end
-    return low + math.floor(rand * high)
 end
 
 function QuestieLib:UnpackBinary(val)
@@ -544,7 +518,7 @@ end
 --- Wow's own unpack stops at first nil. this version is not speed optimized.
 --- Supports just above QuestieLib.tpack func as it requires the 'n' field.
 ---@param tbl table A table packed with QuestieLib.tpack
----@return table 'n' values of the tbl
+---@return table|nil 'n' values of the tbl
 function QuestieLib.tunpack(tbl)
     if tbl.n == 0 then
         return nil
@@ -688,6 +662,29 @@ function QuestieLib.GetSpawnDistance(spawnA, spawnB)
     local distanceY = y1 - y2
 
     return math_sqrt(distanceX * distanceX + distanceY * distanceY)
+end
+
+---@param quest Quest
+---@return number -- Questie.ICON_TYPE_X
+function QuestieLib.GetQuestIcon(quest)
+    if Questie.IsSoD and QuestieDB.IsSoDRuneQuest(quest.Id) then
+        return Questie.ICON_TYPE_SODRUNE
+    elseif QuestieDB.IsActiveEventQuest(quest.Id) then
+        return Questie.ICON_TYPE_EVENTQUEST
+    end
+    if QuestieDB.IsPvPQuest(quest.Id) then
+        return Questie.ICON_TYPE_PVPQUEST
+    end
+    if quest.requiredLevel > QuestiePlayer.GetPlayerLevel() then
+        return Questie.ICON_TYPE_AVAILABLE_GRAY
+    end
+    if quest.IsRepeatable then
+        return Questie.ICON_TYPE_REPEATABLE
+    end
+    if QuestieDB.IsTrivial(quest.level) then
+        return Questie.ICON_TYPE_AVAILABLE_GRAY
+    end
+    return Questie.ICON_TYPE_AVAILABLE
 end
 
 return QuestieLib

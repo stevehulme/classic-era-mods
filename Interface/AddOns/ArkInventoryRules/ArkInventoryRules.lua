@@ -947,7 +947,7 @@ end
 
 function ArkInventoryRules.System.boolean_outfit_outfitter( ... )
 	
-	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "Outfitter" ) and Outfitter:IsInitialized( ) ) then
+	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "Outfitter" ) and Outfitter and Outfitter:IsInitialized( ) ) then
 		return
 	end
 	
@@ -1004,18 +1004,20 @@ function ArkInventoryRules.System.boolean_outfit_itemrack( ... )
 	
 	-- item rack 3.66
 	
-	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "ItemRack" ) ) then
+	if not ( ArkInventory.CrossClient.IsAddOnLoaded( "ItemRack" ) and ItemRack ) then
 		return
 	end
 	
 	
 	local h_rule = ArkInventoryRules.Object.info.osd.h
 	
-	local runeId = ArkInventoryRules.Object.rune
-	if runeId then
-		h_rule = string.format( "%s:runeid:%s", h_rule, runeId )
+	if ItemRack.AppendRuneID then
+		local runeId = ArkInventoryRules.Object.rune
+		if runeId then
+			h_rule = string.format( "%s:runeid:%s", h_rule, runeId )
+		end
+		--ArkInventory.Output( ArkInventoryRules.Object.h, " / ", h_rule )
 	end
-	--ArkInventory.Output( ArkInventoryRules.Object.h, " / ", h_rule )
 	
 	
 	local outfits = { }

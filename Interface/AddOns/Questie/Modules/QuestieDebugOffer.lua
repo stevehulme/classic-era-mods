@@ -3,13 +3,12 @@ local QuestieDebugOffer = QuestieLoader:CreateModule("QuestieDebugOffer")
 
 ---@type QuestieDB
 local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
-
+---@type ZoneDB
+local ZoneDB = QuestieLoader:ImportModule("ZoneDB")
 ---@type QuestieLib
 local QuestieLib = QuestieLoader:ImportModule("QuestieLib")
-
 ---@type QuestLogCache
 local QuestLogCache = QuestieLoader:ImportModule("QuestLogCache")
-
 ---@type QuestieCorrections
 local QuestieCorrections = QuestieLoader:ImportModule("QuestieCorrections")
 
@@ -22,6 +21,7 @@ local openDebugWindows = {} -- determines if existing debug window is already op
 
 local GetBestMapForUnit = C_Map.GetBestMapForUnit
 local GetPlayerMapPosition = C_Map.GetPlayerMapPosition
+local strsplit, tContains, tostring, tonumber = strsplit, tContains, tostring, tonumber
 local PosX = 0
 local PosY = 0
 local target = "target"
@@ -45,7 +45,8 @@ end
 -- entries on whitelist ignore this value
 local minLevelForDebugOffers = 10
 
-local itemBlacklist = {
+local sodItemBlacklist = {
+    11078, -- Relic Coffer Key
     209027, -- Crap Treats (these are also looted from fishing, for which no real "objects" exists)
     215430, -- gnomeregan fallout, drops from nearly every mob in gnomeregan
     -- Waylaid Supplies level 10
@@ -269,14 +270,14 @@ local function filterItem(itemID, itemInfo, containerGUID)
     -- return true if we should create debug offer, false if not
     if itemID <= 0 or itemID == nil or containerGUID == nil then -- if itemID or containerGUID is invalid don't bother going further
         return nil
-    elseif itemID < 190000 then
+    elseif itemID < 190000 and (not Questie.db.profile.enableBugHintsForAllFlavors) then
         -- temporary catch-all for any item added before SoD so we only get SoD reports;
         -- OG chronoboon displacer was 184937 so safe to say any SoD items are higher than 190000
         return nil
     else
         if tContains(itemWhitelist, itemID) then -- if item is in our whitelist, we want it no matter what
             return itemTripCodes.ItemWhitelisted
-        elseif tContains(itemBlacklist, itemID) then -- if item is in our blacklist, ignore it
+        elseif tContains(sodItemBlacklist, itemID) or QuestieCorrections.questItemBlacklist[itemID] then -- if item is in our blacklist, ignore it
             Questie:Debug(Questie.DEBUG_DEVELOP, "[QuestieDebugOffer] - ItemFilter - Item " .. itemID .. " is in debug offer item blacklist, ignoring")
             return nil
         elseif UnitLevel(player) < minLevelForDebugOffers then -- if player level is below our threshold, ignore it
@@ -305,6 +306,20 @@ local function filterItem(itemID, itemInfo, containerGUID)
         -- check if item is even in our DB
         if itemID <= 0 or not QuestieDB.QueryItemSingle(itemID, "name") then
             return itemTripCodes.ItemMissingFromDB
+        end
+
+        if itemQuality == Enum.ItemQuality.Poor then
+            Questie:Debug(Questie.DEBUG_DEVELOP, "[QuestieDebugOffer] - ItemFilter - Item " .. itemID .. " is poor quality, ignoring")
+            return nil
+        elseif classID == Enum.ItemClass.Consumable then
+            Questie:Debug(Questie.DEBUG_DEVELOP, "[QuestieDebugOffer] - ItemFilter - Item " .. itemID .. " is a Consumable, ignoring")
+            return nil
+        elseif classID == Enum.ItemClass.Weapon then
+            Questie:Debug(Questie.DEBUG_DEVELOP, "[QuestieDebugOffer] - ItemFilter - Item " .. itemID .. " is a Weapon, ignoring")
+            return nil
+        elseif classID == Enum.ItemClass.Armor then
+            Questie:Debug(Questie.DEBUG_DEVELOP, "[QuestieDebugOffer] - ItemFilter - Item " .. itemID .. " is Armor, ignoring")
+            return nil
         end
 
         -- check matching questID for quest start items
@@ -381,10 +396,16 @@ local function _AppendUniversalText(input)
     text = text .. "\n|cFFAAAAAACharacter:|r Lvl " .. UnitLevel(player) .. " " .. string.upper(playerRace) .. " " .. playerClass
 
     local mapID = GetBestMapForUnit(player)
-    local pos = GetPlayerMapPosition(mapID, player);
-    PosX = pos.x * 100
-    PosY = pos.y * 100
-    text = text .. "\n|cFFAAAAAAPlayer Coords:|r  [" .. mapID .. "]  " .. format("(%.3f, %.3f)", PosX, PosY)
+
+    if mapID then
+        local pos = GetPlayerMapPosition(mapID, player);
+        PosX = pos.x * 100
+        PosY = pos.y * 100
+        text = text .. "\n|cFFAAAAAAPlayer Coords:|r  [" .. mapID .. "]  " .. format("(%.3f, %.3f)", PosX, PosY)
+    else
+        local zoneId = ZoneDB.instanceIdToUiMapId[select(8, GetInstanceInfo())]
+        text = text .. "\n|cFFAAAAAAPlayer Coords:|r  [" .. zoneId .. "]  -1, -1"
+    end
 
     local questLog = ""
     for k in pairs(QuestLogCache.questLog_DO_NOT_MODIFY) do questLog = k .. ", " .. questLog end

@@ -1,5 +1,5 @@
 ## Interface: 20504
-## Version: 1.7.32
+## Version: 1.8.7
 ## Title: MoveAny |T135994:16:16:0:0|t by |cff3FC7EBD4KiR |T132115:16:16:0:0|t 
 ## Notes: Move Any Ui or Frame
 ## Author: D4KiR
@@ -13,13 +13,13 @@ libs\D4Lib\D4Lib.xml
 
 libs\math.lua
 libs\db.lua
-profiles\emp.lua
 
 locale\enUS.lua
 locale\deDE.lua
 locale\esES.lua
 locale\frFR.lua
 locale\itIT.lua
+locale\koKR.lua
 locale\ptBR.lua
 locale\ruRU.lua
 locale\zhCN.lua
@@ -43,5 +43,3 @@ core.lua
 registerwidgets.lua
 moveframes.lua
 settings.lua
-
-Bindings.xml

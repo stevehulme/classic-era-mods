@@ -6,16 +6,17 @@ local COMPAT = select(4,GetBuildInfo())
 local MODERN, CF_WRATH = COMPAT >= 10e4, COMPAT < 10e4 and COMPAT >= 3e4
 local GameTooltip = T.NotGameTooltip or GameTooltip
 
-local exclude, questItems, IsQuestItem, disItems = PC:RegisterPVar("AutoQuestExclude", {}), {}
+local exclude, questItems = PC:RegisterPVar("AutoQuestExclude", {}), {}
+local IsQuestItem, IsQuestItemF, disItems
 local function getContainerItemQuestInfo(bag, slot)
 	if bag and slot then
 		local iqi = C_Container.GetContainerItemQuestInfo(bag, slot)
 		return iqi.isQuestItem, iqi.questID, iqi.isActive
 	end
 end
-if MODERN then
+if MODERN or CF_WRATH then
 	questItems[30148] = {72986, 72985}
-	local include do
+	local include, filtered do
 		local function isInPrimalistFutureScenario()
 			return C_TaskQuest.IsActive(74378) and C_Scenario.IsInScenario() and select(8, GetInstanceInfo()) == 2512
 		end
@@ -26,11 +27,30 @@ if MODERN then
 		local function have1()
 			return true, false, false, 4
 		end
+		local function have3(iid)
+			return C_Item.GetItemCount(iid) > 2, false, false, 4
+		end
+		local function have1_lv80()
+			if (UnitLevel("player") or 0) >= 80 then
+				return true, false, false, 4
+			end
+		end
 		local function c1()
 			return true, false, false, 3
 		end
-		local function c100(iid)
-			return C_Item.GetItemCount(iid) > 99, false, false, 3
+		local function c100_lv80(iid)
+			return C_Item.GetItemCount(iid) > 99 and (UnitLevel("player") or 0) >= 80, false, false, 3
+		end
+		local function haveInterestingNotes()
+			return C_Item.GetItemCount(227406) > 0, false, false, 3
+		end
+		local function ebIsNotRockReviver()
+			local at, sid = GetActionInfo(GetExtraBarIndex()*12-11)
+			return at ~= "spell" or sid ~= 463623, false, false, nil
+		end
+		local function ebIsNotGoPack()
+			local at, sid = GetActionInfo(GetExtraBarIndex()*12-11)
+			return at ~= "spell" or (sid ~= 467294 and sid ~= 469807), false, false, nil
 		end
 		local mapMarker = c1
 		include = {
@@ -43,22 +63,35 @@ if MODERN then
 			[199066]=mapMarker, [199067]=mapMarker, [199068]=mapMarker, [199069]=mapMarker, [200738]=mapMarker, [202667]=mapMarker, [202668]=mapMarker,
 			[202669]=mapMarker, [202670]=mapMarker,
 			[204911]=have1,
-			[205254]=c1, -- Honorary Explorer's Compass [dragonscale rep]
+			[205254]=c1, -- Honorary Explorer's Compass
 			[199192]=have1, [204359]=have1, [205226]=have1, [210549]=have1, [227450]=have1,  -- racer's purse
+			[224292]=have3, -- radiant fuel shard
 			[228741]=have1, -- lamplighter supply satchel
-			[229899]=c100, -- coffer key shard
+			[229899]=c100_lv80, -- coffer key shard
 			[217011]=have1, [217012]=have1, [217013]=have1, -- (isle of dorn) actor's chest
 			[227792]=have1, -- everyday cache
 			[227713]=have1, -- art consortium payout
 			[226263]=have1, -- theater troupe's trove
 			[226264]=have1, -- radiant cache
-			[228361]=have1, -- seasoned adventurer's cache
 			[226273]=have1, -- awakened mechanical cache
 			[225571]=have1, [225572]=have1, [225573]=have1, -- weaver/general/vizier caches
-			[224784]=have1, -- pinnacle cache
+			[226103]=have1, [226045]=have1, [226100]=have1, -- weaver/general/vizier troves
+			[225247]=have1, [225246]=have1, [225239]=have1, [225245]=have1, -- overflowing troves [11.0]
+			[229354]=have1, -- algari adventurer's cache
+			[228361]=have1_lv80, -- seasoned adventurer's cache
+			[224784]=have1_lv80, -- pinnacle cache
 			[169219]=c1, -- brewfest sampler
 			[225249]=c1, -- bag o' gold
+			[235548]=have1, [232372]=have1, [234816]=c1, -- siren isle cache, bygone riches, bag of iron
 		}
+		filtered = {
+			[228988]=ebIsNotRockReviver, -- siren isle rock reviver
+			[230795]=ebIsNotGoPack, -- experimental go-pack, intro quest
+			[227405]=haveInterestingNotes, -- siren isle research journal
+		}
+		for i in (CF_WRATH and "33634 35797 37888 37860 37859 37815 46847 47030 39213 42986 49278" or ""):gmatch("%d+") do
+			include[i+0] = true
+		end
 	end
 	local includeSpell = {
 		[GetSpellInfo(375806) or 0]=3,
@@ -76,6 +109,7 @@ if MODERN then
 	}
 	setmetatable(exclude, {__index={
 		[204561]=1,
+		[232466]=1, -- leave the storm, siren isle
 	}})
 	function IsQuestItem(iid, bag, slot)
 		if exclude[iid] or not iid then
@@ -83,9 +117,13 @@ if MODERN then
 		elseif disItems[iid] then
 			return true, false, disItems[iid]
 		end
-		local inc, isQuest, startQuestId, isQuestActive = include[iid], getContainerItemQuestInfo(bag, slot)
+		local tinc, rcat
+		local inc, ff, isQuest, startQuestId, isQuestActive = include[iid], filtered[iid], getContainerItemQuestInfo(bag, slot)
 		isQuest = iid and ((isQuest and C_Item.GetItemSpell(iid)) or (inc == true) or (startQuestId and not isQuestActive and not C_QuestLog.IsQuestFlaggedCompleted(startQuestId)))
-		local tinc, rcat = inc and not isQuest and type(inc), nil
+		if ff then
+			isQuest, startQuestId, isQuestActive, rcat = ff(iid)
+		end
+		tinc = inc and not isQuest and type(inc)
 		if tinc == "function" then
 			isQuest, startQuestId, isQuestActive, rcat = inc(iid)
 		elseif tinc then
@@ -107,17 +145,17 @@ if MODERN then
 		end
 		return isQuest, startQuestId and not isQuestActive, rcat
 	end
+	function IsQuestItemF(iid)
+		local ff = filtered[iid]
+		return ff == nil or ff(iid)
+	end
 else
 	local include = PC:RegisterPVar("AutoQuestWhitelist", {}) do
-		local hexclude, hinclude = {}, {}
+		local hexclude = {}
 		for i in ("12460 12451 12450 12455 12457 12458 12459"):gmatch("%d+") do
 			hexclude[i+0] = true
 		end
-		for i in (CF_WRATH and "33634 35797 37888 37860 37859 37815 46847 47030 39213 42986 49278" or ""):gmatch("%d+") do
-			hinclude[i+0] = true
-		end
 		setmetatable(exclude, {__index=hexclude})
-		setmetatable(include, CF_WRATH and {__index=hinclude} or nil)
 	end
 	local QUEST_ITEM = Enum.ItemClass.Questitem
 	function IsQuestItem(iid, bag, slot, skipTypeCheck)
@@ -138,6 +176,9 @@ else
 			isQuest = isQuest or startsQuest
 		end
 		return isQuest, startsQuest
+	end
+	function IsQuestItemF(_iid)
+		return true
 	end
 
 	local lastQuestAcceptTime = GetTime()-20
@@ -208,8 +249,7 @@ local function scanQuests(i)
 			return scanQuests(i+1), CollapseQuestHeader(i)
 		elseif questItems[qid] and not isComplete then
 			for _, iid in ipairs(questItems[qid]) do
-				local act = not exclude[iid] and AB:GetActionSlot("item", iid)
-				if act then
+				if not exclude[iid] and IsQuestItemF(iid) then
 					addSlice("OPbQIi" .. iid, 2, "item", iid)
 					break
 				end
@@ -217,8 +257,8 @@ local function scanQuests(i)
 		elseif MODERN then
 			local link, _, _, showWhenComplete = GetQuestLogSpecialItemInfo(i)
 			if link and (showWhenComplete or not isComplete) then
-				local iid = tonumber(link:match("item:(%d+)"))
-				if not exclude[iid] then
+				local iid = tonumber((link:match("item:(%d+)")))
+				if not exclude[iid] and IsQuestItemF(iid) then
 					addSlice("OPbQIi" .. iid, 2, "item", iid)
 				end
 			end
@@ -228,7 +268,7 @@ end
 local function syncRing(_, event, upId)
 	if event ~= "internal.collection.preopen" or upId ~= colId then return end
 	changed, current = false, (ctok + 1) % 2
-	
+
 	local ns = C_Container.GetContainerNumSlots
 	local giid = C_Container.GetContainerItemID
 	for bag=0,MODERN and 5 or 4 do

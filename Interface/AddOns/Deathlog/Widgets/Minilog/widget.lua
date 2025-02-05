@@ -239,6 +239,13 @@ local subtitle_metadata = {
 			return _entry.player_data["level"] or ""
 		end,
 	},
+	["Guild"] = {
+		"Guild",
+		40,
+		function(_entry)
+			return _entry.player_data["guild"] or ""
+		end,
+	},
 	["LastWords"] = {
 		"LastWords",
 		100,
@@ -591,8 +598,7 @@ local function DeathFrameDropdown(frame, level, menuList)
 	end
 
 	local function openSettings()
-		InterfaceOptionsFrame_Show()
-		InterfaceOptionsFrame_OpenToCategory("minilog")
+		Settings.OpenToCategory("Deathlog")
 	end
 
 	if level == 1 then

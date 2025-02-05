@@ -78,7 +78,13 @@ tinsert(eventQuests, {"Lunar Festival", 8882, nil, nil, QuestieCorrections.CLASS
 tinsert(eventQuests, {"Lunar Festival", 8883}) -- Valadar Starsong
 
 -- SoD quests
+tinsert(eventQuests, {"Lunar Festival", 80164}) -- Large Cluster Rockets
+tinsert(eventQuests, {"Lunar Festival", 80165}) -- Cluster Rockets
+tinsert(eventQuests, {"Lunar Festival", 80166}) -- Small Rockets
+tinsert(eventQuests, {"Lunar Festival", 80167}) -- Large Rockets
+tinsert(eventQuests, {"Lunar Festival", 80168}) -- Firework Launcher
 tinsert(eventQuests, {"Lunar Festival", 80169}) -- Cluster Launcher
+tinsert(eventQuests, {"Lunar Festival", 80170}) -- Festive Recipes
 
 -- Northrend Elders
 tinsert(eventQuests, {"Lunar Festival", 13012}) -- Sardis the Elder

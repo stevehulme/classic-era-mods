@@ -1,47 +1,45 @@
-# [5.17.1](https://github.com/WeakAuras/WeakAuras2/tree/5.17.1) (2024-09-07)
+# [5.19.1](https://github.com/WeakAuras/WeakAuras2/tree/5.19.1) (2025-01-30)
 
-[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.17.0...5.17.1)
+[Full Changelog](https://github.com/WeakAuras/WeakAuras2/compare/5.19.0...5.19.1)
 
 ## Highlights
 
- - The options now have a "Thanks" button where we list all our supporters, thanks for being awesome!
-- Fixed a bug with cooldown tracking
-- Item Count triggers can now use reagent/account bank API 
+This is mainly a release to bump the TOC version for classic.
+
+Some minor features:
+
+- Empty region learned how to take an icon to display in the left side options pane (no more transparent squares!)
+- Circular & Linear Progress Texture subregions learned the inverse option
+- Unit Characteristics Trigger now allows "Assigned Role" for non-group units
+- In game changelog (hi again!) is less prone to producing text boxes that tower over the edge of your screen
+
+And some bug fiixes:
+
+- Expanding the options for Glow/Border subregions should no longer produce errors
+- Classic: "Clipped Progress" option for model subregions should function identically to retail now
+- WeakAuras.ScanEvents is less prone to vomiting if called with garbage data
+- Designing a TSU trigger to populate state with garbage timed progress data should no longer brick Options
 
 ## Commits
 
-InfusOnWoW (7):
+InfusOnWoW (10):
 
-- Ensure that talent data is up to date on initial login
-- Fix Lua Error in Cooldown Tracking
-- Item Count: Add support for reagent/account bank api (#5389)
-- Update Discord List
-- Options: Add a Thanks button
-- Update Atlas File List from wago.tools
-- Update Atlas File List from wago.tools
+- Tweak Changelog display
+- Modernize: Fix lua error if there are no authorOptions
+- Also remove "Clipped Progress" on Classic
+- Empty Base Region: Add a thumbnail icon
+- Sanity check WeakAuras.ScanEvents event's type
+- CircularProgressTexture: Add inverse option
+- Linear Progress Texture: Add an inverse setting
+- Fix Glow/Border anchor_area lua error in Options
+- Guard against expirationTime/duration being strings in various places
+- Unit Characteristics: Allow "Assigned Role" check for non-group units
 
-Jon (1):
-
-- Fix percent progress validation and parsing (#5381)
-
-Stanzilla (2):
+Stanzilla (1):
 
 - Update WeakAurasModelPaths from wago.tools
-- Update WeakAurasModelPaths from wago.tools
 
-dependabot[bot] (1):
+mrbuds (1):
 
-- Bump cbrgm/mastodon-github-action from 2.1.5 to 2.1.8
-
-emptyrivers (2):
-
-- fux a small mem leak as user edits custom code
-- close a hole in the sandbox
-
-mrbuds (4):
-
-- fix (#5390)
-- fix keys with wrong type after export from wago
-- Fix data for auras with holes in multiEntry fields
-- Removing an element of a multyEntry field could leave an empty space in the list, fix #5361
+- classic_era toc update
 

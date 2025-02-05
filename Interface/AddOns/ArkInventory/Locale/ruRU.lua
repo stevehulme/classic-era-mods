@@ -76,6 +76,7 @@ if not L then return end
 --	L["RESTACK_CONSOLIDATE_DESC_PROFESSION"] = ""
 --	L["RESTACK_COMPACT"] = ""
 --	L["RESTACK_COMPACT_DESC"] = ""
+--	L["RESTACK_INCLUDE_DESC"] = ""
 	
 	
 --	vault tab tooltips
@@ -181,7 +182,7 @@ if not L then return end
 --	L["MENU_ITEM_ASSIGN_DISABLED_DESC"] = ""
 	L["MENU_ITEM_CUSTOM_NEW"] = "Создать новую пользовательскую категорию"
 --	L["MENU_ITEM_ITEMCOUNT_DESC"] = ""
---	L["MENU_ITEM_ITEMCOUNT_STATUS_DESC"] = ""
+--	L["MENU_ITEM_STATUS_DESC"] = ""
 --	L["MENU_ITEM_DEBUG_PET_ID"] = ""
 --	L["MENU_ITEM_DEBUG_PET_SPECIES"] = ""
 	L["MENU_ITEM_DEBUG_AI_ID_SHORT"] = "Короткий ID"

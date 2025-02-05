@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- TipTac - Core
 --
--- TipTac is a tooltip enchancement addon, it allows you to configure various aspects of the tooltip, such as moving where it's shown, the font, the scale of tips, plus many more features.
+-- TipTac is a tooltip enhancement addon, it allows you to configure various aspects of the tooltip, such as moving where it's shown, the font, the scale of tips, plus many more features.
 --
 
 -- create addon
@@ -397,7 +397,7 @@ TT_ExtendedConfig.defaultAnchorPoint = "BOTTOMRIGHT";
 -- noHooks                        optional. true if no hooks should be applied to the frame directly, false/nil otherwise.
 -- hookFnForFrame                 optional. individual function for hooking for frame, nil otherwise. parameters: TT_CacheForFrames, tip
 -- waitSecondsForHooking          optional. float with number of seconds to wait before hooking for frame, nil otherwise.
--- isFromLibQTip                  optional. true if frame belongs to LibQTip, false/nil otherwise.
+-- isFromLibQTip                  optional. true if frame belongs to LibQTip-1.0, false/nil otherwise.
 --
 -- hint: determined frames will be added to TT_CacheForFrames with key as resolved real frame. The params will be added under ".config", the frame name under ".frameName".
 TT_ExtendedConfig.tipsToModify = {
@@ -453,9 +453,14 @@ TT_ExtendedConfig.tipsToModify = {
 					end);
 					
 					-- HOOK: ItemRefTooltipMixin:ItemRefSetHyperlink() to adjust padding for close button if needed. additionally considering TextRight1 here.
-					LibFroznFunctions:HookSecureFuncIfExists(ItemRefTooltip, "ItemRefSetHyperlink", function(self, link)
+					local function adjustPaddingForCloseButton(tip, closeButton)
+						-- check if close button is shown
+						if (not closeButton:IsShown()) then
+							return;
+						end
+						
 						-- get current display parameters
-						local frameParams = TT_CacheForFrames[self];
+						local frameParams = TT_CacheForFrames[tip];
 						
 						if (not frameParams) then
 							return;
@@ -464,17 +469,30 @@ TT_ExtendedConfig.tipsToModify = {
 						local currentDisplayParams = frameParams.currentDisplayParams;
 						
 						-- adjust padding for close button if needed. additionally considering TextRight1 here.
-						local titleRight = _G[self:GetName() .. "TextRight1"];
-						local titleLeft = _G[self:GetName() .. "TextLeft1"];
+						local titleRight = _G[tip:GetName() .. "TextRight1"];
+						local titleLeft = _G[tip:GetName() .. "TextLeft1"];
 						
-						if (titleRight) and (titleRight:GetText()) and (titleRight:GetRight() - self.CloseButton:GetLeft() > 0) or (titleLeft) and (titleLeft:GetRight() - self.CloseButton:GetLeft() > 0) then
-							local xPadding = 16;
+						if (titleRight) and (titleRight:GetText()) and (titleRight:GetRight() - closeButton:GetLeft() > 0) or (titleLeft) and (titleLeft:GetRight() - closeButton:GetLeft() > 0) then
+							local xPadding = closeButton:GetWidth() - 8;
 							currentDisplayParams.extraPaddingRightForCloseButton = xPadding;
 							
 							-- set padding to tip
-							tt:SetPaddingToTip(self);
+							tt:SetPaddingToTip(tip);
 						end
+					end
+					
+					LibFroznFunctions:HookSecureFuncIfExists(ItemRefTooltip, "ItemRefSetHyperlink", function(self, link)
+						-- adjust padding for close button if needed
+						adjustPaddingForCloseButton(self, self.CloseButton);
 					end);
+					
+					-- HOOK: ItemRefTooltip:SetHyperlink() to adjust padding for close button if needed and close button ItemRefCloseButton exists (only in classic era). additionally considering TextRight1 here.
+					if (ItemRefCloseButton) then
+						hooksecurefunc(ItemRefTooltip, "SetHyperlink", function (self, link)
+							-- adjust padding for close button if needed
+							adjustPaddingForCloseButton(self, ItemRefCloseButton);
+						end);
+					end
 				end
 			},
 			["ItemRefShoppingTooltip1"] = {
@@ -1077,6 +1095,41 @@ TT_ExtendedConfig.tipsToModify = {
 	},
 	
 	-- 3rd party addon tooltips
+	["BulkMail2Inbox"] = {
+		hookFnForAddOn = function(TT_CacheForFrames)
+			-- workaround for addon "Bulk Mail Inbox" to adjust the inbox GUI to the overriden scale
+			local AceAddon = LibStub:GetLibrary("AceAddon-3.0", true);
+			
+			if (AceAddon) then
+				local BulkMailInbox = AceAddon:GetAddon("BulkMailInbox", true);
+				
+				if (BulkMailInbox) then
+					-- use BMI_isAdjustingTipsSizeAndPosition to prevent endless loop when calling BulkMailInbox:AdjustSizeAndPosition()
+					local BMI_isAdjustingTipsSizeAndPosition = false;
+					
+					hooksecurefunc(BulkMailInbox, "AdjustSizeAndPosition", function(self, tooltip)
+						-- check if we're already adjusting the tip's size and position
+						if (BMI_isAdjustingTipsSizeAndPosition) then
+							return;
+						end
+						
+						BMI_isAdjustingTipsSizeAndPosition = false;
+						
+						-- adjust the inbox GUI to the overriden scale
+						local BMI_oldScale = self.db.profile.scale;
+						
+						self.db.profile.scale = tooltip:GetScale();
+						
+						BMI_isAdjustingTipsSizeAndPosition = true;
+						self:AdjustSizeAndPosition(tooltip);
+						BMI_isAdjustingTipsSizeAndPosition = false;
+						
+						self.db.profile.scale = BMI_oldScale;
+					end);
+				end
+			end
+		end
+	},
 	["ElvUI"] = {
 		frames = {
 			["ElvUI_SpellBookTooltip"] = { applyAppearance = true, applyScaling = true, applyAnchor = true }
@@ -1916,6 +1969,7 @@ function tt:ResolveTipsToModify()
 			TT_ExtendedConfig.tipsToModify[addOnName] = nil;
 			
 			-- apply hooks for addon
+			--
 			-- hint:
 			-- function hookFnForAddOn() needs to be called after removing addon config from tips to modify (see above),
 			-- because immediately calling tt:AddModifiedTipExtended() within hookFnForAddOn() leads to an infinite loop
@@ -2267,6 +2321,17 @@ function tt:SetScaleToTip(tip, noFireGroupEvent)
 		return;
 	end
 	
+	-- don't set scale to tip for addon "SavedInstances"
+	local LibQTip;
+	
+	if (tipParams.isFromLibQTip) then
+		LibQTip = LibStub:GetLibrary("LibQTip-1.0", true);
+		
+		if (LibQTip) and (LibQTip.activeTooltips["SavedInstancesTooltip"] == tip) then
+			return;
+		end
+	end
+	
 	-- calculate new scale for tip
 	local tipScale = tip:GetScale();
 	local tipEffectiveScale = tip:GetEffectiveScale();
@@ -2275,22 +2340,20 @@ function tt:SetScaleToTip(tip, noFireGroupEvent)
 	local newTipEffectiveScale = tipEffectiveScale * newTipScale / tipScale;
 	
 	-- reduce scale if tip exceeds UIParent width/height
-	if (tipParams.isFromLibQTip) then
-		local LibQTip = LibStub:GetLibrary("LibQTip-1.0", true);
-		
-		if (LibQTip) then
-			LibQTip.layoutCleaner:CleanupLayouts();
-		end
+	if (tipParams.isFromLibQTip) and (LibQTip) then
+		LibQTip.layoutCleaner:CleanupLayouts();
 	end
 	
-	local tipWidthWithNewScaling = tip:GetWidth() * newTipEffectiveScale;
-	local tipHeightWithNewScaling = tip:GetHeight() * newTipEffectiveScale;
-	
-	local UIParentWidth = UIParent:GetWidth() * TT_UIScale;
-	local UIParentHeight = UIParent:GetHeight() * TT_UIScale;
-	
-	if (tipWidthWithNewScaling > UIParentWidth) or (tipHeightWithNewScaling > UIParentHeight) then
-        newTipScale = newTipScale / math.max(tipWidthWithNewScaling / UIParentWidth, tipHeightWithNewScaling / UIParentHeight) * 0.95; -- 95% of maximum UIParent width/height
+	if (not tipParams.isFromLibQTip) then -- don't reduce scale if frame belongs to LibQTip-1.0, because tip:UpdateScrolling() from LibQTip-1.0 will resize the tooltip to fit the screen and show a scrollbar if needed.
+		local tipWidthWithNewScaling = tip:GetWidth() * newTipEffectiveScale;
+		local tipHeightWithNewScaling = tip:GetHeight() * newTipEffectiveScale;
+		
+		local UIParentWidth = UIParent:GetWidth() * TT_UIScale;
+		local UIParentHeight = UIParent:GetHeight() * TT_UIScale;
+		
+		if (tipWidthWithNewScaling > UIParentWidth) or (tipHeightWithNewScaling > UIParentHeight) then
+			newTipScale = newTipScale / math.max(tipWidthWithNewScaling / UIParentWidth, tipHeightWithNewScaling / UIParentHeight) * 0.95; -- 95% of maximum UIParent width/height
+		end
 	end
 	
 	-- consider min/max scale from inherited DefaultScaleFrame, see DefaultScaleFrameMixin:UpdateScale() in "SharedUIPanelTemplates.lua"
@@ -3211,9 +3274,6 @@ LibFroznFunctions:RegisterForGroupEvents(MOD_NAME, {
 --                       Prevent additional elements from moving off-screen                       --
 ----------------------------------------------------------------------------------------------------
 
--- SetClampRectInsetsToTip          set clamp rect insets to tip                                                tooltip, left, right, top, bottom
-
-
 -- set clamp rect insets to tip for preventing additional elements from moving off-screen
 function tt:SetClampRectInsetsToTip(tip, left, right, top, bottom)
 	-- check if insecure interaction with the tip is currently forbidden
@@ -3455,7 +3515,7 @@ function tt:GetAnchorPosition(tip)
 		isUnit = (UnitExists("mouseover")) and (not UnitIsUnit("mouseover", "player")) or (mouseFocus and mouseFocus.GetAttribute and mouseFocus:GetAttribute("unit")); -- GetAttribute("unit") here is bad, as that will find things like buff frames too.
 	end
 	
-	local anchorFrameName = (mouseFocus == WorldFrame and "World" or "Frame") .. (isUnit and "Unit" or "Tip");
+	local anchorFrameName = (WorldFrame:IsMouseMotionFocus() and "World" or "Frame") .. (isUnit and "Unit" or "Tip"); -- checking "mouseFocus == WorldFrame" doesn't work in cases if there is a fullscreen frame above the world frame, e.g. from addon "OPie".
 	local var = "anchor" .. anchorFrameName;
 	
 	-- consider anchor override during challenge mode, during skyriding or in combat
@@ -3764,24 +3824,16 @@ function tt:SetUnitRecordFromTip(tip)
 	-- set unit record
 	local unitRecord = LibFroznFunctions:CreateUnitRecord(unitID);
 	
-	local rpName;
-	
 	if (unitRecord.isPlayer) then
-		if (msp) then
+		local _msp = (msp or msptrp);
+		
+		if (_msp) then
 			local field = "NA"; -- Name
 			
-			msp:Request(unitRecord.name, field);
+			_msp:Request(unitRecord.name, field);
 			
-			if (msp.char[unitRecord.name] ~= nil) and (msp.char[unitRecord.name].field[field] ~= "") then
-				unitRecord.rpName = msp.char[unitRecord.name].field[field];
-			end
-		elseif (msptrp) then
-			local field = "NA"; -- Name
-			
-			msptrp:Request(unitRecord.name, field);
-			
-			if (msptrp.char[unitRecord.name] ~= nil) and (msptrp.char[unitRecord.name].field[field] ~= "") then
-				unitRecord.rpName = msptrp.char[unitRecord.name].field[field];
+			if (_msp.char[unitRecord.name] ~= nil) and (_msp.char[unitRecord.name].field[field] ~= "") then
+				unitRecord.rpName = _msp.char[unitRecord.name].field[field];
 			end
 		end
 	end

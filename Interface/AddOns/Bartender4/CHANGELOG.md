@@ -1,6 +1,9 @@
 # Bartender4
 
-## [4.15.1](https://github.com/Nevcairiel/Bartender4/tree/4.15.1) (2024-09-19)
-[Full Changelog](https://github.com/Nevcairiel/Bartender4/compare/4.15.0...4.15.1) [Previous Releases](https://github.com/Nevcairiel/Bartender4/releases)
+## [4.15.2](https://github.com/Nevcairiel/Bartender4/tree/4.15.2) (2025-01-10)
+[Full Changelog](https://github.com/Nevcairiel/Bartender4/compare/4.15.1...4.15.2) [Previous Releases](https://github.com/Nevcairiel/Bartender4/releases)
 
-- Update TOC for upcoming WoW updates  
+- Replace OptionsButtonTemplate on all flavors  
+- Update TOC for various patch updates  
+- Update Micro Menu vehicle re-anchoring for Cata Classic  
+- Remove WoW 10.x micro menu data  

@@ -53,6 +53,7 @@ ArkInventory.Lib.PeriodicTable:AddData( "ArkInventory", "1", {
 	["ArkInventory.System.Pet.PTBase"] = "m,Misc.Minipet,ArkInventory.Consumable.Pet",
 	
 	-- <itemID>:<spellID>
+	["ArkInventory.System.Mount.Parts.Alunira"] = "224025",
 	["ArkInventory.System.Mount.Parts.Mimiron's Jumpjets"] = "208984:424082,209781:424082,209055:424082",
 	["ArkInventory.System.Mount.Parts.Gooey Snailemental"] = "204352:374157",
 	["ArkInventory.System.Mount.Parts.Ochre Dreamtalon"] = "210457:427041,209416:427041,208644:427041,208646:427041,208647:427041",
@@ -122,6 +123,7 @@ ArkInventory.Lib.PeriodicTable:AddData( "ArkInventory", "1", {
 	["ArkInventory.System.Toy.Classic"] = "13544,20402,21175",
 	["ArkInventory.System.Toy.Other"] = "21745,27944,37863,64402,86577,89373,113545,117398,119151,127865,127867,127869,127870,128320,132172,138115,139632,162000,167893,170170",
 	
+	["ArkInventory.System.Junk.Quest.TWW"] = "225709,225710,225715,225716,225718",
 	["ArkInventory.System.Junk.Quest.Dragonflight"] = "200295,200587,200593,200594,200595,200596,204873,208619,208649,210049,210255,210346,210737",
 	["ArkInventory.System.Junk.Quest.Shadowlands"] = "185636,185918",
 	
@@ -141,9 +143,12 @@ ArkInventory.Lib.PeriodicTable:AddData( "ArkInventory", "1", {
 	-- used for both item to currency mappings (itemid:currencyid), and just knowing what items are currencies
 	["ArkInventory.System.Currency.Timerunning.Pandaria.Bronze"] = "224461",
 	
-	["ArkInventory.System.Currency.TWW.Crest.Harbinger.Weathered"] = "221268",
-	["ArkInventory.System.Currency.TWW.Crest.Harbinger.Carved"] = "221373",
-	["ArkInventory.System.Currency.TWW.Crest.Harbinger.Runed"] = "",
+	["ArkInventory.System.Currency.TWW.Mereldar Derby Mark"] = "226392:3055",
+	["ArkInventory.System.Currency.TWW.Crest.Harbinger.Weathered"] = "221268:2914",
+	["ArkInventory.System.Currency.TWW.Crest.Harbinger.Carved"] = "221373:2915",
+	["ArkInventory.System.Currency.TWW.Crest.Harbinger.Runed"] = "", -- 2916
+	["ArkInventory.System.Currency.TWW.Valorstone"] = "221269:3008",
+	["ArkInventory.System.Currency.TWW.Vault Token"] = "220769",
 	["ArkInventory.System.Currency.TWW.Wax"] = "212493",
 	["ArkInventory.System.Currency.TWW.Sizzling Cinderpollen"] = "225557",
 	["ArkInventory.System.Currency.Dragonflight.Bullion"] = "213089",
@@ -496,7 +501,7 @@ ArkInventory.Lib.PeriodicTable:AddData( "ArkInventory", "1", {
 	
 	
 	
-	["ArkInventory.Skill.Alchemy.TWW.Knowledge"] = "224024,225234,225235,226265,226266,226267,226268,226269,226270,226271,226272",
+	["ArkInventory.Skill.Alchemy.TWW.Knowledge"] = "224024,225234,225235,226265,226266,226267,226268,226269,226270,226271,226272,228773,228724",
 	["ArkInventory.Skill.Alchemy.Dragonflight.Knowledge"] = "193891,193897,194697,198519,198599,198608,198653,198663,198685,198697,198710,198712,198963,198964,200974,201003,201270,201281,201706,210185",
 	["ArkInventory.Skill.Alchemy.BFA"] = "168143,168144,168145,168146",
 	["ArkInventory.Skill.Alchemy.Legion"] = "124444,137595,137596,137597",
@@ -533,6 +538,7 @@ ArkInventory.Lib.PeriodicTable:AddData( "ArkInventory", "1", {
 	["ArkInventory.Skill.Engineering.PTBase"] = "m,Tradeskill.Tool.Engineering,Tradeskill.Mat.ByProfession.Engineering,TradeskillResultMats.Reverse.Engineering",
 	["ArkInventory.Skill.First Aid.Other"] = "113478",
 	["ArkInventory.Skill.First Aid.PTBase"] = "m,Tradeskill.Mat.ByProfession.First Aid,TradeskillResultMats.Reverse.First Aid",
+	["ArkInventory.Skill.Fishing.TWW.Knowledge"] = "224752,225770,225771",
 	["ArkInventory.Skill.Fishing.Dragonflight.Iskaara"] = "194510,200080,200081,200082,200083,200084,200085,200086",
 	["ArkInventory.Skill.Fishing.Bait.Shadowlands"] = "173038,173039,173040,173041,173042,173043,180168,187712",
 	["ArkInventory.Skill.Fishing.Bait.Draenor"] = "110274,110289,110290,110291,110292,110293,110294,128229",
@@ -561,7 +567,7 @@ ArkInventory.Lib.PeriodicTable:AddData( "ArkInventory", "1", {
 	["ArkInventory.Skill.Skinning.TWW.Knowledge"] = "224780,224781,224782,225222,226340,226341,226342,226343,226344,226345,226346,226347",
 	["ArkInventory.Skill.Skinning.Dragonflight.Knowledge"] = "194040,194066,194067,194068,194076,194077,198527,198837,198841,199128,200982,201023,201278,201289,201714,201718,202016",
 	["ArkInventory.Skill.Skinning.PTBase"] = "m,Tradeskill.Tool.Skinning,ArkInventory.Tradegoods.Leather",
-	["ArkInventory.Skill.Tailoring.TWW.Knowledge"] = "226348,226349,226350,226351,226352,226353,226354,226355",
+	["ArkInventory.Skill.Tailoring.TWW.Knowledge"] = "225220,225221,226348,226349,226350,226351,226352,226353,226354,226355",
 	["ArkInventory.Skill.Tailoring.Dragonflight.Knowledge"] = "193898,193899,194698,198528,198609,198662,198680,198684,198692,198699,198702,198977,198978,200975,201019,201020,201271,201282,201715,210461",
 	["ArkInventory.Skill.Tailoring.PTBase"] = "m,Tradeskill.Mat.ByProfession.Tailoring,TradeskillResultMats.Reverse.Tailoring,ArkInventory.Tradegoods.Cloth",
 	
@@ -790,7 +796,7 @@ ArkInventory.Lib.PeriodicTable:AddData( "ArkInventory", "1", {
 	["ArkInventory.Internal.ItemsWithCharges.Dragonflight.Shovels"] = "191294,191304",
 	
 	-- power items - war within
-	["ArkInventory.Consumable.Power.TWW.Knowledge.Base"] = "m,ArkInventory.Skill.Alchemy.TWW.Knowledge,ArkInventory.Skill.Blacksmithing.TWW.Knowledge,ArkInventory.Skill.Enchanting.TWW.Knowledge,ArkInventory.Skill.Enchanting.TWW.Disenchant,ArkInventory.Skill.Engineering.TWW.Knowledge,ArkInventory.Skill.Herbalism.TWW.Knowledge,ArkInventory.Skill.Herbalism.TWW.Other,ArkInventory.Skill.Inscription.TWW.Knowledge,ArkInventory.Skill.Jewelcrafting.TWW.Knowledge,ArkInventory.Skill.Leatherworking.TWW.Knowledge,ArkInventory.Skill.Mining.TWW.Knowledge,ArkInventory.Skill.Skinning.TWW.Knowledge,ArkInventory.Skill.Tailoring.TWW.Knowledge",
+	["ArkInventory.Consumable.Power.TWW.Knowledge.Base"] = "m,ArkInventory.Skill.Alchemy.TWW.Knowledge,ArkInventory.Skill.Blacksmithing.TWW.Knowledge,ArkInventory.Skill.Enchanting.TWW.Knowledge,ArkInventory.Skill.Enchanting.TWW.Disenchant,ArkInventory.Skill.Engineering.TWW.Knowledge,ArkInventory.Skill.Fishing.TWW.Knowledge,ArkInventory.Skill.Herbalism.TWW.Knowledge,ArkInventory.Skill.Herbalism.TWW.Other,ArkInventory.Skill.Inscription.TWW.Knowledge,ArkInventory.Skill.Jewelcrafting.TWW.Knowledge,ArkInventory.Skill.Leatherworking.TWW.Knowledge,ArkInventory.Skill.Mining.TWW.Knowledge,ArkInventory.Skill.Skinning.TWW.Knowledge,ArkInventory.Skill.Tailoring.TWW.Knowledge",
 	["ArkInventory.Consumable.Power.TWW.Brann.Curios.Combat"] = "218129,225897,225898,225899,225900,225902,229353",
 	["ArkInventory.Consumable.Power.TWW.Brann.Curios.Utility"] = "225903,225904,225905,225906,225907,225908,228582",
 	

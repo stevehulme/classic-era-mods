@@ -2064,6 +2064,11 @@ ArkInventory.Const.DatabaseDefaults.global = {
 					["enable"] = false,
 				},
 			},
+			["include"] = {
+				["item"] = {
+					["*"] = true, -- class:id
+				},
+			},
 		},
 		["bucket"] = {
 			["*"] = nil,

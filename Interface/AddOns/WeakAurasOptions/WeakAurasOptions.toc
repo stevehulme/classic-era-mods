@@ -1,7 +1,7 @@
-## Interface: 110002
+## Interface: 110007
 ## Title: WeakAuras Options
 ## Author: The WeakAuras Team
-## Version: 5.17.1
+## Version: 5.19.1
 ## IconTexture: Interface\AddOns\WeakAuras\Media\Textures\icon.blp
 ## Notes: Options for WeakAuras
 ## Notes-esES: Opciones para WeakAuras
@@ -18,8 +18,10 @@
 embeds.xml
 locales.xml
 
+VersionCheck.lua
 ForAllIndentsAndPurposes.lua
 
+RegionOptions\Empty.lua
 RegionOptions\AuraBar.lua
 RegionOptions\Texture.lua
 RegionOptions\Icon.lua
@@ -37,6 +39,10 @@ SubRegionOptions\Border.lua
 SubRegionOptions\Glow.lua
 SubRegionOptions\Tick.lua
 SubRegionOptions\Model.lua
+SubRegionOptions\StopMotion.lua
+SubRegionOptions\Texture.lua
+SubRegionOptions\CircularProgressTexture.lua
+SubRegionOptions\LinearProgressTexture.lua
 
 Cache.lua
 
@@ -55,6 +61,8 @@ GenericTrigger.lua
 WeakAurasOptions.lua
 ConditionOptions.lua
 AuthorOptions.lua
+
+Changelog.lua
 
 OptionsFrames\OptionsFrame.lua
 
@@ -97,7 +105,7 @@ AceGUI-Widgets\AceGUIWidget-WeakAurasExpandAnchor.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasSpacer.lua
 AceGUI-Widgets\AceGuiWidget-WeakAurasProgressBar.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasSpinBox.lua
-AceGUI-Widgets\AceGUIWidget-WeakAurasMiniTalent_Dragonflight.lua
+AceGUI-Widgets\AceGUIWidget-WeakAurasMiniTalent_TWW.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasScrollArea.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasInput.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasInputFocus.lua

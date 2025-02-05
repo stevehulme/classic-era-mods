@@ -85,14 +85,18 @@ local QuestieItemStartFixes = QuestieLoader:ImportModule("QuestieItemStartFixes"
 local filterExpansion = BlacklistFilter.filterExpansion
 
 -- Bitmask flags to blacklist DB entries in specific expansions
-QuestieCorrections.CLASSIC_HIDE = 1 -- Hide in Classic
+QuestieCorrections.CLASSIC_HIDE = 1 -- Hide in Classic (Vanilla, Era, SoD, ...)
 QuestieCorrections.TBC_HIDE = 2 -- Hide in TBC
 QuestieCorrections.WOTLK_HIDE = 4 -- Hide in Wotlk
 QuestieCorrections.CATA_HIDE = 8 -- Hide in Cata
-QuestieCorrections.SOD_HIDE = 16 -- Hide when Season of Discovery; use to hide quests that are not available in SoD
+QuestieCorrections.SOD_HIDE = 16 -- Hide when Season of Discovery TODO: Move all to ContentPhases
+QuestieCorrections.ERA_HIDE = 32 -- Hide in Classic Era
+QuestieCorrections.ANNIVERSARY_HIDE = 64 -- Hide in Classic Anniversary TODO: Move all to ContentPhases
 
 QuestieCorrections.killCreditObjectiveFirst = {}
 QuestieCorrections.objectObjectiveFirst = {}
+QuestieCorrections.itemObjectiveFirst = {}
+QuestieCorrections.eventObjectiveFirst = {}
 
 do
     local type, assert = type, assert
@@ -118,16 +122,14 @@ do
     end
 
     function QuestieCorrections:MinimalInit() -- db already compiled
-        if (not Questie.IsCata) then
-            -- Classic Era Corrections
-            addOverride(QuestieDB.itemDataOverrides, QuestieItemFixes:LoadFactionFixes())
-            addOverride(QuestieDB.npcDataOverrides, QuestieNPCFixes:LoadFactionFixes())
-            addOverride(QuestieDB.objectDataOverrides, QuestieObjectFixes:LoadFactionFixes())
-            addOverride(QuestieDB.questDataOverrides, QuestieQuestFixes:LoadFactionFixes())
-        end
+        -- Classic Era Corrections
+        addOverride(QuestieDB.itemDataOverrides, QuestieItemFixes:LoadFactionFixes())
+        addOverride(QuestieDB.npcDataOverrides, QuestieNPCFixes:LoadFactionFixes())
+        addOverride(QuestieDB.objectDataOverrides, QuestieObjectFixes:LoadFactionFixes())
+        addOverride(QuestieDB.questDataOverrides, QuestieQuestFixes:LoadFactionFixes())
 
         -- TBC Corrections
-        if (Questie.IsTBC or Questie.IsWotlk) then
+        if (Questie.IsTBC or Questie.IsWotlk or Questie.IsCata) then
             addOverride(QuestieDB.itemDataOverrides, QuestieTBCItemFixes:LoadFactionFixes())
             addOverride(QuestieDB.npcDataOverrides, QuestieTBCNpcFixes:LoadFactionFixes())
             addOverride(QuestieDB.objectDataOverrides, QuestieTBCObjectFixes:LoadFactionFixes())
@@ -135,7 +137,7 @@ do
         end
 
         -- WOTLK Corrections
-        if (Questie.IsWotlk) then
+        if (Questie.IsWotlk or Questie.IsCata) then
             addOverride(QuestieDB.npcDataOverrides, QuestieWotlkNpcFixes:LoadFactionFixes())
             addOverride(QuestieDB.itemDataOverrides, QuestieWotlkItemFixes:LoadFactionFixes())
             addOverride(QuestieDB.objectDataOverrides, QuestieWotlkObjectFixes:LoadFactionFixes())
@@ -382,6 +384,7 @@ function QuestieCorrections:OptimizeWaypoints(waypointData)
 end
 
 function QuestieCorrections:PreCompile() -- this happens only if we are about to compile the database. Run intensive preprocessing tasks here (like ramer-douglas-peucker)
+    local yieldLimit = 500 -- 500 seems like a good number
     local waypointKey = QuestieDB.npcKeys["waypoints"]
     local npcData = QuestieDB.npcData
 
@@ -392,10 +395,26 @@ function QuestieCorrections:PreCompile() -- this happens only if we are about to
             npcData[id][waypointKey] = QuestieCorrections:OptimizeWaypoints(way)
         end
 
-        if count > 500 then -- 500 seems like a good number
+        if count > yieldLimit then
             count = 0
             coroutine.yield()
         end
         count = count + 1
     end
+
+    waypointKey = QuestieDB.objectKeys["waypoints"]
+    local objData = QuestieDB.objectData
+    for id, data in pairs(objData) do
+        local way = data[waypointKey]
+        if way then
+            objData[id][waypointKey] = QuestieCorrections:OptimizeWaypoints(way)
+        end
+
+        if count > yieldLimit then
+             count = 0
+             coroutine.yield()
+        end
+    end
 end
+
+return QuestieCorrections

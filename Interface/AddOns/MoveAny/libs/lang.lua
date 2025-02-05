@@ -1,3 +1,4 @@
+-- deDE German Deutsch
 local _, MoveAny = ...
 local ltab = {}
 function MoveAny:GetLangTab()
@@ -31,6 +32,8 @@ function MoveAny:UpdateLanguage()
 		MoveAny:LangfrFR()
 	elseif GetLocale() == "itIT" then
 		MoveAny:LangitIT()
+	elseif GetLocale() == "koKR" then
+		MoveAny:LangkoKR()
 	elseif GetLocale() == "ptBR" then
 		MoveAny:LangptBR()
 	elseif GetLocale() == "ruRU" then

@@ -76,6 +76,7 @@ if not L then return end
 	L["RESTACK_CONSOLIDATE_DESC_PROFESSION"] = "Fill empty profession bag slots in the %1$s with allowable items from lower priority bags within the same panel"
 	L["RESTACK_COMPACT"] = "Compact"
 	L["RESTACK_COMPACT_DESC"] = "compact bags"
+	L["RESTACK_INCLUDE_DESC"] = "Include this item when running Restack"
 	
 	
 --	vault tab tooltips
@@ -181,7 +182,7 @@ if not L then return end
 	L["MENU_ITEM_ASSIGN_DISABLED_DESC"] = "This category is currently disabled.\n\nYou need to enable it before you can assign items to it."
 	L["MENU_ITEM_CUSTOM_NEW"] = "Create a new custom category"
 	L["MENU_ITEM_ITEMCOUNT_DESC"] = "Display item counts in tooltips for this item."
-	L["MENU_ITEM_ITEMCOUNT_STATUS_DESC"] = "%s\n\nclick to %s it."
+	L["MENU_ITEM_STATUS_DESC"] = "%s\n\nclick to %s it." -- enabled/disabled status display
 	L["MENU_ITEM_DEBUG_PET_ID"] = "Pet ID"
 	L["MENU_ITEM_DEBUG_PET_SPECIES"] = "Pet Species"
 	L["MENU_ITEM_DEBUG_AI_ID_SHORT"] = "Short ID"

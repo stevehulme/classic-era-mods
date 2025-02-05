@@ -1,4 +1,4 @@
-local AddonName, MoveAny = ...
+local _, MoveAny = ...
 local MADEBUG = false
 function MoveAny:DEBUG()
 	return MADEBUG
@@ -616,14 +616,14 @@ function MoveAny:InitDB()
 	end
 end
 
-function MoveAny:AddonLoaded(event, addonName, ...)
-	if event == "ADDON_LOADED" and addonName == AddonName then
+function MoveAny:AddonLoaded(event, ...)
+	if event == "PLAYER_LOGIN" then
 		MoveAny:LoadAddon()
 	end
 end
 
 local mf = CreateFrame("FRAME")
-mf:RegisterEvent("ADDON_LOADED")
+mf:RegisterEvent("PLAYER_LOGIN")
 mf:SetScript("OnEvent", MoveAny.AddonLoaded)
 --[[ FIX ]]
 function MoveAny:TrySaveEditMode()
@@ -662,7 +662,7 @@ function MoveAny:FixEditMode()
 	local rig = 0
 	local wro = 0
 	for i, v in pairs(_G) do
-		if v ~= nil and i ~= "L" and i ~= "G" and type(v) == "table" and v.GetPoint ~= nil and v.systemInfo ~= nil and type(v.systemInfo) == "table" and v.systemInfo.anchorInfo ~= nil and type(v.systemInfo.anchorInfo) == "table" and v.systemInfo.anchorInfo.relativeTo ~= nil and not is_full_caps(i) then
+		if v ~= nil and i ~= "L" and i ~= "G" and C_Widget.IsWidget(v) and v.GetPoint ~= nil and v.systemInfo ~= nil and type(v.systemInfo) == "table" and v.systemInfo.anchorInfo ~= nil and type(v.systemInfo.anchorInfo) == "table" and v.systemInfo.anchorInfo.relativeTo ~= nil and not is_full_caps(i) then
 			if string.startswith(v.systemInfo.anchorInfo.relativeTo, "MA") then
 				_G[i]["systemInfo"]["anchorInfo"]["relativeTo"] = "UIParent"
 				EditModeSystemMixin.UpdateSystem(_G[i], _G[i]["systemInfo"])

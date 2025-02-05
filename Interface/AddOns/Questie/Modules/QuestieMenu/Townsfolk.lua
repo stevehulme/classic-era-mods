@@ -30,7 +30,7 @@ local function _PopulateTownsfolkTypes(folkTypes) -- populate the table with all
     for id, npcData in pairs(QuestieDB.npcData) do
         local flags = npcData[QuestieDB.npcKeys.npcFlags]
         for name, folkType in pairs(folkTypes) do
-            if flags and bitband(flags, folkType.mask) == folkType.mask then
+            if flags and folkType.mask and bitband(flags, folkType.mask) == folkType.mask then
                 local npcName = npcData[QuestieDB.npcKeys.name]
                 local subName = npcData[QuestieDB.npcKeys.subName]
                 if npcName and sub(npcName, 1, 5) ~= "[DND]" then
@@ -94,6 +94,21 @@ function Townsfolk.Initialize()
             mask = QuestieDB.npcFlags.SPIRIT_HEALER,
             requireSubname = false,
             data = {}
+        },
+        ["Barber"] = {
+            mask = QuestieDB.npcFlags.BARBER,
+            requireSubname = false,
+            data = {}
+        },
+        ["Transmogrifier"] = {
+            mask = QuestieDB.npcFlags.TRANSMOGRIFIER,
+            requireSubname = false,
+            data = {}
+        },
+        ["Arcane Reforger"] = {
+            mask = QuestieDB.npcFlags.ARCANE_REFORGER,
+            requireSubname = false,
+            data = {}
         }
     }
     _PopulateTownsfolkTypes(townsfolkData)
@@ -105,6 +120,9 @@ function Townsfolk.Initialize()
         ["Battlemaster"] = townsfolkData["Battlemaster"].data,
         ["Flight Master"] = townsfolkData["Flight Master"].data,
         ["Innkeeper"] = townsfolkData["Innkeeper"].data,
+        ["Barber"] = QuestieDB.npcFlags.BARBER and townsfolkData["Barber"].data or nil,
+        ["Arcane Reforger"] = QuestieDB.npcFlags.ARCANE_REFORGER and townsfolkData["Arcane Reforger"].data or nil,
+        ["Transmogrifier"] = QuestieDB.npcFlags.TRANSMOGRIFIER and townsfolkData["Transmogrifier"].data or nil,
         ["Weapon Master"] = {}, -- populated below
     }
 
@@ -261,7 +279,6 @@ function Townsfolk.Initialize()
 
     --- Set the globals
     Questie.db.global.townsfolk = townfolk
-    Questie.db.global.townsfolkNeedsUpdatedGlobalVendors = true
 
     Questie.db.global.professionTrainers = professionTrainers
     Questie.db.global.classSpecificTownsfolk = classSpecificTownsfolk
@@ -270,15 +287,6 @@ function Townsfolk.Initialize()
 end
 
 function Townsfolk.PostBoot() -- post DB boot (use queries here)
-
-    if Questie.db.global.townsfolkNeedsUpdatedGlobalVendors then
-        Questie.db.global.townsfolkNeedsUpdatedGlobalVendors = nil
-        -- insert item-based profession vendors
-        _reformatVendors(Townsfolk:PopulateVendors({22012, 21992, 21993, 16084, 16112, 16113, 16085, 19442, 6454, 8547, 23689}), Questie.db.global.professionTrainers[professionKeys.FIRST_AID])
-        _reformatVendors(Townsfolk:PopulateVendors({27532, 16082, 16083}), Questie.db.global.professionTrainers[professionKeys.FISHING])
-        _reformatVendors(Townsfolk:PopulateVendors({27736, 16072, 16073}), Questie.db.global.professionTrainers[professionKeys.COOKING])
-    end
-
     -- item ids for class-specific reagents
     local reagents = {
         ["MAGE"] = {17031, 17032, 17020},
@@ -289,7 +297,7 @@ function Townsfolk.PostBoot() -- post DB boot (use queries here)
         ["HUNTER"] = {},
         ["DEATHKNIGHT"] = {37201},
         ["WARLOCK"] = {5565,16583},
-        ["ROGUE"] = Questie.IsWotlk and {2892} -- All poison vendors sell all ranks of poison, so Rank 1 of one poison is enough here
+        ["ROGUE"] = (Questie.IsWotlk or Questie.IsCata) and {2892} -- All poison vendors sell all ranks of poison, so Rank 1 of one poison is enough here
             or {5140,2928,8924,5173,2930,8923},
         ["DRUID"] = {17034,17026,17035,17021,17038,17036,17037}
     }
@@ -302,12 +310,15 @@ function Townsfolk.PostBoot() -- post DB boot (use queries here)
     if #reagents > 0 then
         Questie.db.char.vendorList["Reagents"] = _reformatVendors(Townsfolk:PopulateVendors(reagents))
     end
-    Questie.db.char.vendorList["Trade Goods"] = _reformatVendors(Townsfolk:PopulateVendors({ -- item ids from wowhead for trade goods   (temporarily disabled)
+    Questie.db.char.vendorList["Trade Goods"] = _reformatVendors(Townsfolk:PopulateVendors({
         14256,12810,13463,8845,8846,4234,3713,8170,14341,4389,3357,2453,13464,
         3355,3356,3358,4371,4304,5060,2319,18256,8925,3857,10940,2321,785,4404,2692,
         2605,3372,2320,6217,2449,4399,4364,10938,18567,4382,4289,765,3466,3371,2447,2880,
         2928,4361,10647,10648,4291,4357,8924,8343,4363,2678,5173,4400,2930,4342,2325,4340,
-        6261,8923,2324,2604,6260,4378,10290,17194,4341
+        6261,8923,2324,2604,6260,4378,10290,17194,4341,
+        22012,21992,21993,16084,16112,16113,16085,19442,6454,8547,23689, -- First Aid skill books
+        27532,16082,16083, -- Fishing skill books
+        27736,16072,16073, -- Cooking skill books
     }))
     Questie.db.char.vendorList["Bags"] = _reformatVendors(Townsfolk:PopulateVendors({4496, 4497, 4498, 4499, (Questie.IsTBC or Questie.IsWotlk) and 30744 or nil}))
     Questie.db.char.vendorList["Potions"] = _reformatVendors(Townsfolk:PopulateVendors({
@@ -343,6 +354,10 @@ local function _UpdatePetFood() -- call on change pet
 end
 
 local function _UpdateAmmoVendors() -- call on change weapon
+    if Questie.IsCata then
+        return
+    end
+
     Questie.db.char.vendorList["Ammo"] = _reformatVendors(Townsfolk:PopulateVendors({11285,3030,19316,2515,2512,11284,19317,2519,2516,3033,28056,28053,28061,28060}, {}, true))
 end
 

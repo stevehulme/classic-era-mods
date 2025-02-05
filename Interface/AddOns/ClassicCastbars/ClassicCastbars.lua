@@ -15,6 +15,8 @@ ClassicCastbars.AnchorManager = namespace.AnchorManager
 ClassicCastbars.defaultConfig = namespace.defaultConfig
 ClassicCastbars.activeFrames = activeFrames
 
+local isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
 local castEvents = {
     "UNIT_SPELLCAST_START",
     "UNIT_SPELLCAST_STOP",
@@ -36,11 +38,13 @@ local castEvents = {
 
 local GetBuffDataByIndex = _G.C_UnitAuras and _G.C_UnitAuras.GetBuffDataByIndex
 local next = _G.next
-local gsub = _G.string.gsub
+local strmatch = _G.string.match
 local strfind = _G.string.find
+local UnitGUID = _G.UnitGUID
+local UnitIsUnit = _G.UnitIsUnit
 
 function ClassicCastbars:GetUnitType(unitID)
-    return gsub(gsub(unitID or "", "%d", ""), "-testmode", "") -- remove numbers and suffix
+    return unitID and strmatch(unitID, "^%a+") -- remove numbers and testmode suffix
 end
 
 function ClassicCastbars:GetCastbarFrame(unitID)
@@ -141,7 +145,7 @@ function ClassicCastbars:BindCurrentCastData(castbar, unitID, isChanneled, chann
         end
 
         -- HACK: UnitChannelInfo is bugged for classic era, tmp fallback method
-        if channelSpellID and not spellName then
+        if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC and channelSpellID and not spellName then
             if C_Spell and C_Spell.GetSpellInfo then
                 local info = C_Spell.GetSpellInfo(channelSpellID)
                 spellName = info and info.name
@@ -171,6 +175,7 @@ function ClassicCastbars:BindCurrentCastData(castbar, unitID, isChanneled, chann
     castbar.isFailed = nil
     castbar.isInterrupted = nil
     castbar.isCastComplete = nil
+    castbar.pushbackValue = nil
 
     if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
         castbar.isUninterruptible = notInterruptible
@@ -204,6 +209,29 @@ function ClassicCastbars:CheckAuraModifiers(castbar, unitID)
 
     castbar.isUninterruptible = immunityFound
     self:RefreshBorderShield(castbar, unitID)
+end
+
+local BARKSKIN = GetSpellInfo(22812)
+local FOCUSED_CASTING = GetSpellInfo(14743)
+local pushbackBlacklist = namespace.pushbackBlacklist
+local max = _G.math.max
+local FindAuraByName = AuraUtil.FindAuraByName
+function ClassicCastbars:CastPushback(unitID, castbar)
+    if not castbar or not unitID --[[or unitID == "player"]] then return end
+    if not castbar.isActiveCast then return end
+    if pushbackBlacklist[castbar.spellName] then return end
+    if UnitIsUnit(unitID, "player") then return end
+    if FindAuraByName(BARKSKIN, unitID, "HELPFUL") or FindAuraByName(FOCUSED_CASTING , unitID, "HELPFUL") then return end
+
+    if not castbar.isChanneled then
+        -- https://wow.gamepedia.com/index.php?title=Interrupt&oldid=305918
+        castbar.pushbackValue = castbar.pushbackValue or 1.0
+        castbar.value = max(castbar.value - castbar.pushbackValue, 0)
+        castbar.pushbackValue = max(castbar.pushbackValue - 0.5, 0.2)
+    else
+        -- channels are reduced by 25% per hit
+        castbar.value = max(castbar.value - (castbar.maxValue * 25) / 100, 0)
+    end
 end
 
 function ClassicCastbars:UNIT_AURA(unitID)
@@ -539,14 +567,26 @@ function ClassicCastbars:PLAYER_LOGIN()
 end
 
 local CombatLogGetCurrentEventInfo = _G.CombatLogGetCurrentEventInfo
+local COMBATLOG_OBJECT_TYPE_PLAYER = _G.COMBATLOG_OBJECT_TYPE_PLAYER
+local bit_band = _G.bit.band
 function ClassicCastbars:COMBAT_LOG_EVENT_UNFILTERED()
-    local _, eventType, _, _, _, _, _, dstGUID, _, _, _, _, _, _, _, _, extraSchool = CombatLogGetCurrentEventInfo()
+    local _, eventType, _, _, _, _, _, dstGUID, _, dstFlags, _, _, _, _, _, _, extraSchool = CombatLogGetCurrentEventInfo()
 
     if eventType == "SPELL_INTERRUPT" then
         for unitID, castbar in next, activeFrames do
             if castbar:GetAlpha() > 0 then
                 if UnitGUID(unitID) == dstGUID then
                     castbar.Text:SetText(string.format(LOSS_OF_CONTROL_DISPLAY_INTERRUPT_SCHOOL, GetSchoolString(extraSchool)))
+                end
+            end
+        end
+    elseif eventType == "SWING_DAMAGE" or eventType == "ENVIRONMENTAL_DAMAGE" or eventType == "RANGE_DAMAGE" or eventType == "SPELL_DAMAGE" then
+        if isClassicEra and bit_band(dstFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 then -- is player, and not pet
+            for unitID, castbar in next, activeFrames do -- cba reworking this to work with GUID mappings so this'll have to do for now
+                if castbar:GetAlpha() > 0 then
+                    if UnitGUID(unitID) == dstGUID then
+                        self:CastPushback(unitID, castbar)
+                    end
                 end
             end
         end

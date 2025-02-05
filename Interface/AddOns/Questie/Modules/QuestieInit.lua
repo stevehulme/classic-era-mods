@@ -39,8 +39,8 @@ local Townsfolk = QuestieLoader:ImportModule("Townsfolk")
 local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
 ---@type IsleOfQuelDanas
 local IsleOfQuelDanas = QuestieLoader:ImportModule("IsleOfQuelDanas")
----@type QuestieEventHandler
-local QuestieEventHandler = QuestieLoader:ImportModule("QuestieEventHandler")
+---@type EventHandler
+local EventHandler = QuestieLoader:ImportModule("EventHandler")
 ---@type QuestieJourney
 local QuestieJourney = QuestieLoader:ImportModule("QuestieJourney")
 ---@type HBDHooks
@@ -176,9 +176,6 @@ QuestieInit.Stages[1] = function() -- run as a coroutine
         QuestieCorrections:MinimalInit()
     end
 
-    Tutorial.Initialize()
-    coYield()
-
     local dbCompiledCount = Questie.IsSoD and Questie.db.global.sod.dbCompiledCount or Questie.db.global.dbCompiledCount
 
     if (not Questie.db.char.townsfolk) or (dbCompiledCount ~= Questie.db.char.townsfolkVersion) or (Questie.db.char.townsfolkClass ~= UnitClass("player")) then
@@ -189,6 +186,9 @@ QuestieInit.Stages[1] = function() -- run as a coroutine
 
     coYield()
     QuestieDB:Initialize()
+
+    Tutorial.Initialize()
+    coYield()
 
     --? Only run the validator on recompile if debug is enabled, otherwise it's a waste of time.
     if Questie.db.profile.debugEnabled and dbCompiled then
@@ -232,7 +232,7 @@ QuestieInit.Stages[3] = function() -- run as a coroutine
     Questie:Debug(Questie.DEBUG_INFO, "[QuestieInit:Stage3] Stage 3 start.")
 
     -- register events that rely on questie being initialized
-    QuestieEventHandler:RegisterLateEvents()
+    EventHandler:RegisterLateEvents()
 
     QuestieTooltips:Initialize()
     TrackerQuestTimers:Initialize()
@@ -254,14 +254,11 @@ QuestieInit.Stages[3] = function() -- run as a coroutine
     coYield()
 
     -- Fill the QuestLogCache for first time
-    local cacheMiss, _, questIdsChecked = QuestLogCache.CheckForChanges(nil)
+    local cacheMiss, _, questIdsChecked = QuestLogCache.CheckForChanges(nil, false)
 
     if cacheMiss then
-        -- We really want to wait for the cache to be filled before we continue.
-        -- Other addons (e.g. ATT) can interfere with the cache and we need to make sure it's correct.
-        coYield()
-        local _, _, newQuestIdsChecked = QuestLogCache.CheckForChanges(nil)
-        questIdsChecked = newQuestIdsChecked
+        Questie:Debug(Questie.DEBUG_CRITICAL, "QuestieInit: Game Cache did not fill in time, waiting for valid cache.")
+        questIdsChecked = QuestieInit.WaitForValidGameCache()
     end
 
     QuestEventHandler.InitQuestLogStates(questIdsChecked)
@@ -271,7 +268,7 @@ QuestieInit.Stages[3] = function() -- run as a coroutine
     QuestieQuest:GetAllQuestIds()
     coYield()
 
-    QuestEventHandler:RegisterEvents()
+    QuestEventHandler:Initialize()
 
     coYield()
     QuestieCombatQueue.Initialize()
@@ -285,7 +282,7 @@ QuestieInit.Stages[3] = function() -- run as a coroutine
 
     local dateToday = date("%y-%m-%d")
 
-    if Questie.db.profile.showAQWarEffortQuests and ((not Questie.db.profile.aqWarningPrintDate) or (Questie.db.profile.aqWarningPrintDate < dateToday)) then
+    if (not Questie.IsSoD) and Questie.db.profile.showAQWarEffortQuests and ((not Questie.db.profile.aqWarningPrintDate) or (Questie.db.profile.aqWarningPrintDate < dateToday)) then
         Questie.db.profile.aqWarningPrintDate = dateToday
         C_Timer.After(2, function()
             print("|cffff0000-----------------------------|r")
@@ -372,8 +369,6 @@ function QuestieInit.OnAddonLoaded()
 
         IsleOfQuelDanas.Initialize() -- This has to happen before option init
         QuestieOptions.Initialize()
-
-        ZoneDB.Initialize()
     end, 0,"Error during AddonLoaded initialization!")
 
     MinimapIcon:Init()
@@ -382,6 +377,8 @@ function QuestieInit.OnAddonLoaded()
 
     Migration:Migrate()
 
+    ZoneDB.Initialize()
+    AvailableQuests.Initialize()
     QuestieProfessions:Init()
     QuestXP.Init()
     Phasing.Initialize()
@@ -412,4 +409,34 @@ function QuestieInit:Init()
             end)
         end
     end
+end
+
+
+--- We really want to wait for the cache to be filled before we continue.
+--- Other addons (e.g. ATT) can interfere with the cache and we need to make sure it's correct.
+---@return table<number>
+function QuestieInit.WaitForValidGameCache()
+    local doWait = true
+    local retries = 0
+    local questIdsChecked
+
+    local timer
+    timer = C_Timer.NewTicker(1, function()
+        local cacheMiss, _, newQuestIdsChecked = QuestLogCache.CheckForChanges(nil, false)
+        if (not cacheMiss) or retries >= 3 then
+            if retries == 3 then
+                Questie:Error("QuestieInit: Game Cache did become valid in 3 seconds, continuing with initialization.")
+            end
+            doWait = false
+            timer:Cancel()
+        end
+        questIdsChecked = newQuestIdsChecked
+        retries = retries + 1
+    end)
+
+    while doWait do
+        coYield()
+    end
+
+    return questIdsChecked
 end

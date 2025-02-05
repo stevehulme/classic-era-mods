@@ -66,7 +66,7 @@ function MoveAny:InitBuffBar()
 				DebuffFrame:SetPoint("CENTER", 0, 0)
 			end
 
-			function DebuffFrame:UpdatePoint()
+			function MoveAny:UpdateDebuffs()
 				MABUFFLIMIT = MoveAny:GetEleOption("MABuffBar", "MABUFFLIMIT", 10)
 				MABUFFSPACINGX = MoveAny:GetEleOption("MABuffBar", "MABUFFSPACINGX", 4)
 				MABUFFSPACINGY = MoveAny:GetEleOption("MABuffBar", "MABUFFSPACINGY", 10)
@@ -165,7 +165,10 @@ function MoveAny:InitBuffBar()
 				function(sel, ...)
 					if sel.debuffsetpoint then return end
 					sel.debuffsetpoint = true
-					DebuffFrame:UpdatePoint()
+					if MoveAny.UpdateDebuffs then
+						MoveAny:UpdateDebuffs()
+					end
+
 					sel.debuffsetpoint = false
 				end
 			)
@@ -176,7 +179,10 @@ function MoveAny:InitBuffBar()
 				function(sel, ...)
 					if sel.debuffsetpoint then return end
 					sel.debuffsetpoint = true
-					DebuffFrame:UpdatePoint()
+					if MoveAny.UpdateDebuffs then
+						MoveAny:UpdateDebuffs()
+					end
+
 					sel.debuffsetpoint = false
 				end
 			)
@@ -186,8 +192,8 @@ function MoveAny:InitBuffBar()
 			f:SetScript(
 				"OnEvent",
 				function(sel, event, ...)
-					if event == "UNIT_AURA" then
-						DebuffFrame:UpdatePoint()
+					if event == "UNIT_AURA" and MoveAny.UpdateDebuffs then
+						MoveAny:UpdateDebuffs()
 					end
 				end
 			)
@@ -479,45 +485,47 @@ function MoveAny:InitBuffBar()
 			end
 
 			-- Masque
-			local MSQ = LibStub("Masque", true)
-			if MSQ then
-				if once then
-					once = false
-					MSQ:Register("Buffs", function() end, {})
-					MAMasqueBuffs = MSQ:Group("MA Blizzard Buffs")
-				end
-
-				for i = 1, 32 do
-					local btn = _G["BuffButton" .. i]
-					if btn and not btn.MasqueButtonData then
-						btn.MasqueButtonData = {
-							Button = btn,
-							Icon = _G["BuffButton" .. "IconTexture"],
-						}
-
-						MAMasqueBuffs:AddButton(btn, btn.MasqueButtonData, "Item")
+			if LibStub then
+				local MSQ = LibStub("Masque", true)
+				if MSQ then
+					if once then
+						once = false
+						MSQ:Register("Buffs", function() end, {})
+						MAMasqueBuffs = MSQ:Group("MA Blizzard Buffs")
 					end
 
-					local btn2 = _G["DebuffButton" .. i]
-					if btn2 and not btn2.MasqueButtonData then
-						btn2.MasqueButtonData = {
-							Button = btn2,
-							Icon = _G["DebuffButton" .. "IconTexture"],
-						}
+					for i = 1, 32 do
+						local btn = _G["BuffButton" .. i]
+						if btn and not btn.MasqueButtonData then
+							btn.MasqueButtonData = {
+								Button = btn,
+								Icon = _G["BuffButton" .. "IconTexture"],
+							}
 
-						MAMasqueBuffs:AddButton(btn2, btn2.MasqueButtonData, "Item")
+							MAMasqueBuffs:AddButton(btn, btn.MasqueButtonData, "Item")
+						end
+
+						local btn2 = _G["DebuffButton" .. i]
+						if btn2 and not btn2.MasqueButtonData then
+							btn2.MasqueButtonData = {
+								Button = btn2,
+								Icon = _G["DebuffButton" .. "IconTexture"],
+							}
+
+							MAMasqueBuffs:AddButton(btn2, btn2.MasqueButtonData, "Item")
+						end
 					end
-				end
 
-				for i = 1, 3 do
-					local btn = _G["TempEnchant" .. i]
-					if btn and not btn.MasqueButtonData then
-						btn.MasqueButtonData = {
-							Button = btn,
-							Icon = _G["TempEnchant" .. i .. "IconTexture"],
-						}
+					for i = 1, 3 do
+						local btn = _G["TempEnchant" .. i]
+						if btn and not btn.MasqueButtonData then
+							btn.MasqueButtonData = {
+								Button = btn,
+								Icon = _G["TempEnchant" .. i .. "IconTexture"],
+							}
 
-						MAMasqueBuffs:AddButton(btn, btn.MasqueButtonData, "Item")
+							MAMasqueBuffs:AddButton(btn, btn.MasqueButtonData, "Item")
+						end
 					end
 				end
 			end

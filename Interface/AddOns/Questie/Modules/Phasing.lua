@@ -127,6 +127,65 @@ local phases = {
     MOUNT_HYJAL_INVASION_SANCTUARY = 1055,
     MOUNT_HYJAL_VISION_YSERA_1 = 1056,
     MOUNT_HYJAL_VISION_YSERA_2 = 1057,
+    VASHJIR_LADY_NAZ_JAR_AT_RIDGE = 1058,
+    GRYAN_TOWER = 1059,
+    GRYAN_FP = 1060,
+    MOLTEN_FRONT_CAMP = 1061,
+    MOLTEN_FRONT_DRUIDS = 1062,
+    MOLTEN_FRONT_WARDENS = 1063,
+    MARRIS_BRIDGE = 1064,
+    MARRIS_STABLES = 1065,
+    RAMBO_TEAM_CANYON = 1066,
+    RAMBO_TEAM_POST = 1067,
+    SVEN_YORGEN_VISIBLE = 1068,
+    AGGRA_THRONE = 1069,
+    AGGRA_PRECIPICE = 1070,
+    THRALL_AGGRA_PROPOSAL = 1071,
+    THURMAN_AT_CHILLWIND = 1072,
+    THURMAN_AT_WRITHING = 1073,
+    THASSARIAN_WPL_TOWER = 1074,
+    THASSARIAN_WPL_FP = 1075,
+    CARAVAN_THONDRORIL = 1076,
+    CARAVAN_CROWNGUARD = 1077,
+    CARAVAN_LIGHTS_SHIELD = 1078,
+    CARAVAN_EASTWALL = 1079,
+    CARAVAN_NORTHPASS = 1080,
+    CARAVAN_LIGHTS_HOPE = 1081,
+    VEXTUL_SPAWN = 1082,
+    VEXTUL_FIONA = 1083,
+    TARENAR_NORTHPASS = 1084,
+    TARENAR_PLAGUEWOOD = 1085,
+    TARENAR_SAVED_GIDWIN = 1086,
+    TARENAR_GIDWIN_LHC = 1087,
+    RHEA_LETHLOR_RAVINE = 1088,
+    RHEA_DRAGONS_MOUTH = 1089,
+    RHEA_NEW_KARGATH = 1090,
+    RHEA_HIDDEN_CLUTCH = 1091,
+    DEATHWING_TELDURIN = 1092,
+    DEATHWING_MARTEK = 1093,
+    SEARING_GORGE_NPCS_TOWERS = 1094,
+    SEARING_GORGE_CAVE_ASSAULT = 1095,
+    LUNK_IRON_SUMMIT = 1096,
+    LUNK_THORIUM_POINT = 1097,
+    HORATIO_JANSEN_STEAD = 1098,
+    HORATIO_SENTINEL_HILL = 1099,
+    BS_PRE_ASSAULT = 1100,
+    BS_POST_ASSAULT = 1101,
+    SETHMAN_VISIBLE = 1102,
+    LASHTAIL_VISIBLE = 1103,
+    BERRIN_EMERINE_OSBORN_CAGE = 1104,
+    BERRIN_EMERINE_OSBORN_RESCUED = 1105,
+    BOOTY_BAY_REGULAR = 1106,
+    BOOTY_BAY_ATTACK = 1107,
+    HOLLEE_RUINS = 1108,
+    HOLLEE_CAMP = 1109,
+    SERENDIA_FP = 1110,
+    SERENDIA_INN = 1111,
+    GRIMCLAW_THICKET = 1112,
+    GRIMCLAW_INN = 1113,
+    BARGE_AT_PEACE = 1114,
+    BARGE_UNDER_ATTACK = 1115,
+    KELSEY_AT_COVE = 1116,
 }
 Phasing.phases = phases
 
@@ -134,7 +193,7 @@ function Phasing.Initialize()
     playerFaction = UnitFactionGroup("player")
 end
 
----@param phase number|nil @The phase belonging to a spawn of an NPC
+---@param phase number? @The phase belonging to a spawn of an NPC
 ---@return boolean @true if the spawn is visible, false otherwise
 function Phasing.IsSpawnVisible(phase)
     if (not phase) or phase == phases.UNKNOWN then
@@ -186,7 +245,7 @@ function Phasing.IsSpawnVisible(phase)
     end
 
     if phase == phases.VASHJIR_NAR_SHOLA_TERRACE_WEST then
-        return (not complete[25966]) and (not complete[25755]) and (complete[26191] or complete[25750]) or false
+        return (not complete[25967]) and (not complete[25892]) and (complete[26191] or complete[25750]) or false
     end
 
     if phase == phases.VASHJIR_NAR_SHOLA_TERRACE then
@@ -203,12 +262,16 @@ function Phasing.IsSpawnVisible(phase)
         return (complete[25629] and complete[25896]) or false
     end
 
+    if phase == phases.VASHJIR_LADY_NAZ_JAR_AT_RIDGE then
+        return complete[25859] or false
+    end
+
     if phase == phases.VASHJIR_ERANUK_AT_CAVERN then
         return (not complete[25988]) or complete[26143] or false
     end
 
     if phase == phases.VASHJIR_ERANUK_AT_PROMONTORY_POINT then
-        return (complete[25988] and (not complete[26143])) or false
+        return ((complete[25988] or complete[25987]) and (not complete[26143])) or false
     end
 
     if phase == phases.SIRA_KESS_AT_GARDEN then
@@ -352,11 +415,11 @@ function Phasing.IsSpawnVisible(phase)
     end
 
     if phase == phases.HAR_KOA_AT_ALTAR then
-        return (not complete[12684])
+        return (not complete[12685])
     end
 
     if phase == phases.HAR_KOA_AT_ZIM_TORGA then
-        return complete[12684] or false
+        return complete[12685] or false
     end
 
     if phase == phases.EARTHEN_GUIDE_BFD then
@@ -440,11 +503,239 @@ function Phasing.IsSpawnVisible(phase)
     end
 
     if phase == phases.MOUNT_HYJAL_VISION_YSERA_1 then
-        return complete[25611] or false -- might be all quests at shrine needed for this NPC to popup. turn in this quest first, see if others are required, if you find that to be true - @cheeq
+        return complete[25611] or false
     end
 
     if phase == phases.MOUNT_HYJAL_VISION_YSERA_2 then
-        return (complete[25502] and complete[25520]) or false
+        return (complete[25502] and complete[25520] and (not complete[25830])) or false
+    end
+
+    if phase == phases.GRYAN_TOWER then
+        return (not complete[26322])
+    end
+
+    if phase == phases.GRYAN_FP then
+        return complete[26322] or false
+    end
+
+    if phase == phases.MOLTEN_FRONT_DRUIDS then
+        return complete[29206] and ((not questLog[29273] and not questLog[29274]) or ((questLog[29273] and (questLog[29273].isComplete == 0)) or (questLog[29274] and (questLog[29274].isComplete == 0)))) or false
+    end
+
+    if phase == phases.MOLTEN_FRONT_WARDENS then
+        return complete[29205] and ((not questLog[29275] and not questLog[29276]) or ((questLog[29275] and (questLog[29275].isComplete == 0)) or (questLog[29276] and (questLog[29276].isComplete == 0)))) or false
+    end
+
+    if phase == phases.MOLTEN_FRONT_CAMP then
+        return (questLog[29273] and questLog[29273].isComplete == 1) or (questLog[29274] and questLog[29274].isComplete == 1) or (questLog[29275] and questLog[29275].isComplete == 1) or (questLog[29276] and questLog[29276].isComplete == 1) or false
+    end
+
+    if phase == phases.MARRIS_BRIDGE then
+        return (not complete[26513])
+    end
+
+    if phase == phases.MARRIS_STABLES then
+        return complete[26513] or false
+    end
+
+    if phase == phases.RAMBO_TEAM_CANYON then
+        return (not complete[26708]) and ((not questLog[26708]) or (questLog[26708] and questLog[26708].isComplete == 0)) or false
+    end
+
+    if phase == phases.RAMBO_TEAM_POST then
+        return complete[26708] or (questLog[26708] and (questLog[26708].isComplete == 1)) or false
+    end
+
+    if phase == phases.SVEN_YORGEN_VISIBLE then
+        return complete[26760] or (questLog[26760] and (questLog[26760].isComplete == 1)) or false
+    end
+
+    if phase == phases.AGGRA_THRONE then
+        return (not complete[29329]) and ((not questLog[29329]) or (questLog[29329] and questLog[29329].isComplete == 0)) or false
+    end
+
+    if phase == phases.AGGRA_PRECIPICE then
+        return complete[29329] or (questLog[29329] and questLog[29329].isComplete == 1) or false
+    end
+
+    if phase == phases.THRALL_AGGRA_PROPOSAL then
+        return (not complete[29331])
+    end
+
+    if phase == phases.THURMAN_AT_CHILLWIND then
+        return (not complete[27170])
+    end
+
+    if phase == phases.THURMAN_AT_WRITHING then
+        return (complete[27170] and (not complete[27197] or questLog[27197])) or false
+    end
+
+    if phase == phases.THASSARIAN_WPL_TOWER then
+        return (not complete[27174])
+    end
+
+    if phase == phases.THASSARIAN_WPL_FP then
+        return complete[27174] or false
+    end
+
+    if phase == phases.CARAVAN_THONDRORIL then
+        return (not complete[27373]) and ((not questLog[27373]) or (questLog[27373] and questLog[27373].isComplete == 0)) or false
+    end
+
+    if phase == phases.CARAVAN_CROWNGUARD then
+        return ((complete[27373]) or (questLog[27373] and questLog[27373].isComplete == 1)) and (not complete[27448]) and ((not questLog[27448]) or (questLog[27448] and questLog[27448].isComplete == 0)) or false
+    end
+
+    if phase == phases.CARAVAN_LIGHTS_SHIELD then
+        return ((complete[27448]) or (questLog[27448] and questLog[27448].isComplete == 1)) and (not complete[27465]) or false
+    end
+
+    if phase == phases.CARAVAN_EASTWALL then
+        return (complete[27465]) and (not complete[27489]) and ((not questLog[27489]) or (questLog[27489] and questLog[27489].isComplete == 0)) or false
+    end
+
+    if phase == phases.CARAVAN_NORTHPASS then
+        return ((complete[27489]) or (questLog[27489] and questLog[27489].isComplete == 1)) and (not complete[27526]) or false
+    end
+
+    if phase == phases.CARAVAN_LIGHTS_HOPE then
+        return complete[27526] or false
+    end
+
+    if phase == phases.VEXTUL_SPAWN then
+        return (not complete[27449])
+    end
+
+    if phase == phases.VEXTUL_FIONA then
+        return complete[27449] and (not complete[27465]) or false
+    end
+
+    if phase == phases.TARENAR_NORTHPASS then
+        return (not complete[27522]) and ((complete[27489]) or (questLog[27489] and questLog[27489].isComplete == 1)) or false
+    end
+
+    if phase == phases.TARENAR_PLAGUEWOOD then
+        return complete[27522] and ((not complete[27526]) and ((not questLog[27526]) or (questLog[27526] and questLog[27526].isComplete == 0))) or false
+    end
+
+    if phase == phases.TARENAR_SAVED_GIDWIN then
+        return (not complete[27527]) and (complete[27526] or (questLog[27526] and questLog[27526].isComplete == 1)) or false
+    end
+
+    if phase == phases.TARENAR_GIDWIN_LHC then
+        return complete[27527] or false
+    end
+
+    if phase == phases.RHEA_LETHLOR_RAVINE then
+        return (not complete[27769])
+    end
+
+    if phase == phases.RHEA_DRAGONS_MOUTH then
+        return complete[27769] and ((not complete[27832]) and ((not questLog[27832]) or (questLog[27832] and questLog[27832].isComplete == 0))) or false
+    end
+
+    if phase == phases.RHEA_HIDDEN_CLUTCH then
+        return (complete[27832] or (questLog[27832] and questLog[27832].isComplete == 1)) or false
+    end
+
+    if phase == phases.DEATHWING_TELDURIN then
+        return (not complete[27713])
+    end
+
+    if phase == phases.DEATHWING_MARTEK then
+        return complete[27713] or false
+    end
+
+    if phase == phases.SEARING_GORGE_NPCS_TOWERS then
+        return ((not complete[28052]) and (not questLog[28052])) or complete[28062]
+    end
+
+    if phase == phases.SEARING_GORGE_CAVE_ASSAULT then
+        return (complete[28052] or questLog[28052]) and (not complete[28062]) or false
+    end
+
+    if phase == phases.LUNK_IRON_SUMMIT then
+        return (not complete[28062])
+    end
+
+    if phase == phases.LUNK_THORIUM_POINT then
+        return complete[28062] or false
+    end
+
+    if phase == phases.HORATIO_JANSEN_STEAD then
+        return (not complete[26270])
+    end
+
+    if phase == phases.HORATIO_SENTINEL_HILL then
+        return (complete[26270] and (not complete[26322])) or false
+    end
+
+    if phase == phases.BS_PRE_ASSAULT then
+        return (not complete[28320])
+    end
+
+    if phase == phases.BS_POST_ASSAULT then
+        return complete[28320] or false
+    end
+
+    if phase == phases.SETHMAN_VISIBLE then
+        return (complete[26732] or (questLog[26732] and questLog[26732].isComplete == 1)) or false
+    end
+
+    if phase == phases.LASHTAIL_VISIBLE then
+        return complete[26739] or false
+    end
+
+    if phase == phases.BERRIN_EMERINE_OSBORN_CAGE then
+        return (not complete[26736])
+    end
+
+    if phase == phases.BERRIN_EMERINE_OSBORN_RESCUED then
+        return complete[26736] or false
+    end
+
+    if phase == phases.BOOTY_BAY_REGULAR then
+        return (not complete[26678]) or complete[26703] or false
+    end
+
+    if phase == phases.BOOTY_BAY_ATTACK then
+        return complete[26678] and (not complete[26703]) or false
+    end
+
+    if phase == phases.HOLLEE_RUINS then
+        return not complete[13605]
+    end
+
+    if phase == phases.HOLLEE_CAMP then
+        return complete[13605] or false
+    end
+
+    if phase == phases.SERENDIA_FP then
+        return not complete[13520]
+    end
+
+    if phase == phases.SERENDIA_INN then
+        return complete[13520] or false
+    end
+
+    if phase == phases.GRIMCLAW_THICKET then
+        return not complete[13599]
+    end
+
+    if phase == phases.GRIMCLAW_INN then
+        return complete[13599] or false
+    end
+
+    if phase == phases.BARGE_AT_PEACE then
+        return (((not complete[25515]) and (not complete[25517]) and (not complete[25524])) or ((not complete[25516]) and (not complete[25518]) and (not complete[25526]))) or complete[25542] or complete[25543] or complete[25561] or complete[25562] or false
+    end
+
+    if phase == phases.BARGE_UNDER_ATTACK then
+        return (complete[25515] and complete[25517] and complete[25524] and (not complete[25542]) and (not complete[25561])) or (complete[25516] and complete[25518] and complete[25526] and (not complete[25543]) and (not complete[25562])) or false
+    end
+
+    if phase == phases.KELSEY_AT_COVE then
+        return (not complete[26889])
     end
 
     return false
